@@ -378,7 +378,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Overall Progress',
+                'Today\'s Progress',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -480,6 +480,21 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                       decorationThickness: 1.5,
                     ),
                   ),
+                  if (hobby.notes.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      hobby.notes,
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        decoration: isCompleted ? TextDecoration.lineThrough : null,
+                        decorationColor: Colors.white38,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                   if (hobby.currentStreak > 0) ...[
                     const SizedBox(height: 6),
                     Row(
@@ -588,24 +603,27 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () => setState(() => _selectedIndex = index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFF6C3FFF) : Colors.white54,
-            size: 28,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
               color: isSelected ? const Color(0xFF6C3FFF) : Colors.white54,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              size: 28,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF6C3FFF) : Colors.white54,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
