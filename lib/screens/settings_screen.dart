@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import '../services/hobby_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback onBack;
   final Function(int) onNavigate;
+  final VoidCallback onLogout;
 
   const SettingsScreen({
     Key? key, 
     required this.onBack,
     required this.onNavigate,
+    required this.onLogout,
   }) : super(key: key);
 
   @override
@@ -15,9 +18,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _darkModeEnabled = true;
-  bool _publicProfile = false;
+  bool _pushNotificationsEnabled = true;
+  bool _completionSoundEnabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -59,23 +61,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
             _buildPreferencesCard(),
             const SizedBox(height: 32),
-            const Text(
-              'ANALYTICS',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildAnalyticsCard(),
-            const SizedBox(height: 32),
             _buildLogoutButton(),
             const SizedBox(height: 24),
             const Center(
               child: Text(
-                'Bytemonk v2.4.0 — Made for focus',
+                'Hobbyist v1.0.0 — Made for consistency',
                 style: TextStyle(
                   color: Colors.white38,
                   fontSize: 14,
@@ -196,19 +186,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         children: [
           _buildSwitchTile(
-            icon: Icons.notifications,
+            icon: Icons.notifications_active,
             iconColor: const Color(0xFF6C3FFF),
-            title: 'Notifications',
-            value: _notificationsEnabled,
-            onChanged: (value) => setState(() => _notificationsEnabled = value),
+            title: 'Push Notifications',
+            value: _pushNotificationsEnabled,
+            onChanged: (value) => setState(() => _pushNotificationsEnabled = value),
           ),
           const Divider(color: Color(0xFF3D3449), height: 1),
           _buildSwitchTile(
-            icon: Icons.dark_mode,
+            icon: Icons.volume_up,
             iconColor: const Color(0xFF8B5CF6),
-            title: 'Dark Mode',
-            value: _darkModeEnabled,
-            onChanged: (value) => setState(() => _darkModeEnabled = value),
+            title: 'Completion Sound',
+            value: _completionSoundEnabled,
+            onChanged: (value) => setState(() => _completionSoundEnabled = value),
           ),
           const Divider(color: Color(0xFF3D3449), height: 1),
           _buildNavTile(
@@ -218,23 +208,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () {},
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAnalyticsCard() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2238),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: _buildSwitchTile(
-        icon: Icons.bar_chart,
-        iconColor: const Color(0xFF8B5CF6),
-        title: 'Public Progress Profile',
-        value: _publicProfile,
-        onChanged: (value) => setState(() => _publicProfile = value),
       ),
     );
   }
@@ -329,8 +302,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextButton(
-        onPressed: () {
-          // Handle logout
+        onPressed: () async {
+          // Show confirmation dialog
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: const Color(0xFF2A2238),
+              title: const Text(
+                'Clear All Data',
+                style: TextStyle(color: Colors.white),
+              ),
+              content: const Text(
+                'This will delete all your hobbies and start fresh. This action cannot be undone.',
+                style: TextStyle(color: Colors.white70),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFFF3B30),
+                  ),
+                  child: const Text('Clear Data'),
+                ),
+              ],
+            ),
+          );
+
+          if (confirmed == true) {
+            final service = HobbyService();
+            await service.clearAllData();
+            if (mounted) {
+              widget.onLogout();
+            }
+          }
         },
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),

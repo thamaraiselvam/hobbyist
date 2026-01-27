@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'landing_screen.dart';
 import 'daily_tasks_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -15,18 +17,50 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     
-    // Navigate to home after 2 seconds without animations
-    Future.delayed(const Duration(seconds: 2), () {
+    // Check first launch and navigate accordingly
+    Future.delayed(const Duration(seconds: 2), () async {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const DailyTasksScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return child; // No transition animation
-            },
-            transitionDuration: Duration.zero,
-          ),
-        );
+        final prefs = await SharedPreferences.getInstance();
+        final hasSeenLanding = prefs.getBool('has_seen_landing') ?? false;
+        
+        if (!hasSeenLanding) {
+          // Show landing page on first launch
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => LandingScreen(
+                onGetStarted: () async {
+                  await prefs.setBool('has_seen_landing', true);
+                  if (context.mounted) {
+                    Navigator.of(context).pushReplacement(
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const DailyTasksScreen(),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          return child;
+                        },
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  }
+                },
+              ),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return child;
+              },
+              transitionDuration: Duration.zero,
+            ),
+          );
+        } else {
+          // Go directly to main app
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const DailyTasksScreen(),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return child;
+              },
+              transitionDuration: Duration.zero,
+            ),
+          );
+        }
       }
     });
   }

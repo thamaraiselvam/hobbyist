@@ -42,6 +42,11 @@ class HobbyService {
     await saveHobbies(hobbies);
   }
 
+  Future<void> clearAllData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_storageKey);
+  }
+
   Future<void> toggleCompletion(String hobbyId, String date) async {
     final hobbies = await loadHobbies();
     final index = hobbies.indexWhere((h) => h.id == hobbyId);

@@ -23,13 +23,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   int get currentStreak {
     if (widget.hobbies.isEmpty) return 0;
-    int maxStreak = 0;
-    for (var hobby in widget.hobbies) {
-      if (hobby.currentStreak > maxStreak) {
-        maxStreak = hobby.currentStreak;
+    
+    int streak = 0;
+    final today = DateTime.now();
+    
+    for (int i = 0; i < 365; i++) {
+      final date = today.subtract(Duration(days: i));
+      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+      
+      bool anyTaskCompleted = false;
+      for (var hobby in widget.hobbies) {
+        if (hobby.completions[dateKey]?.completed == true) {
+          anyTaskCompleted = true;
+          break;
+        }
+      }
+      
+      if (anyTaskCompleted) {
+        streak++;
+      } else {
+        break;
       }
     }
-    return maxStreak;
+    return streak;
   }
 
   int get totalCompleted {
@@ -42,22 +58,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   double get completionRate {
     if (widget.hobbies.isEmpty) return 0;
-    final last7Days = List.generate(7, (i) => 
-      DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(Duration(days: i)))
-    );
     
-    int possibleCompletions = widget.hobbies.length * 7;
-    int actualCompletions = 0;
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    int completedToday = 0;
     
     for (var hobby in widget.hobbies) {
-      for (var date in last7Days) {
-        if (hobby.completions[date]?.completed == true) {
-          actualCompletions++;
-        }
+      if (hobby.completions[today]?.completed == true) {
+        completedToday++;
       }
     }
     
-    return possibleCompletions > 0 ? (actualCompletions / possibleCompletions * 100) : 0;
+    return widget.hobbies.length > 0 ? (completedToday / widget.hobbies.length * 100) : 0;
   }
 
   Map<String, int> get weeklyActivity {
@@ -111,28 +122,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Map<String, int> get yearlyActivity {
     final months = <String, int>{};
-    final monthChars = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+    final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final now = DateTime.now();
     
-    // Get all 12 months starting from January of current year
-    for (int monthNum = 1; monthNum <= 12; monthNum++) {
-      final targetMonth = DateTime(now.year, monthNum, 1);
-      int count = 0;
-      
-      final daysInMonth = DateTime(targetMonth.year, targetMonth.month + 1, 0).day;
-      for (int day = 1; day <= daysInMonth; day++) {
-        final date = DateTime(targetMonth.year, targetMonth.month, day);
-        if (date.isAfter(now)) break;
-        
-        final dateKey = DateFormat('yyyy-MM-dd').format(date);
-        for (var hobby in widget.hobbies) {
-          if (hobby.completions[dateKey]?.completed == true) {
-            count++;
+    // Initialize all months with 0
+    for (int i = 0; i < 12; i++) {
+      months[monthNames[i]] = 0;
+    }
+    
+    // Count completions for each hobby
+    for (var hobby in widget.hobbies) {
+      for (var entry in hobby.completions.entries) {
+        if (entry.value.completed) {
+          final date = entry.value.completedAt ?? DateTime.parse(entry.key);
+          if (date.year == now.year && !date.isAfter(now)) {
+            months[monthNames[date.month - 1]] = (months[monthNames[date.month - 1]] ?? 0) + 1;
           }
         }
       }
-      
-      months[monthChars[monthNum - 1]] = count;
     }
     
     return months;
@@ -150,17 +157,102 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   String get bestDay {
-    final activity = weeklyActivity;
-    if (activity.isEmpty || activity.values.every((v) => v == 0)) return 'N/A';
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final today = DateFormat('yyyy-MM-dd').format(now);
+    final yesterday = DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 1)));
     
-    final maxEntry = activity.entries.reduce((a, b) => a.value > b.value ? a : b);
-    return maxEntry.key.substring(0, 1) + maxEntry.key.substring(1).toLowerCase();
+    Map<String, Map<String, dynamic>> dayData = {};
+    
+    for (int i = 0; i < 7; i++) {
+      final date = monday.add(Duration(days: i));
+      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+      int count = 0;
+      
+      for (var hobby in widget.hobbies) {
+        if (hobby.completions[dateKey]?.completed == true) {
+          count++;
+        }
+      }
+      
+      String displayDate;
+      if (dateKey == today) {
+        displayDate = 'Today';
+      } else if (dateKey == yesterday) {
+        displayDate = 'Yesterday';
+      } else {
+        displayDate = DateFormat('dd-MMM').format(date);
+      }
+      
+      dayData[displayDate] = {
+        'count': count,
+        'dateKey': dateKey,
+      };
+    }
+    
+    if (dayData.isEmpty || dayData.values.every((v) => v['count'] == 0)) return 'N/A';
+    
+    final maxEntry = dayData.entries.reduce((a, b) => 
+      (a.value['count'] as int) > (b.value['count'] as int) ? a : b
+    );
+    
+    return maxEntry.key;
+  }
+  
+  String get bestDaySubtitle {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final today = DateFormat('yyyy-MM-dd').format(now);
+    
+    Map<String, int> dayData = {};
+    
+    for (int i = 0; i < 7; i++) {
+      final date = monday.add(Duration(days: i));
+      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+      int count = 0;
+      
+      for (var hobby in widget.hobbies) {
+        if (hobby.completions[dateKey]?.completed == true) {
+          count++;
+        }
+      }
+      
+      dayData[dateKey] = count;
+    }
+    
+    if (dayData.isEmpty || dayData.values.every((v) => v == 0)) return 'No data yet';
+    
+    final maxEntry = dayData.entries.reduce((a, b) => 
+      a.value > b.value ? a : b
+    );
+    
+    return '${maxEntry.value} tasks';
   }
 
   double get dailyAverage {
     if (widget.hobbies.isEmpty) return 0;
-    final days = totalCompleted > 0 ? 7 : 1;
-    return totalCompleted / days;
+    
+    int totalTasks = 0;
+    int daysWithData = 0;
+    
+    for (int i = 0; i < 7; i++) {
+      final date = DateTime.now().subtract(Duration(days: i));
+      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+      int dayCount = 0;
+      
+      for (var hobby in widget.hobbies) {
+        if (hobby.completions[dateKey]?.completed == true) {
+          dayCount++;
+        }
+      }
+      
+      if (dayCount > 0) {
+        totalTasks += dayCount;
+        daysWithData++;
+      }
+    }
+    
+    return daysWithData > 0 ? totalTasks / daysWithData : 0;
   }
 
   int get totalCompletedThisWeek {
@@ -229,7 +321,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     'CURRENT STREAK',
                     '$currentStreak',
                     'Days',
-                    '+2% vs last week',
+                    'Keep it up!',
                     Icons.local_fire_department,
                     const Color(0xFFFF6B35),
                   )),
@@ -238,7 +330,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     'TOTAL DONE',
                     '$totalCompleted',
                     'Tasks',
-                    '${completionRate.toInt()}% Completion rate',
+                    '${completionRate.toInt()}% Today',
                     Icons.check_circle,
                     const Color(0xFF6C3FFF),
                   )),
@@ -256,20 +348,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildInsightCard(
-                'Weekly Growth',
-                weeklyGrowth >= 0
-                    ? 'You completed ${weeklyGrowth.toInt()}% more hobbies this week than last week. ${weeklyGrowth > 20 ? "Great momentum!" : "Keep it up!"}'
-                    : 'You completed ${weeklyGrowth.abs().toInt()}% fewer hobbies this week. Let\'s get back on track!',
-                Icons.auto_awesome,
-              ),
-              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(child: _buildMiniStatCard(
                     'HIGHEST COMPLETION\nDAY',
                     bestDay,
-                    bestDay != 'N/A' ? 'Best performance' : 'No data yet',
+                    bestDay != 'N/A' ? bestDaySubtitle : 'No data yet',
                   )),
                   const SizedBox(width: 12),
                   Expanded(child: _buildMiniStatCard(
@@ -280,7 +364,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              if (totalCompleted > 0) _buildRoutineCard() else _buildNoDataCard(),
+              if (totalCompleted > 0) _buildRoutineCards() else _buildNoDataCard(),
             ],
           ),
         ),
@@ -435,33 +519,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
           const SizedBox(height: 20),
           _buildWeeklyChart(),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3D3449),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text('LESS ACTIVE', style: TextStyle(color: Colors.white54, fontSize: 11)),
-              const SizedBox(width: 16),
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6C3FFF),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text('MORE ACTIVE', style: TextStyle(color: Colors.white54, fontSize: 11)),
-            ],
-          ),
         ],
       ),
     );
@@ -495,55 +552,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         : activity.values.reduce((a, b) => a > b ? a : b);
     
     return _selectedPeriod == 'Yearly' 
-        ? SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: activity.entries.map((entry) {
-                final intensity = maxActivity > 0 ? entry.value / maxActivity : 0;
-                
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: SizedBox(
-                    width: 50,
-                    child: Column(
-                      children: [
-                        Container(
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: entry.value > 0
-                                ? (intensity > 0.6 
-                                    ? const Color(0xFF6C3FFF)
-                                    : const Color(0xFF8B5CF6))
-                                : const Color(0xFF3D3449),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              entry.value > 0 ? '${entry.value}' : '',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _getChartLabel(entry.key),
-                          style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          )
+        ? _buildYearlyGitHubStyle()
         : Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: activity.entries.map((entry) {
@@ -596,6 +605,69 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               );
             }).toList(),
           );
+  }
+
+  Widget _buildYearlyGitHubStyle() {
+    final activity = yearlyActivity;
+    final maxActivity = activity.values.isEmpty || activity.values.every((v) => v == 0) 
+        ? 1 
+        : activity.values.reduce((a, b) => a > b ? a : b);
+    
+    return Row(
+      children: activity.entries.map((entry) {
+        final intensity = maxActivity > 0 ? entry.value / maxActivity : 0;
+        Color boxColor;
+        
+        if (entry.value == 0) {
+          boxColor = const Color(0xFF3D3449);
+        } else if (intensity <= 0.33) {
+          boxColor = const Color(0xFF5C3FBF);
+        } else if (intensity <= 0.66) {
+          boxColor = const Color(0xFF7B5CE6);
+        } else {
+          boxColor = const Color(0xFF6C3FFF);
+        }
+        
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: boxColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: entry.value > 0
+                        ? Text(
+                            '${entry.value}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  entry.key,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 
   String _getChartLabel(String key) {
@@ -657,6 +729,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _buildMiniStatCard(String label, String value, String subtitle) {
     return Container(
+      height: 110,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF2A2238),
@@ -664,6 +737,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
@@ -673,76 +747,158 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Color(0xFF6C3FFF),
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Color(0xFF6C3FFF),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 11,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRoutineCard() {
-    final totalTasks = totalCompleted;
-    final completionPercentage = totalTasks > 0 && widget.hobbies.isNotEmpty 
-        ? (totalTasks / (widget.hobbies.length * 7) * 100).toInt() 
-        : 0;
+  Widget _buildRoutineCards() {
+    final dailyHobbies = widget.hobbies.where((h) => h.repeatMode == 'daily').toList();
+    final weeklyHobbies = widget.hobbies.where((h) => h.repeatMode == 'weekly').toList();
+    final monthlyHobbies = widget.hobbies.where((h) => h.repeatMode == 'monthly').toList();
     
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    
+    List<Widget> cards = [];
+    
+    if (dailyHobbies.isNotEmpty) {
+      int completed = dailyHobbies.where((h) => h.completions[today]?.completed == true).length;
+      int percentage = ((completed / dailyHobbies.length) * 100).toInt();
+      cards.add(_buildRoutineMiniCard('DAILY ROUTINE', '$percentage%', '$completed of ${dailyHobbies.length} tasks'));
+    }
+    
+    if (weeklyHobbies.isNotEmpty) {
+      int completed = 0;
+      for (int i = 0; i < 7; i++) {
+        final date = DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(Duration(days: i)));
+        completed += weeklyHobbies.where((h) => h.completions[date]?.completed == true).length;
+      }
+      int total = weeklyHobbies.length;
+      int percentage = total > 0 ? ((completed / total) * 100).toInt() : 0;
+      cards.add(_buildRoutineMiniCard('WEEKLY ROUTINE', '$percentage%', '$completed of $total tasks'));
+    }
+    
+    if (monthlyHobbies.isNotEmpty) {
+      int completed = 0;
+      for (int i = 0; i < 30; i++) {
+        final date = DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(Duration(days: i)));
+        completed += monthlyHobbies.where((h) => h.completions[date]?.completed == true).length;
+      }
+      int total = monthlyHobbies.length;
+      int percentage = total > 0 ? ((completed / total) * 100).toInt() : 0;
+      cards.add(_buildRoutineMiniCard('MONTHLY ROUTINE', '$percentage%', '$completed of $total tasks'));
+    }
+    
+    if (cards.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    // Create rows of 2 cards each
+    List<Widget> rows = [];
+    for (int i = 0; i < cards.length; i += 2) {
+      if (i + 1 < cards.length) {
+        rows.add(Row(
+          children: [
+            Expanded(child: cards[i]),
+            const SizedBox(width: 12),
+            Expanded(child: cards[i + 1]),
+          ],
+        ));
+      } else {
+        rows.add(Row(
+          children: [
+            Expanded(child: cards[i]),
+            const SizedBox(width: 12),
+            const Expanded(child: SizedBox()),
+          ],
+        ));
+      }
+    }
+    
+    return Column(
+      children: rows.map((row) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: row,
+      )).toList(),
+    );
+  }
+
+  Widget _buildRoutineMiniCard(String label, String value, String subtitle) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      height: 110,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF2A2238),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF00D9A0).withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
             ),
-            child: const Icon(Icons.check_circle, color: Color(0xFF00D9A0), size: 24),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Weekly Routine',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Color(0xFF6C3FFF),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
-                SizedBox(height: 4),
-                Text(
-                  '$completionPercentage% completion this week',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 11,
                 ),
-              ],
-            ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-          const Icon(Icons.chevron_right, color: Colors.white54),
         ],
       ),
     );

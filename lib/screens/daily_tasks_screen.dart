@@ -23,6 +23,76 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
   void initState() {
     super.initState();
     _loadHobbies();
+    _checkAndGenerateDummyData();
+  }
+
+  Future<void> _checkAndGenerateDummyData() async {
+    final hobbies = await _service.loadHobbies();
+    if (hobbies.isEmpty) {
+      await _generateDummyData();
+    }
+  }
+
+  Future<void> _generateDummyData() async {
+    final random = DateTime.now().millisecondsSinceEpoch;
+    final dummyHobbies = [
+      'Morning Meditation',
+      'Read 30 Minutes',
+      'Exercise',
+      'Practice Guitar',
+      'Learn Spanish',
+      'Write Journal',
+      'Drink Water',
+      'Walk 10k Steps',
+      'Code Practice',
+      'Evening Stretch',
+    ];
+
+    final colors = [
+      0xFF6C3FFF,
+      0xFF8B5CF6,
+      0xFFFF6B35,
+      0xFF00D9A0,
+      0xFFFF3B30,
+      0xFF007AFF,
+      0xFFFFCC00,
+      0xFFFF2D55,
+      0xFF5856D6,
+      0xFFAF52DE,
+    ];
+
+    for (int i = 0; i < dummyHobbies.length; i++) {
+      final completions = <String, HobbyCompletion>{};
+      
+      // Generate completions for last 7 days
+      for (int day = 0; day < 7; day++) {
+        final date = DateTime.now().subtract(Duration(days: day));
+        final dateKey = DateFormat('yyyy-MM-dd').format(date);
+        
+        // Randomly complete tasks (70% completion rate)
+        final isCompleted = (random + i + day) % 10 < 7;
+        if (isCompleted) {
+          completions[dateKey] = HobbyCompletion(
+            completed: true,
+            completedAt: date,
+          );
+        }
+      }
+
+      final hobby = Hobby(
+        id: 'dummy_${DateTime.now().millisecondsSinceEpoch}_$i',
+        name: dummyHobbies[i],
+        notes: 'Daily habit for personal growth',
+        repeatMode: 'daily',
+        priority: i % 3 == 0 ? 'high' : (i % 3 == 1 ? 'medium' : 'low'),
+        color: colors[i],
+        completions: completions,
+      );
+
+      await _service.addHobby(hobby);
+    }
+
+    await _loadHobbies();
   }
 
   Future<void> _loadHobbies() async {
@@ -82,6 +152,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
       return SettingsScreen(
         onBack: () => setState(() => _selectedIndex = 0),
         onNavigate: (index) => setState(() => _selectedIndex = index),
+        onLogout: () async {
+          setState(() {
+            _selectedIndex = 0;
+            _hobbies = [];
+          });
+          await _generateDummyData();
+        },
       );
     }
 
@@ -191,9 +268,33 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
   }
 
   Widget _buildHeader() {
-    final maxStreak = _hobbies.isEmpty 
-        ? 0 
-        : _hobbies.map((h) => h.currentStreak).reduce((a, b) => a > b ? a : b);
+    // Calculate global streak (any task completed counts)
+    int calculateGlobalStreak() {
+      int streak = 0;
+      final today = DateTime.now();
+      
+      for (int i = 0; i < 365; i++) {
+        final date = today.subtract(Duration(days: i));
+        final dateKey = DateFormat('yyyy-MM-dd').format(date);
+        
+        bool anyTaskCompleted = false;
+        for (var hobby in _hobbies) {
+          if (hobby.completions[dateKey]?.completed == true) {
+            anyTaskCompleted = true;
+            break;
+          }
+        }
+        
+        if (anyTaskCompleted) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+    
+    final globalStreak = _hobbies.isEmpty ? 0 : calculateGlobalStreak();
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
@@ -226,7 +327,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
               ],
             ),
           ),
-          if (maxStreak > 0)
+          if (globalStreak > 0)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -243,7 +344,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '$maxStreak',
+                    '$globalStreak',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
