@@ -1,7 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.hobby_tracker">
+    package="tham.hobbyist.app">
+    <uses-permission android:name="android.permission.VIBRATE"/>
     <application
-        android:label="Hobby Tracker"
+        android:label="Hobbyist"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

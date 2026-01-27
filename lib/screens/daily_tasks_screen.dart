@@ -1,7 +1,13 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
+import '../services/sound_service.dart';
+import '../services/quote_service.dart';
+import '../widgets/animated_checkbox.dart';
+import '../widgets/tada_animation.dart';
+import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'analytics_screen.dart';
 import 'settings_screen.dart';
@@ -15,84 +21,25 @@ class DailyTasksScreen extends StatefulWidget {
 
 class _DailyTasksScreenState extends State<DailyTasksScreen> {
   final HobbyService _service = HobbyService();
+  final SoundService _soundService = SoundService();
+  final QuoteService _quoteService = QuoteService();
   List<Hobby> _hobbies = [];
   bool _loading = true;
   int _selectedIndex = 0;
+  final Map<String, bool> _celebratingTasks = {};
+  String _currentQuote = '';
 
   @override
   void initState() {
     super.initState();
+    _loadQuote();
     _loadHobbies();
-    _checkAndGenerateDummyData();
   }
 
-  Future<void> _checkAndGenerateDummyData() async {
-    final hobbies = await _service.loadHobbies();
-    if (hobbies.isEmpty) {
-      await _generateDummyData();
-    }
-  }
-
-  Future<void> _generateDummyData() async {
-    final random = DateTime.now().millisecondsSinceEpoch;
-    final dummyHobbies = [
-      'Morning Meditation',
-      'Read 30 Minutes',
-      'Exercise',
-      'Practice Guitar',
-      'Learn Spanish',
-      'Write Journal',
-      'Drink Water',
-      'Walk 10k Steps',
-      'Code Practice',
-      'Evening Stretch',
-    ];
-
-    final colors = [
-      0xFF6C3FFF,
-      0xFF8B5CF6,
-      0xFFFF6B35,
-      0xFF00D9A0,
-      0xFFFF3B30,
-      0xFF007AFF,
-      0xFFFFCC00,
-      0xFFFF2D55,
-      0xFF5856D6,
-      0xFFAF52DE,
-    ];
-
-    for (int i = 0; i < dummyHobbies.length; i++) {
-      final completions = <String, HobbyCompletion>{};
-      
-      // Generate completions for last 7 days
-      for (int day = 0; day < 7; day++) {
-        final date = DateTime.now().subtract(Duration(days: day));
-        final dateKey = DateFormat('yyyy-MM-dd').format(date);
-        
-        // Randomly complete tasks (70% completion rate)
-        final isCompleted = (random + i + day) % 10 < 7;
-        if (isCompleted) {
-          completions[dateKey] = HobbyCompletion(
-            completed: true,
-            completedAt: date,
-          );
-        }
-      }
-
-      final hobby = Hobby(
-        id: 'dummy_${DateTime.now().millisecondsSinceEpoch}_$i',
-        name: dummyHobbies[i],
-        notes: 'Daily habit for personal growth',
-        repeatMode: 'daily',
-        priority: i % 3 == 0 ? 'high' : (i % 3 == 1 ? 'medium' : 'low'),
-        color: colors[i],
-        completions: completions,
-      );
-
-      await _service.addHobby(hobby);
-    }
-
-    await _loadHobbies();
+  Future<void> _loadQuote() async {
+    setState(() {
+      _currentQuote = _quoteService.getRandomQuote();
+    });
   }
 
   Future<void> _loadHobbies() async {
@@ -108,6 +55,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final isCompleted = hobby.completions[today]?.completed ?? false;
     
+    // Update UI immediately
     final updatedCompletions = Map<String, HobbyCompletion>.from(hobby.completions);
     updatedCompletions[today] = HobbyCompletion(
       completed: !isCompleted,
@@ -115,8 +63,45 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     );
     
     final updatedHobby = hobby.copyWith(completions: updatedCompletions);
-    await _service.updateHobby(updatedHobby);
-    await _loadHobbies();
+    
+    // Update UI first
+    setState(() {
+      final index = _hobbies.indexWhere((h) => h.id == hobby.id);
+      if (index != -1) {
+        _hobbies[index] = updatedHobby;
+      }
+      
+      // Celebrate when marking as complete - always reset to trigger animation
+      if (!isCompleted) {
+        _celebratingTasks[hobby.id] = false; // Reset first
+      }
+    });
+    
+    // Trigger animation after a frame
+    if (!isCompleted) {
+      // Play completion sound
+      _soundService.playCompletionSound();
+      
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (mounted) {
+          setState(() {
+            _celebratingTasks[hobby.id] = true;
+          });
+          
+          // Remove celebration flag after animation
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              setState(() {
+                _celebratingTasks.remove(hobby.id);
+              });
+            }
+          });
+        }
+      });
+    }
+    
+    // Sync to backend asynchronously
+    _service.updateHobby(updatedHobby);
   }
 
   int get completedToday {
@@ -141,27 +126,22 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_selectedIndex == 1) {
-      return AnalyticsScreen(
-        hobbies: _hobbies, 
-        onBack: () => setState(() => _selectedIndex = 0),
-        onNavigate: (index) => setState(() => _selectedIndex = index),
-      );
-    }
-    if (_selectedIndex == 2) {
-      return SettingsScreen(
-        onBack: () => setState(() => _selectedIndex = 0),
-        onNavigate: (index) => setState(() => _selectedIndex = index),
-        onLogout: () async {
-          setState(() {
-            _selectedIndex = 0;
-            _hobbies = [];
-          });
-          await _generateDummyData();
-        },
-      );
-    }
+    return _selectedIndex == 1
+        ? AnalyticsScreen(
+            hobbies: _hobbies,
+            onBack: () => setState(() => _selectedIndex = 0),
+            onNavigate: (index) => setState(() => _selectedIndex = index),
+            onRefresh: _loadHobbies,
+          )
+        : _selectedIndex == 2
+            ? SettingsScreen(
+                onBack: () => setState(() => _selectedIndex = 0),
+                onNavigate: (index) => setState(() => _selectedIndex = index),
+              )
+            : _buildTasksScreen();
+  }
 
+  Widget _buildTasksScreen() {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1625),
       body: SafeArea(
@@ -175,9 +155,14 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                   _buildOverallProgress(),
                   _buildQuoteSection(),
                   Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
+                    child: RefreshIndicator(
+                      onRefresh: _loadHobbies,
+                      color: const Color(0xFF6C3FFF),
+                      backgroundColor: const Color(0xFF2A2139),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (inProgressTasks.isNotEmpty) ...[
@@ -248,6 +233,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                         ],
                       ),
                     ),
+                    ),
                   ),
                 ],
               ),
@@ -256,7 +242,10 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddHobbyScreen()),
+            SlidePageRoute(
+              page: const AddHobbyScreen(),
+              direction: AxisDirection.up,
+            ),
           );
           _loadHobbies();
         },
@@ -269,10 +258,21 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
 
   Widget _buildHeader() {
     // Calculate global streak (any task completed counts)
-    int calculateGlobalStreak() {
+    Map<String, dynamic> calculateGlobalStreak() {
       int streak = 0;
+      bool todayCompleted = false;
       final today = DateTime.now();
+      final todayKey = DateFormat('yyyy-MM-dd').format(today);
       
+      // Check if today has any completions
+      for (var hobby in _hobbies) {
+        if (hobby.completions[todayKey]?.completed == true) {
+          todayCompleted = true;
+          break;
+        }
+      }
+      
+      // Count consecutive days starting from today
       for (int i = 0; i < 365; i++) {
         final date = today.subtract(Duration(days: i));
         final dateKey = DateFormat('yyyy-MM-dd').format(date);
@@ -287,14 +287,17 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
         
         if (anyTaskCompleted) {
           streak++;
-        } else {
+        } else if (i > 0) { // Don't break on today if it's not completed yet
           break;
         }
       }
-      return streak;
+      
+      return {'streak': streak, 'todayCompleted': todayCompleted};
     }
     
-    final globalStreak = _hobbies.isEmpty ? 0 : calculateGlobalStreak();
+    final streakData = _hobbies.isEmpty ? {'streak': 0, 'todayCompleted': false} : calculateGlobalStreak();
+    final globalStreak = streakData['streak'] as int;
+    final todayCompleted = streakData['todayCompleted'] as bool;
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
@@ -306,14 +309,20 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Hello, Tham!',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
-                  ),
+                FutureBuilder<String?>(
+                  future: _service.getSetting('userName'),
+                  builder: (context, snapshot) {
+                    final userName = snapshot.data ?? 'Tham';
+                    return Text(
+                      'Hello, $userName!',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -337,16 +346,16 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.local_fire_department,
-                    color: Color(0xFFFF6B35),
+                    color: todayCompleted ? const Color(0xFFFF6B35) : Colors.grey.withOpacity(0.5),
                     size: 20,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     '$globalStreak',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: todayCompleted ? Colors.white : Colors.grey.withOpacity(0.5),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -423,7 +432,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
       child: Padding(
         padding: const EdgeInsets.only(left: 16),
         child: Text(
-          _getMotivationalQuote(),
+          _currentQuote,
           style: const TextStyle(
             color: Colors.white54,
             fontSize: 13,
@@ -439,87 +448,69 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     );
   }
 
-  String _getMotivationalQuote() {
-    final quotes = [
-      "Small steps every day lead to big results. Keep going, you are doing great!",
-      "Success is the sum of small efforts repeated day in and day out.",
-      "The secret of getting ahead is getting started.",
-      "Don't count the days, make the days count.",
-      "Your future is created by what you do today, not tomorrow.",
-      "Consistency is what transforms average into excellence.",
-    ];
-    
-    final dayOfYear = DateTime.now().difference(DateTime(DateTime.now().year, 1, 1)).inDays;
-    return quotes[dayOfYear % quotes.length];
-  }
 
   Widget _buildTaskCard(Hobby hobby, bool isCompleted) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1B2E),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hobby.name,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    decoration: isCompleted ? TextDecoration.lineThrough : null,
-                    decorationColor: Colors.white38,
-                    decorationThickness: 1.5,
+    final isCelebrating = _celebratingTasks[hobby.id] ?? false;
+    
+    return TadaAnimation(
+      animate: isCelebrating,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1B2E),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hobby.name,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      decoration: isCompleted ? TextDecoration.lineThrough : null,
+                      decorationColor: Colors.white38,
+                      decorationThickness: 1.5,
+                    ),
                   ),
-                ),
-                if (hobby.currentStreak > 0) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.local_fire_department,
-                          color: Color(0xFFFF6B35), size: 16),
-                      const SizedBox(width: 5),
-                      Text(
-                        '${hobby.currentStreak} day streak',
-                        style: const TextStyle(
-                          color: Color(0xFFFF6B35),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                  if (hobby.currentStreak > 0) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.local_fire_department,
+                            color: Color(0xFFFF6B35), size: 16),
+                        const SizedBox(width: 5),
+                        Text(
+                          '${hobby.currentStreak} day streak',
+                          style: const TextStyle(
+                            color: Color(0xFFFF6B35),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          GestureDetector(
-            onTap: () => _toggleToday(hobby),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: isCompleted ? const Color(0xFF6C3FFF) : Colors.transparent,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isCompleted ? const Color(0xFF6C3FFF) : const Color(0xFF3A3748),
-                  width: 2,
-                ),
               ),
-              child: isCompleted
-                  ? const Icon(Icons.check, color: Colors.white, size: 20)
-                  : null,
             ),
-          ),
-          const SizedBox(width: 4),
-          PopupMenuButton(
+            const SizedBox(width: 16),
+            Builder(
+              builder: (context) => AnimatedCheckbox(
+                isChecked: isCompleted,
+                onTap: () => _toggleToday(hobby),
+                size: 32,
+              ),
+            ),
+            const SizedBox(width: 4),
+            PopupMenuButton(
             padding: EdgeInsets.zero,
             icon: const Icon(Icons.more_vert, color: Colors.white38, size: 22),
             color: const Color(0xFF2A2738),
@@ -550,8 +541,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
               if (value == 'edit') {
                 await Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => AddHobbyScreen(hobby: hobby),
+                  SlidePageRoute(
+                    page: AddHobbyScreen(hobby: hobby),
+                    direction: AxisDirection.left,
                   ),
                 );
                 _loadHobbies();
@@ -562,6 +554,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
             },
           ),
         ],
+      ),
       ),
     );
   }

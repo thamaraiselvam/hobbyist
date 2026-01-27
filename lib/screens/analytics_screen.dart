@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/hobby.dart';
@@ -6,12 +7,14 @@ class AnalyticsScreen extends StatefulWidget {
   final List<Hobby> hobbies;
   final VoidCallback onBack;
   final Function(int) onNavigate;
+  final Future<void> Function() onRefresh;
 
   const AnalyticsScreen({
     Key? key,
     required this.hobbies,
     required this.onBack,
     required this.onNavigate,
+    required this.onRefresh,
   }) : super(key: key);
 
   @override
@@ -21,11 +24,21 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String _selectedPeriod = 'Weekly';
 
-  int get currentStreak {
-    if (widget.hobbies.isEmpty) return 0;
+  Map<String, dynamic> get currentStreakData {
+    if (widget.hobbies.isEmpty) return {'streak': 0, 'todayCompleted': false};
     
     int streak = 0;
+    bool todayCompleted = false;
     final today = DateTime.now();
+    final todayKey = DateFormat('yyyy-MM-dd').format(today);
+    
+    // Check if today has any completions
+    for (var hobby in widget.hobbies) {
+      if (hobby.completions[todayKey]?.completed == true) {
+        todayCompleted = true;
+        break;
+      }
+    }
     
     for (int i = 0; i < 365; i++) {
       final date = today.subtract(Duration(days: i));
@@ -41,12 +54,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       
       if (anyTaskCompleted) {
         streak++;
-      } else {
+      } else if (i > 0) {
         break;
       }
     }
-    return streak;
+    return {'streak': streak, 'todayCompleted': todayCompleted};
   }
+
+  int get currentStreak => currentStreakData['streak'] as int;
 
   int get totalCompleted {
     int total = 0;
@@ -121,22 +136,31 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Map<String, int> get yearlyActivity {
-    final months = <String, int>{};
+    final months = LinkedHashMap<String, int>();
     final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final now = DateTime.now();
     
-    // Initialize all months with 0
-    for (int i = 0; i < 12; i++) {
-      months[monthNames[i]] = 0;
+    // Get last 12 months - from 11 months ago to current month
+    // Start from oldest (11 months ago) to newest (current month)
+    for (int i = 11; i >= 0; i--) {
+      final date = DateTime(now.year, now.month - i, 1);
+      final monthName = monthNames[date.month - 1];
+      months[monthName] = 0;
     }
     
-    // Count completions for each hobby
+    // Count completions for each hobby in the last 12 months
     for (var hobby in widget.hobbies) {
       for (var entry in hobby.completions.entries) {
         if (entry.value.completed) {
           final date = entry.value.completedAt ?? DateTime.parse(entry.key);
-          if (date.year == now.year && !date.isAfter(now)) {
-            months[monthNames[date.month - 1]] = (months[monthNames[date.month - 1]] ?? 0) + 1;
+          final monthsAgo = (now.year - date.year) * 12 + (now.month - date.month);
+          
+          // Only count if within last 12 months
+          if (monthsAgo >= 0 && monthsAgo < 12) {
+            final monthName = monthNames[date.month - 1];
+            if (months.containsKey(monthName)) {
+              months[monthName] = months[monthName]! + 1;
+            }
           }
         }
       }
@@ -159,7 +183,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String get bestDay {
     final now = DateTime.now();
     final monday = now.subtract(Duration(days: now.weekday - 1));
-    final today = DateFormat('yyyy-MM-dd').format(now);
     final yesterday = DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 1)));
     
     Map<String, Map<String, dynamic>> dayData = {};
@@ -176,7 +199,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       }
       
       String displayDate;
-      if (dateKey == today) {
+      final todayKey = DateFormat('yyyy-MM-dd').format(now);
+      if (dateKey == todayKey) {
         displayDate = 'Today';
       } else if (dateKey == yesterday) {
         displayDate = 'Yesterday';
@@ -202,7 +226,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String get bestDaySubtitle {
     final now = DateTime.now();
     final monday = now.subtract(Duration(days: now.weekday - 1));
-    final today = DateFormat('yyyy-MM-dd').format(now);
     
     Map<String, int> dayData = {};
     
@@ -288,14 +311,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return ((totalCompletedThisWeek - totalCompletedLastWeek) / totalCompletedLastWeek * 100);
   }
 
+  Future<void> _refreshData() async {
+    await widget.onRefresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1625),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: const Color(0xFF6C3FFF),
+          backgroundColor: const Color(0xFF2A2139),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
@@ -366,6 +398,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const SizedBox(height: 12),
               if (totalCompleted > 0) _buildRoutineCards() else _buildNoDataCard(),
             ],
+          ),
           ),
         ),
       ),
@@ -785,36 +818,141 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final weeklyHobbies = widget.hobbies.where((h) => h.repeatMode == 'weekly').toList();
     final monthlyHobbies = widget.hobbies.where((h) => h.repeatMode == 'monthly').toList();
     
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    
     List<Widget> cards = [];
     
     if (dailyHobbies.isNotEmpty) {
-      int completed = dailyHobbies.where((h) => h.completions[today]?.completed == true).length;
-      int percentage = ((completed / dailyHobbies.length) * 100).toInt();
-      cards.add(_buildRoutineMiniCard('DAILY ROUTINE', '$percentage%', '$completed of ${dailyHobbies.length} tasks'));
+      int totalCompleted = 0;
+      int totalAvailable = 0;
+      
+      for (var hobby in dailyHobbies) {
+        // Use createdAt if available, otherwise find earliest completion
+        DateTime? startDate = hobby.createdAt;
+        if (startDate == null) {
+          for (var dateKey in hobby.completions.keys) {
+            try {
+              final date = DateTime.parse(dateKey);
+              if (startDate == null || date.isBefore(startDate)) {
+                startDate = date;
+              }
+            } catch (e) {
+              // Skip invalid dates
+            }
+          }
+        }
+        
+        if (startDate != null) {
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final start = DateTime(startDate.year, startDate.month, startDate.day);
+          final daysSinceCreation = today.difference(start).inDays + 1;
+          
+          // Count completed days for this hobby
+          int completedDays = hobby.completions.values.where((c) => c.completed).length;
+          
+          totalAvailable += daysSinceCreation;
+          totalCompleted += completedDays;
+        }
+      }
+      
+      int percentage = totalAvailable > 0 ? ((totalCompleted / totalAvailable) * 100).toInt() : 0;
+      cards.add(_buildRoutineMiniCard('DAILY ROUTINE', '$percentage%', '$totalCompleted of $totalAvailable tasks'));
     }
     
     if (weeklyHobbies.isNotEmpty) {
-      int completed = 0;
-      for (int i = 0; i < 7; i++) {
-        final date = DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(Duration(days: i)));
-        completed += weeklyHobbies.where((h) => h.completions[date]?.completed == true).length;
+      int totalCompleted = 0;
+      int totalAvailable = 0;
+      
+      for (var hobby in weeklyHobbies) {
+        // Use createdAt if available, otherwise find earliest completion
+        DateTime? startDate = hobby.createdAt;
+        if (startDate == null) {
+          for (var dateKey in hobby.completions.keys) {
+            try {
+              final date = DateTime.parse(dateKey);
+              if (startDate == null || date.isBefore(startDate)) {
+                startDate = date;
+              }
+            } catch (e) {
+              // Skip invalid dates
+            }
+          }
+        }
+        
+        if (startDate != null) {
+          final now = DateTime.now();
+          final start = DateTime(startDate.year, startDate.month, startDate.day);
+          final weeksSinceCreation = ((now.difference(start).inDays) / 7).ceil();
+          
+          // Count unique weeks where task was completed
+          Set<String> completedWeeks = {};
+          for (var entry in hobby.completions.entries) {
+            if (entry.value.completed) {
+              try {
+                final date = DateTime.parse(entry.key);
+                // Get Monday of the week for this date
+                final monday = date.subtract(Duration(days: date.weekday - 1));
+                final weekKey = DateFormat('yyyy-MM-dd').format(monday);
+                completedWeeks.add(weekKey);
+              } catch (e) {
+                // Skip invalid dates
+              }
+            }
+          }
+          
+          totalAvailable += weeksSinceCreation;
+          totalCompleted += completedWeeks.length;
+        }
       }
-      int total = weeklyHobbies.length;
-      int percentage = total > 0 ? ((completed / total) * 100).toInt() : 0;
-      cards.add(_buildRoutineMiniCard('WEEKLY ROUTINE', '$percentage%', '$completed of $total tasks'));
+      
+      int percentage = totalAvailable > 0 ? ((totalCompleted / totalAvailable) * 100).toInt() : 0;
+      cards.add(_buildRoutineMiniCard('WEEKLY ROUTINE', '$percentage%', '$totalCompleted of $totalAvailable tasks'));
     }
     
     if (monthlyHobbies.isNotEmpty) {
-      int completed = 0;
-      for (int i = 0; i < 30; i++) {
-        final date = DateFormat('yyyy-MM-dd').format(DateTime.now().subtract(Duration(days: i)));
-        completed += monthlyHobbies.where((h) => h.completions[date]?.completed == true).length;
+      int totalCompleted = 0;
+      int totalAvailable = 0;
+      
+      for (var hobby in monthlyHobbies) {
+        // Use createdAt if available, otherwise find earliest completion
+        DateTime? startDate = hobby.createdAt;
+        if (startDate == null) {
+          for (var dateKey in hobby.completions.keys) {
+            try {
+              final date = DateTime.parse(dateKey);
+              if (startDate == null || date.isBefore(startDate)) {
+                startDate = date;
+              }
+            } catch (e) {
+              // Skip invalid dates
+            }
+          }
+        }
+        
+        if (startDate != null) {
+          final now = DateTime.now();
+          final monthsSinceCreation = ((now.year - startDate.year) * 12 + (now.month - startDate.month)) + 1;
+          
+          // Count unique months where task was completed
+          Set<String> completedMonths = {};
+          for (var entry in hobby.completions.entries) {
+            if (entry.value.completed) {
+              try {
+                final date = DateTime.parse(entry.key);
+                final monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+                completedMonths.add(monthKey);
+              } catch (e) {
+                // Skip invalid dates
+              }
+            }
+          }
+          
+          totalAvailable += monthsSinceCreation;
+          totalCompleted += completedMonths.length;
+        }
       }
-      int total = monthlyHobbies.length;
-      int percentage = total > 0 ? ((completed / total) * 100).toInt() : 0;
-      cards.add(_buildRoutineMiniCard('MONTHLY ROUTINE', '$percentage%', '$completed of $total tasks'));
+      
+      int percentage = totalAvailable > 0 ? ((totalCompleted / totalAvailable) * 100).toInt() : 0;
+      cards.add(_buildRoutineMiniCard('MONTHLY ROUTINE', '$percentage%', '$totalCompleted of $totalAvailable tasks'));
     }
     
     if (cards.isEmpty) {

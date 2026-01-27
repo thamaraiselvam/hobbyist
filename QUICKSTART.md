@@ -1,32 +1,47 @@
-# Hobby Tracker - Quick Start Guide
+# Hobbyist - Quick Start Guide
 
 ## 🎯 Overview
-A complete Flutter app for tracking daily hobbies with GitHub-style contribution analytics.
+Hobbyist - A complete Flutter app for tracking daily hobbies with GitHub-style contribution analytics, motivational quotes, and elegant design.
 
 ## ✨ Features Implemented
 
-### 1. **Hobby Management**
+### 1. **Onboarding Flow**
+- ✅ Splash screen with custom branding
+- ✅ Landing page with feature highlights
+- ✅ User name collection
+- ✅ Automatic navigation to dashboard after onboarding
+
+### 2. **Hobby Management**
 - ✅ Create new hobbies with name, description, and custom color
 - ✅ Edit existing hobbies
 - ✅ Delete hobbies with confirmation dialog
 - ✅ Color picker for visual identification
+- ✅ SQLite database for persistent storage
 
-### 2. **Daily Tracking**
+### 3. **Daily Tracking**
 - ✅ Mark hobbies complete/incomplete by tapping
 - ✅ Track completions by date
-- ✅ Persistent storage using SharedPreferences
+- ✅ Animated checkbox feedback
+- ✅ Sound effects on completion
+- ✅ Celebration animations
 
-### 3. **Analytics Dashboard**
+### 4. **Analytics Dashboard**
 - ✅ GitHub-style contribution chart (12 weeks)
 - ✅ Heatmap visualization (darker = more completions)
 - ✅ Month labels and day indicators
 - ✅ Legend showing activity levels
 - ✅ Today's hobby list with completion status
+- ✅ Random motivational quotes on each load
+
+### 5. **Settings & Customization**
+- ✅ User profile management
+- ✅ Sound toggle
+- ✅ About section
 
 ## 📁 Project Structure
 
 ```
-hobby_tracker/
+hobbyist/
 ├── lib/
 │   ├── main.dart                      # App entry & theme
 │   ├── models/

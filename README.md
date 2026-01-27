@@ -1,6 +1,6 @@
-# Hobby Tracker
+# Hobbyist
 
-A Flutter application to track your daily hobbies with a GitHub-style contribution chart.
+Hobbyist - Track your hobbies with discipline and motivation. A minimalist Flutter application with a GitHub-style contribution chart.
 
 ## Features
 
@@ -8,23 +8,33 @@ A Flutter application to track your daily hobbies with a GitHub-style contributi
 - **Daily Tracking**: Mark hobbies as complete for each day with a simple tap
 - **Contribution Chart**: Visualize your consistency with a GitHub-style heatmap showing 12 weeks of activity
 - **Analytics Dashboard**: See your progress at a glance
-- **Persistent Storage**: All data saved locally using SharedPreferences
+- **Persistent Storage**: All data saved locally using SQLite
+- **Motivational Quotes**: Random inspirational quotes on every screen load
 
 ## Project Structure
 
 ```
-hobby_tracker/
+hobbyist/
 ├── lib/
 │   ├── main.dart                 # App entry point
 │   ├── models/
 │   │   └── hobby.dart            # Hobby data model
 │   ├── services/
-│   │   └── hobby_service.dart    # Data persistence service
+│   │   ├── hobby_service.dart    # Data persistence service
+│   │   ├── quote_service.dart    # Quote randomization service
+│   │   └── sound_service.dart    # Sound effects service
 │   ├── screens/
-│   │   ├── dashboard_screen.dart # Main dashboard with chart
-│   │   └── hobby_form_screen.dart # Add/edit hobby form
+│   │   ├── splash_screen.dart    # Splash screen with branding
+│   │   ├── landing_screen.dart   # Onboarding landing page
+│   │   ├── name_input_screen.dart # User name collection
+│   │   ├── daily_tasks_screen.dart # Main dashboard with chart
+│   │   ├── add_hobby_screen.dart  # Add/edit hobby form
+│   │   ├── analytics_screen.dart  # Analytics and insights
+│   │   └── settings_screen.dart   # App settings
 │   └── widgets/
-│       └── contribution_chart.dart # GitHub-style contribution chart
+│       ├── contribution_chart.dart # GitHub-style contribution chart
+│       ├── animated_checkbox.dart  # Animated checkbox widget
+│       └── tada_animation.dart     # Celebration animation
 └── pubspec.yaml                  # Dependencies
 ```
 

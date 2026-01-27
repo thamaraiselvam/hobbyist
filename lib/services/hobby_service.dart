@@ -1,66 +1,222 @@
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 import '../models/hobby.dart';
+import '../database/database_helper.dart';
 
 class HobbyService {
-  static const String _storageKey = 'hobbies';
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   Future<List<Hobby>> loadHobbies() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? hobbiesJson = prefs.getString(_storageKey);
+    final db = await _dbHelper.database;
     
-    if (hobbiesJson == null) return [];
-    
-    final List<dynamic> decoded = jsonDecode(hobbiesJson);
-    return decoded.map((json) => Hobby.fromJson(json)).toList();
-  }
+    // Get all hobbies
+    final List<Map<String, dynamic>> hobbiesData = await db.query(
+      'hobbies',
+      orderBy: 'created_at DESC',
+    );
 
-  Future<void> saveHobbies(List<Hobby> hobbies) async {
-    final prefs = await SharedPreferences.getInstance();
-    final String encoded = jsonEncode(hobbies.map((h) => h.toJson()).toList());
-    await prefs.setString(_storageKey, encoded);
+    // Load completions for each hobby
+    List<Hobby> hobbies = [];
+    for (var hobbyData in hobbiesData) {
+      final List<Map<String, dynamic>> completionsData = await db.query(
+        'completions',
+        where: 'hobby_id = ?',
+        whereArgs: [hobbyData['id']],
+      );
+
+      // Build completions map
+      Map<String, HobbyCompletion> completions = {};
+      for (var comp in completionsData) {
+        completions[comp['date']] = HobbyCompletion(
+          completed: comp['completed'] == 1,
+          completedAt: comp['completed_at'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(comp['completed_at'])
+              : null,
+        );
+      }
+
+      hobbies.add(Hobby(
+        id: hobbyData['id'],
+        name: hobbyData['name'],
+        notes: hobbyData['notes'] ?? '',
+        repeatMode: hobbyData['repeat_mode'] ?? 'daily',
+        priority: hobbyData['priority'] ?? 'medium',
+        color: hobbyData['color'],
+        completions: completions,
+        createdAt: hobbyData['created_at'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(hobbyData['created_at'])
+            : null,
+      ));
+    }
+
+    return hobbies;
   }
 
   Future<void> addHobby(Hobby hobby) async {
-    final hobbies = await loadHobbies();
-    hobbies.add(hobby);
-    await saveHobbies(hobbies);
+    final db = await _dbHelper.database;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    // Insert hobby
+    await db.insert(
+      'hobbies',
+      {
+        'id': hobby.id,
+        'name': hobby.name,
+        'notes': hobby.notes,
+        'repeat_mode': hobby.repeatMode,
+        'priority': hobby.priority,
+        'color': hobby.color,
+        'created_at': now,
+        'updated_at': now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    // Insert completions
+    for (var entry in hobby.completions.entries) {
+      await db.insert(
+        'completions',
+        {
+          'hobby_id': hobby.id,
+          'date': entry.key,
+          'completed': entry.value.completed ? 1 : 0,
+          'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
   }
 
   Future<void> updateHobby(Hobby hobby) async {
-    final hobbies = await loadHobbies();
-    final index = hobbies.indexWhere((h) => h.id == hobby.id);
-    if (index != -1) {
-      hobbies[index] = hobby;
-      await saveHobbies(hobbies);
+    final db = await _dbHelper.database;
+
+    // Update hobby
+    await db.update(
+      'hobbies',
+      {
+        'name': hobby.name,
+        'notes': hobby.notes,
+        'repeat_mode': hobby.repeatMode,
+        'priority': hobby.priority,
+        'color': hobby.color,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [hobby.id],
+    );
+
+    // Delete existing completions and re-insert
+    await db.delete(
+      'completions',
+      where: 'hobby_id = ?',
+      whereArgs: [hobby.id],
+    );
+
+    // Insert updated completions
+    for (var entry in hobby.completions.entries) {
+      await db.insert(
+        'completions',
+        {
+          'hobby_id': hobby.id,
+          'date': entry.key,
+          'completed': entry.value.completed ? 1 : 0,
+          'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
   }
 
   Future<void> deleteHobby(String id) async {
-    final hobbies = await loadHobbies();
-    hobbies.removeWhere((h) => h.id == id);
-    await saveHobbies(hobbies);
+    final db = await _dbHelper.database;
+    
+    // Delete hobby (completions will be deleted automatically due to CASCADE)
+    await db.delete(
+      'hobbies',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> clearAllData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_storageKey);
+    await _dbHelper.clearAllData();
   }
 
   Future<void> toggleCompletion(String hobbyId, String date) async {
-    final hobbies = await loadHobbies();
-    final index = hobbies.indexWhere((h) => h.id == hobbyId);
-    
-    if (index != -1) {
-      final hobby = hobbies[index];
-      final completions = Map<String, HobbyCompletion>.from(hobby.completions);
-      final isCompleted = completions[date]?.completed ?? false;
-      completions[date] = HobbyCompletion(
-        completed: !isCompleted,
-        completedAt: !isCompleted ? DateTime.now() : null,
+    final db = await _dbHelper.database;
+
+    // Check if completion exists
+    final List<Map<String, dynamic>> existing = await db.query(
+      'completions',
+      where: 'hobby_id = ? AND date = ?',
+      whereArgs: [hobbyId, date],
+    );
+
+    if (existing.isEmpty) {
+      // Insert new completion
+      await db.insert('completions', {
+        'hobby_id': hobbyId,
+        'date': date,
+        'completed': 1,
+        'completed_at': DateTime.now().millisecondsSinceEpoch,
+      });
+    } else {
+      // Toggle existing completion
+      final isCompleted = existing[0]['completed'] == 1;
+      await db.update(
+        'completions',
+        {
+          'completed': isCompleted ? 0 : 1,
+          'completed_at': isCompleted ? null : DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'hobby_id = ? AND date = ?',
+        whereArgs: [hobbyId, date],
       );
-      hobbies[index] = hobby.copyWith(completions: completions);
-      await saveHobbies(hobbies);
     }
   }
+
+  // Settings methods
+  Future<String?> getSetting(String key) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> result = await db.query(
+      'settings',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+
+    if (result.isEmpty) return null;
+    return result[0]['value'];
+  }
+
+  Future<void> setSetting(String key, String value) async {
+    final db = await _dbHelper.database;
+    await db.insert(
+      'settings',
+      {
+        'key': key,
+        'value': value,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Migration helper - for backward compatibility
+  Future<void> saveHobbies(List<Hobby> hobbies) async {
+    // This method is kept for backward compatibility
+    // but now it uses the new database structure
+    for (var hobby in hobbies) {
+      await addHobby(hobby);
+    }
+  }
+
+  // Reset database - for developer settings
+  Future<void> resetDatabase() async {
+    final db = await _dbHelper.database;
+    
+    // Delete all data
+    await db.delete('hobbies');
+    await db.delete('completions');
+    await db.delete('settings');
+  }
 }
+

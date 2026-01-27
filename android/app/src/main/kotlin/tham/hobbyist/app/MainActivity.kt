@@ -1,4 +1,4 @@
-package com.example.hobby_tracker
+package tham.hobbyist.app
 
 import io.flutter.embedding.android.FlutterActivity
 

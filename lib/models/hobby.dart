@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class Hobby {
   final String id;
   final String name;
@@ -8,6 +6,7 @@ class Hobby {
   final String priority; // low, medium, high
   final int color;
   final Map<String, HobbyCompletion> completions; // date -> completion info
+  final DateTime? createdAt;
 
   Hobby({
     required this.id,
@@ -17,12 +16,20 @@ class Hobby {
     this.priority = 'medium',
     required this.color,
     Map<String, HobbyCompletion>? completions,
+    this.createdAt,
   }) : completions = completions ?? {};
 
   int get currentStreak {
     int streak = 0;
-    final today = DateTime.now();
-    for (int i = 0; i < 365; i++) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // Check if today has any completion (don't break streak for current day)
+    final todayKey = _formatDate(today);
+    bool todayStarted = completions[todayKey]?.completed == true;
+    
+    // Start from yesterday and count backwards
+    for (int i = 1; i < 365; i++) {
       final date = today.subtract(Duration(days: i));
       final dateKey = _formatDate(date);
       if (completions[dateKey]?.completed == true) {
@@ -31,6 +38,12 @@ class Hobby {
         break;
       }
     }
+    
+    // Add today to streak if completed
+    if (todayStarted) {
+      streak++;
+    }
+    
     return streak;
   }
 
@@ -46,6 +59,7 @@ class Hobby {
         'priority': priority,
         'color': color,
         'completions': completions.map((k, v) => MapEntry(k, v.toJson())),
+        'createdAt': createdAt?.toIso8601String(),
       };
 
   factory Hobby.fromJson(Map<String, dynamic> json) => Hobby(
@@ -59,6 +73,9 @@ class Hobby {
               (k, v) => MapEntry(k, HobbyCompletion.fromJson(v)),
             ) ??
             {},
+        createdAt: json['createdAt'] != null
+            ? DateTime.parse(json['createdAt'])
+            : null,
       );
 
   Hobby copyWith({
@@ -68,6 +85,7 @@ class Hobby {
     String? priority,
     int? color,
     Map<String, HobbyCompletion>? completions,
+    DateTime? createdAt,
   }) =>
       Hobby(
         id: id,
@@ -77,6 +95,7 @@ class Hobby {
         priority: priority ?? this.priority,
         color: color ?? this.color,
         completions: completions ?? this.completions,
+        createdAt: createdAt ?? this.createdAt,
       );
 }
 

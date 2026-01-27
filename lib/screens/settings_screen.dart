@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import '../services/hobby_service.dart';
+import 'developer_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback onBack;
   final Function(int) onNavigate;
-  final VoidCallback onLogout;
 
   const SettingsScreen({
     Key? key, 
     required this.onBack,
     required this.onNavigate,
-    required this.onLogout,
   }) : super(key: key);
 
   @override
@@ -20,6 +19,93 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _pushNotificationsEnabled = true;
   bool _completionSoundEnabled = true;
+  final HobbyService _service = HobbyService();
+  String _userName = 'Tham';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+    _loadSettings();
+  }
+
+  Future<void> _loadUserName() async {
+    final name = await _service.getSetting('userName');
+    if (mounted && name != null) {
+      setState(() {
+        _userName = name;
+      });
+    }
+  }
+
+  Future<void> _loadSettings() async {
+    final completionSound = await _service.getSetting('completionSound');
+    final pushNotifications = await _service.getSetting('pushNotifications');
+    
+    if (mounted) {
+      setState(() {
+        _completionSoundEnabled = completionSound != 'false';
+        _pushNotificationsEnabled = pushNotifications != 'false';
+      });
+    }
+  }
+
+  Future<void> _showEditNameDialog() async {
+    final controller = TextEditingController(text: _userName);
+    
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2A2238),
+        title: const Text(
+          'Edit Name',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Enter your name',
+            hintStyle: const TextStyle(color: Colors.white38),
+            enabledBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF6C3FFF)),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF6C3FFF), width: 2),
+            ),
+          ),
+          textCapitalization: TextCapitalization.words,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) {
+                await _service.setSetting('userName', newName);
+                setState(() {
+                  _userName = newName;
+                });
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              }
+            },
+            child: const Text(
+              'Save',
+              style: TextStyle(color: Color(0xFF6C3FFF)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
             _buildPreferencesCard(),
             const SizedBox(height: 32),
-            _buildLogoutButton(),
+            _buildDeveloperSettingsCard(),
             const SizedBox(height: 24),
             const Center(
               child: Text(
@@ -126,52 +212,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAccountCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2238),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: const Color(0xFF8B9BA8),
-            child: const Text(
-              'A',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+    final initial = _userName.isNotEmpty ? _userName[0].toUpperCase() : 'T';
+    
+    return GestureDetector(
+      onTap: _showEditNameDialog,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A2238),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: const Color(0xFF6C3FFF),
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Alex Sterling',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _userName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'alex.sterling@bytemonk.io',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 14,
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Tap to edit name',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const Icon(Icons.chevron_right, color: Colors.white54),
-        ],
+            const Icon(Icons.chevron_right, color: Colors.white54),
+          ],
+        ),
       ),
     );
   }
@@ -190,7 +281,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             iconColor: const Color(0xFF6C3FFF),
             title: 'Push Notifications',
             value: _pushNotificationsEnabled,
-            onChanged: (value) => setState(() => _pushNotificationsEnabled = value),
+            onChanged: (value) {
+              setState(() => _pushNotificationsEnabled = value);
+              _service.setSetting('pushNotifications', value.toString());
+            },
           ),
           const Divider(color: Color(0xFF3D3449), height: 1),
           _buildSwitchTile(
@@ -198,7 +292,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             iconColor: const Color(0xFF8B5CF6),
             title: 'Completion Sound',
             value: _completionSoundEnabled,
-            onChanged: (value) => setState(() => _completionSoundEnabled = value),
+            onChanged: (value) {
+              setState(() => _completionSoundEnabled = value);
+              _service.setSetting('completionSound', value.toString());
+            },
           ),
           const Divider(color: Color(0xFF3D3449), height: 1),
           _buildNavTile(
@@ -293,64 +390,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildLogoutButton() {
+  Widget _buildDeveloperSettingsCard() {
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFFF3B30), width: 2),
+        color: const Color(0xFF2A2238),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: TextButton(
-        onPressed: () async {
-          // Show confirmation dialog
-          final confirmed = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              backgroundColor: const Color(0xFF2A2238),
-              title: const Text(
-                'Clear All Data',
-                style: TextStyle(color: Colors.white),
-              ),
-              content: const Text(
-                'This will delete all your hobbies and start fresh. This action cannot be undone.',
-                style: TextStyle(color: Colors.white70),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFFFF3B30),
-                  ),
-                  child: const Text('Clear Data'),
-                ),
-              ],
+      child: _buildNavTile(
+        icon: Icons.code,
+        iconColor: const Color(0xFFFF6B35),
+        title: 'Developer Settings',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const DeveloperSettingsScreen(),
             ),
           );
-
-          if (confirmed == true) {
-            final service = HobbyService();
-            await service.clearAllData();
-            if (mounted) {
-              widget.onLogout();
-            }
-          }
         },
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
-        child: const Text(
-          'Log Out',
-          style: TextStyle(
-            color: Color(0xFFFF3B30),
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
       ),
     );
   }
