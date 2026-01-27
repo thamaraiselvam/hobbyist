@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add New Hobby Task</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#590df2",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#161022",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">body {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    min-height: max(884px, 100dvh)
+    }
+.backdrop-blur-md {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px)
+    }
+.no-scrollbar::-webkit-scrollbar {
+    display: none
+    }
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none
+    }
+select {
+    appearance: none;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuC-p2wwCfh4am4W_3I2n4qFJqGk3KcU1fL_zGzySLAzqPKQLYm4_XEFOdX6NyyX5fJ_GSRlwURvyf3Ayqdr0ZPfHMJcE_e5FwM2H2CJ_dqDPLgv2FUHBdJAvKmgKr_YFbhf7A_8NzSjWg1ovs3JmlgUxSdi3Nao3ko6NkqnFszSEvy3zqkfumca4zjcNmz5ZpLr-EtMfVCpp1x1fV-qhRqonaZeVXkXm3rFbPPWt5dFGdrARoPs8cH8_prxPQTy2OgtSP0oq2uwl5ex);
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.25em
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen font-display flex items-center justify-center p-0 m-0 overflow-hidden">
+<div class="absolute inset-0 z-0 flex flex-col p-6 opacity-40">
+<div class="flex justify-between items-center mb-8">
+<div class="h-10 w-10 rounded-full bg-primary/20"></div>
+<div class="h-6 w-32 bg-gray-300 dark:bg-gray-700 rounded"></div>
+<div class="h-10 w-10 rounded-full bg-primary/20"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="h-40 rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+<div class="h-40 rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+<div class="h-40 rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+<div class="h-40 rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/40 backdrop-blur-md z-10 flex flex-col justify-end">
+<div class="bg-white dark:bg-[#161022] w-full max-w-md mx-auto rounded-t-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col transition-all duration-300">
+<div class="flex flex-col items-center pt-3 pb-1">
+<div class="h-1.5 w-12 rounded-full bg-gray-200 dark:bg-[#433168]"></div>
+</div>
+<div class="px-4 py-4">
+<h4 class="text-gray-400 dark:text-[#a490cb] text-xs font-bold leading-normal tracking-[0.2em] text-center uppercase">New Hobby Task</h4>
+</div>
+<div class="px-6 pb-10 space-y-4">
+<div>
+<input class="form-input w-full border-none bg-gray-50 dark:bg-[#221834] rounded-2xl h-16 px-6 text-lg font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#a490cb] focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Hobby Name (e.g., Exercise)" type="text"/>
+</div>
+<div>
+<textarea class="form-textarea w-full border-none bg-gray-50 dark:bg-[#221834] rounded-2xl p-6 text-base font-normal text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#a490cb] focus:ring-2 focus:ring-primary/50 transition-all resize-none min-h-[140px]" placeholder="Add details or notes"></textarea>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="relative">
+<select class="form-select w-full border-none bg-gray-50 dark:bg-[#221834] rounded-xl h-14 pl-4 pr-10 text-sm font-medium text-gray-700 dark:text-[#a490cb] focus:ring-2 focus:ring-primary/50 transition-all">
+<option disabled="" selected="" value="">Repeat Mode</option>
+<option>Daily</option>
+<option>Weekdays</option>
+<option>Weekly</option>
+<option>Monthly</option>
+</select>
+</div>
+<div class="relative">
+<select class="form-select w-full border-none bg-gray-50 dark:bg-[#221834] rounded-xl h-14 pl-4 pr-10 text-sm font-medium text-gray-700 dark:text-[#a490cb] focus:ring-2 focus:ring-primary/50 transition-all">
+<option disabled="" selected="" value="">Priority</option>
+<option>None</option>
+<option>Low (Green)</option>
+<option>Medium (Yellow)</option>
+<option>High (Red)</option>
+</select>
+</div>
+</div>
+<div class="pt-6">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-primary/20 transition-transform active:scale-[0.98]">
+<span>Create</span>
+</button>
+<button class="w-full mt-3 text-gray-400 dark:text-[#a490cb] font-medium py-2 text-sm tracking-wide">
+                        Cancel
+                    </button>
+</div>
+</div>
+<div class="h-8 bg-white dark:bg-[#161022]"></div>
+</div>
+</div>
+
+</body></html>

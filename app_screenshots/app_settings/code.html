@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>App Settings - Hobby Tracker</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Noto+Sans:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#590df2",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#161022",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white transition-colors duration-300">
+<div class="relative flex h-auto min-h-screen w-full flex-col max-w-[430px] mx-auto overflow-x-hidden border-x border-slate-200 dark:border-slate-800">
+<!-- TopAppBar -->
+<div class="sticky top-0 z-10 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md p-4 pb-2 justify-between">
+<div class="text-slate-900 dark:text-white flex size-10 shrink-0 items-center justify-center cursor-pointer">
+<span class="material-symbols-outlined" data-icon="arrow_back_ios">arrow_back_ios</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Settings</h2>
+</div>
+<div class="flex flex-col flex-1 px-4 py-6">
+<!-- Account Section -->
+<h3 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest px-2 pb-4">Account</h3>
+<!-- ListItem: Profile -->
+<div class="flex items-center gap-4 bg-white dark:bg-slate-900/40 rounded-xl px-4 min-h-[72px] py-3 justify-between shadow-sm border border-slate-100 dark:border-slate-800/50 mb-6">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14 border-2 border-primary/20" data-alt="Minimalist user profile avatar circle" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDZ4nrae-2sWYCOfSnCpRWchdC0GCdYojRDCcheOpIpO6kvxkBNxNtzBN5DXQWkSZWycT1tTvKXw7fOoNIl2ltO05gc8SPT0tTyCMdxuJFR8QkqjTaVxTJZQhQuxhkI5sPFt65tioQUguhh8TfO96Th3PuwpKrEph96E32lMgzQTC2cCo8LFaU74B1M7BOg9JobZ9hZfi0tY8viO7Jb-b_i_jMGOURPVEDMHd6LIAxpTRgm7k17vf3NsaFO86LhFIFl-alO3BTea_7t");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-tight line-clamp-1">Alex Sterling</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">alex.sterling@bytemonk.io</p>
+</div>
+</div>
+<div class="shrink-0">
+<div class="text-slate-400 flex size-7 items-center justify-center" data-icon="chevron_right">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Preferences Section -->
+<h3 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest px-2 pb-4 pt-2">Preferences</h3>
+<div class="bg-white dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800/50 shadow-sm overflow-hidden mb-6">
+<!-- ListItem: Notifications -->
+<div class="flex items-center gap-4 px-4 min-h-14 justify-between border-b border-slate-50 dark:border-slate-800/30">
+<div class="flex items-center gap-3">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-9" data-icon="notifications">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</div>
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal flex-1">Notifications</p>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[28px] w-[48px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-800 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary transition-all duration-200">
+<div class="h-full aspect-square rounded-full bg-white shadow-md"></div>
+<input checked="" class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- ListItem: Dark Mode -->
+<div class="flex items-center gap-4 px-4 min-h-14 justify-between border-b border-slate-50 dark:border-slate-800/30">
+<div class="flex items-center gap-3">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-9" data-icon="dark_mode">
+<span class="material-symbols-outlined text-[20px]">dark_mode</span>
+</div>
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal flex-1">Dark Mode</p>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[28px] w-[48px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-800 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary transition-all duration-200">
+<div class="h-full aspect-square rounded-full bg-white shadow-md"></div>
+<input checked="" class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- ListItem: Privacy -->
+<div class="flex items-center gap-4 px-4 min-h-14 justify-between">
+<div class="flex items-center gap-3">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-9" data-icon="lock">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+</div>
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal flex-1">Privacy &amp; Security</p>
+</div>
+<div class="shrink-0">
+<div class="text-slate-400 flex size-7 items-center justify-center">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Analytics Section -->
+<h3 class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest px-2 pb-4 pt-2">Analytics</h3>
+<div class="bg-white dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800/50 shadow-sm overflow-hidden mb-8">
+<div class="flex items-center gap-4 px-4 min-h-14 justify-between">
+<div class="flex items-center gap-3">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-9" data-icon="analytics">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+</div>
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal flex-1">Public Progress Profile</p>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[28px] w-[48px] cursor-pointer items-center rounded-full border-none bg-slate-200 dark:bg-slate-800 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary transition-all duration-200">
+<div class="h-full aspect-square rounded-full bg-white shadow-md"></div>
+<input class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+</div>
+<!-- Danger Zone -->
+<button class="w-full py-4 text-rose-500 font-semibold text-base border border-rose-500/20 rounded-xl bg-rose-500/5 hover:bg-rose-500/10 transition-colors">
+                Log Out
+            </button>
+<p class="text-center text-slate-400 dark:text-slate-600 text-xs mt-8 mb-4">Bytemonk v2.4.0 — Made for focus</p>
+</div>
+<!-- Bottom Navigation Bar (Minimalist) -->
+<div class="sticky bottom-0 w-full bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center">
+<div class="flex flex-col items-center gap-1 opacity-40">
+<span class="material-symbols-outlined text-[24px]">task_alt</span>
+</div>
+<div class="flex flex-col items-center gap-1 opacity-40">
+<span class="material-symbols-outlined text-[24px]">leaderboard</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+<div class="w-1 h-1 bg-primary rounded-full"></div>
+</div>
+</div>
+</div>
+</body></html>
