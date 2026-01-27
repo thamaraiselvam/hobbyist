@@ -31,10 +31,10 @@ flutter:
     - assets/splash_screen_full.png
 
 flutter_native_splash:
-  color: "#0b0a0f"
+  color: "#1b162a"
   image: assets/splash_screen_full.png
   android: true
   ios: true
   android_12:
-    color: "#0b0a0f"
+    color: "#1b162a"
     image: assets/splash_screen_full.png

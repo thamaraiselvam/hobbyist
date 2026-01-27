@@ -821,11 +821,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     List<Widget> cards = [];
     
     if (dailyHobbies.isNotEmpty) {
-      int totalCompleted = 0;
-      int totalAvailable = 0;
-      
+      // Find the earliest creation date across all daily hobbies
+      DateTime? earliestDate;
       for (var hobby in dailyHobbies) {
-        // Use createdAt if available, otherwise find earliest completion
         DateTime? startDate = hobby.createdAt;
         if (startDate == null) {
           for (var dateKey in hobby.completions.keys) {
@@ -841,29 +839,38 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         }
         
         if (startDate != null) {
-          final now = DateTime.now();
-          final today = DateTime(now.year, now.month, now.day);
-          final start = DateTime(startDate.year, startDate.month, startDate.day);
-          final daysSinceCreation = today.difference(start).inDays + 1;
-          
-          // Count completed days for this hobby
+          if (earliestDate == null || startDate.isBefore(earliestDate)) {
+            earliestDate = startDate;
+          }
+        }
+      }
+      
+      int totalCompleted = 0;
+      int totalExpected = 0;
+      
+      if (earliestDate != null) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final start = DateTime(earliestDate.year, earliestDate.month, earliestDate.day);
+        // Calculate days from earliest creation date to now
+        final daysSinceCreation = today.difference(start).inDays + 1;
+        totalExpected = daysSinceCreation;
+        
+        // Count total completed days across all daily hobbies
+        for (var hobby in dailyHobbies) {
           int completedDays = hobby.completions.values.where((c) => c.completed).length;
-          
-          totalAvailable += daysSinceCreation;
           totalCompleted += completedDays;
         }
       }
       
-      int percentage = totalAvailable > 0 ? ((totalCompleted / totalAvailable) * 100).toInt() : 0;
-      cards.add(_buildRoutineMiniCard('DAILY ROUTINE', '$percentage%', '$totalCompleted of $totalAvailable tasks'));
+      int percentage = totalExpected > 0 ? ((totalCompleted / totalExpected) * 100).toInt() : 0;
+      cards.add(_buildRoutineMiniCard('DAILY ROUTINE', '$percentage%', '$totalCompleted of $totalExpected tasks'));
     }
     
     if (weeklyHobbies.isNotEmpty) {
-      int totalCompleted = 0;
-      int totalAvailable = 0;
-      
+      // Find the earliest creation date across all weekly hobbies
+      DateTime? earliestDate;
       for (var hobby in weeklyHobbies) {
-        // Use createdAt if available, otherwise find earliest completion
         DateTime? startDate = hobby.createdAt;
         if (startDate == null) {
           for (var dateKey in hobby.completions.keys) {
@@ -879,17 +886,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         }
         
         if (startDate != null) {
-          final now = DateTime.now();
-          final start = DateTime(startDate.year, startDate.month, startDate.day);
-          final weeksSinceCreation = ((now.difference(start).inDays) / 7).ceil();
-          
-          // Count unique weeks where task was completed
+          if (earliestDate == null || startDate.isBefore(earliestDate)) {
+            earliestDate = startDate;
+          }
+        }
+      }
+      
+      int totalCompleted = 0;
+      int totalExpected = 0;
+      
+      if (earliestDate != null) {
+        final now = DateTime.now();
+        final start = DateTime(earliestDate.year, earliestDate.month, earliestDate.day);
+        // Calculate weeks from earliest creation date to now
+        final weeksSinceCreation = ((now.difference(start).inDays) / 7).ceil();
+        totalExpected = weeksSinceCreation;
+        
+        // Count total completed weeks (unique week completions across all hobbies)
+        for (var hobby in weeklyHobbies) {
           Set<String> completedWeeks = {};
           for (var entry in hobby.completions.entries) {
             if (entry.value.completed) {
               try {
                 final date = DateTime.parse(entry.key);
-                // Get Monday of the week for this date
                 final monday = date.subtract(Duration(days: date.weekday - 1));
                 final weekKey = DateFormat('yyyy-MM-dd').format(monday);
                 completedWeeks.add(weekKey);
@@ -898,22 +917,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               }
             }
           }
-          
-          totalAvailable += weeksSinceCreation;
           totalCompleted += completedWeeks.length;
         }
       }
       
-      int percentage = totalAvailable > 0 ? ((totalCompleted / totalAvailable) * 100).toInt() : 0;
-      cards.add(_buildRoutineMiniCard('WEEKLY ROUTINE', '$percentage%', '$totalCompleted of $totalAvailable tasks'));
+      int percentage = totalExpected > 0 ? ((totalCompleted / totalExpected) * 100).toInt() : 0;
+      cards.add(_buildRoutineMiniCard('WEEKLY ROUTINE', '$percentage%', '$totalCompleted of $totalExpected tasks'));
     }
     
     if (monthlyHobbies.isNotEmpty) {
-      int totalCompleted = 0;
-      int totalAvailable = 0;
-      
+      // Find the earliest creation date across all monthly hobbies
+      DateTime? earliestDate;
       for (var hobby in monthlyHobbies) {
-        // Use createdAt if available, otherwise find earliest completion
         DateTime? startDate = hobby.createdAt;
         if (startDate == null) {
           for (var dateKey in hobby.completions.keys) {
@@ -929,10 +944,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         }
         
         if (startDate != null) {
-          final now = DateTime.now();
-          final monthsSinceCreation = ((now.year - startDate.year) * 12 + (now.month - startDate.month)) + 1;
-          
-          // Count unique months where task was completed
+          if (earliestDate == null || startDate.isBefore(earliestDate)) {
+            earliestDate = startDate;
+          }
+        }
+      }
+      
+      int totalCompleted = 0;
+      int totalExpected = 0;
+      
+      if (earliestDate != null) {
+        final now = DateTime.now();
+        // Calculate months from earliest creation date to now
+        final monthsSinceCreation = ((now.year - earliestDate.year) * 12 + (now.month - earliestDate.month)) + 1;
+        totalExpected = monthsSinceCreation;
+        
+        // Count total completed months (unique month completions across all hobbies)
+        for (var hobby in monthlyHobbies) {
           Set<String> completedMonths = {};
           for (var entry in hobby.completions.entries) {
             if (entry.value.completed) {
@@ -945,14 +973,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               }
             }
           }
-          
-          totalAvailable += monthsSinceCreation;
           totalCompleted += completedMonths.length;
         }
       }
       
-      int percentage = totalAvailable > 0 ? ((totalCompleted / totalAvailable) * 100).toInt() : 0;
-      cards.add(_buildRoutineMiniCard('MONTHLY ROUTINE', '$percentage%', '$totalCompleted of $totalAvailable tasks'));
+      int percentage = totalExpected > 0 ? ((totalCompleted / totalExpected) * 100).toInt() : 0;
+      cards.add(_buildRoutineMiniCard('MONTHLY ROUTINE', '$percentage%', '$totalCompleted of $totalExpected tasks'));
     }
     
     if (cards.isEmpty) {
