@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'daily_tasks_screen.dart';
 import '../services/hobby_service.dart';
 import '../services/analytics_service.dart';
+import '../services/auth_service.dart';
 
 class NameInputScreen extends StatefulWidget {
   const NameInputScreen({super.key});
@@ -13,6 +14,7 @@ class NameInputScreen extends StatefulWidget {
 
 class _NameInputScreenState extends State<NameInputScreen> {
   final TextEditingController _nameController = TextEditingController();
+  final AuthService _authService = AuthService();
   bool _isButtonEnabled = false;
 
   @override
@@ -38,12 +40,8 @@ class _NameInputScreenState extends State<NameInputScreen> {
             : word[0].toUpperCase() + word.substring(1).toLowerCase())
         .join(' ');
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasCompletedOnboarding', true);
-
-    // Save name to SQLite
-    final service = HobbyService();
-    await service.setSetting('userName', name);
+    // Save as offline user
+    await _authService.saveOfflineUser(name);
 
     // Track onboarding completion
     await AnalyticsService().logOnboardingComplete();

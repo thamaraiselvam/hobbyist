@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
+import '../services/notification_service.dart';
 import '../utils/default_hobbies.dart';
 
 class AddHobbyScreen extends StatefulWidget {
@@ -17,11 +18,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   final _nameController = TextEditingController();
   final _notesController = TextEditingController();
   final HobbyService _service = HobbyService();
+  final NotificationService _notificationService = NotificationService();
 
   String _repeatMode = 'weekly';
   String _priority = 'medium';
   TimeOfDay _notificationTime = const TimeOfDay(hour: 8, minute: 0);
-  bool _notifyEnabled = true;
+  bool _notifyEnabled = false; // Default OFF
   
   final List<String> _weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   int _selectedWeekDay = 0; // Single day for weekly (0=Monday)
@@ -39,6 +41,15 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
       _repeatMode = widget.hobby!.repeatMode;
       _priority = widget.hobby!.priority;
 
+      // Load custom day if exists
+      if (widget.hobby!.customDay != null) {
+        if (widget.hobby!.repeatMode == 'weekly') {
+          _selectedWeekDay = widget.hobby!.customDay!;
+        } else if (widget.hobby!.repeatMode == 'monthly') {
+          _selectedMonthDay = widget.hobby!.customDay!;
+        }
+      }
+
       // Load notification time if exists
       if (widget.hobby!.reminderTime != null &&
           widget.hobby!.reminderTime!.isNotEmpty) {
@@ -48,6 +59,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             hour: int.tryParse(timeParts[0]) ?? 8,
             minute: int.tryParse(timeParts[1]) ?? 0,
           );
+          _notifyEnabled = true;
         }
       }
     }
@@ -67,6 +79,14 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
           ? '${_notificationTime.hour.toString().padLeft(2, '0')}:${_notificationTime.minute.toString().padLeft(2, '0')}'
           : '';
 
+      // Get custom day based on repeat mode
+      int? customDay;
+      if (_repeatMode == 'weekly') {
+        customDay = _selectedWeekDay;
+      } else if (_repeatMode == 'monthly') {
+        customDay = _selectedMonthDay;
+      }
+
       if (widget.hobby != null) {
         // Update existing hobby
         final updatedHobby = widget.hobby!.copyWith(
@@ -75,6 +95,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
           repeatMode: _repeatMode,
           priority: _priority,
           reminderTime: notificationTimeString,
+          customDay: customDay,
         );
         await _service.updateHobby(updatedHobby);
       } else {
@@ -87,11 +108,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
           priority: _priority,
           color: const Color(0xFF590df2).value,
           reminderTime: notificationTimeString,
+          customDay: customDay,
         );
         await _service.addHobby(hobby);
       }
 
-      if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context, true);
     }
   }
 
@@ -507,7 +529,31 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                       ),
                                       Switch(
                                         value: _notifyEnabled,
-                                        onChanged: (value) {
+                                        onChanged: (value) async {
+                                          if (value) {
+                                            // Request permission when turning on for the first time
+                                            // Check if already granted
+                                            final alreadyEnabled = await _notificationService.areNotificationsEnabled();
+                                            
+                                            if (!alreadyEnabled) {
+                                              // Request permissions
+                                              final granted = await _notificationService.requestPermissions();
+                                              
+                                              if (!granted) {
+                                                // Permission denied, show message
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text('Notification permission denied. Please enable it in settings.'),
+                                                      backgroundColor: Colors.orange,
+                                                    ),
+                                                  );
+                                                }
+                                                return; // Don't enable toggle
+                                              }
+                                            }
+                                          }
+                                          
                                           setState(() {
                                             _notifyEnabled = value;
                                           });
@@ -725,7 +771,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                 label,
                 style: TextStyle(
                   color: isSelected ? Colors.white : const Color(0xFFa490cb),
-                  fontSize: 10,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
               ),

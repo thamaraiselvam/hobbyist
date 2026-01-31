@@ -73,12 +73,12 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
             height: widget.size,
             decoration: BoxDecoration(
               color: widget.isChecked
-                  ? const Color(0xFF6C3FFF)
+                  ? widget.color
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              shape: BoxShape.circle,
               border: Border.all(
                 color: widget.isChecked
-                    ? const Color(0xFF6C3FFF)
+                    ? widget.color
                     : const Color(0xFF4A4458),
                 width: 2,
               ),

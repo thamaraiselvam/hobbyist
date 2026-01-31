@@ -293,7 +293,7 @@ class NotificationService {
     await _scheduleNotification(hobby, scheduledDate, DateTimeComponents.time);
   }
 
-  /// Schedule weekly recurring notification (every Monday)
+  /// Schedule weekly recurring notification (on selected day)
   Future<void> _scheduleWeeklyNotification(
     Hobby hobby,
     int hour,
@@ -301,7 +301,13 @@ class NotificationService {
   ) async {
     final now = tz.TZDateTime.now(tz.local);
 
-    // Find next Monday
+    // Get selected weekday (0=Monday, 6=Sunday), default to Monday if not set
+    final selectedWeekday = hobby.customDay ?? 0;
+    
+    // Convert to DateTime weekday (1=Monday, 7=Sunday)
+    final targetWeekday = selectedWeekday + 1;
+
+    // Find next occurrence of selected weekday
     var scheduledDate = tz.TZDateTime(
       tz.local,
       now.year,
@@ -311,20 +317,21 @@ class NotificationService {
       minute,
     );
 
-    // Calculate days until next Monday (1 = Monday, 7 = Sunday)
-    int daysUntilMonday = (DateTime.monday - scheduledDate.weekday) % 7;
-    if (daysUntilMonday == 0 && scheduledDate.isBefore(now)) {
-      daysUntilMonday =
-          7; // If today is Monday but time passed, schedule for next Monday
+    // Calculate days until target weekday
+    int daysUntilTarget = (targetWeekday - scheduledDate.weekday) % 7;
+    if (daysUntilTarget == 0 && scheduledDate.isBefore(now)) {
+      daysUntilTarget = 7; // If today is the day but time passed, schedule for next week
     }
 
-    scheduledDate = scheduledDate.add(Duration(days: daysUntilMonday));
+    scheduledDate = scheduledDate.add(Duration(days: daysUntilTarget));
+
+    print('📅 Weekly notification scheduled for weekday $targetWeekday (${_getWeekdayName(targetWeekday)}) at $scheduledDate');
 
     await _scheduleNotification(
         hobby, scheduledDate, DateTimeComponents.dayOfWeekAndTime);
   }
 
-  /// Schedule monthly recurring notification (first day of month)
+  /// Schedule monthly recurring notification (on selected day of month)
   Future<void> _scheduleMonthlyNotification(
     Hobby hobby,
     int hour,
@@ -332,28 +339,32 @@ class NotificationService {
   ) async {
     final now = tz.TZDateTime.now(tz.local);
 
-    // Schedule for first day of next month
+    // Get selected day of month (1-31), default to 1st if not set
+    final selectedDay = hobby.customDay ?? 1;
+
+    // Schedule for selected day of current or next month
     var scheduledDate = tz.TZDateTime(
       tz.local,
       now.year,
       now.month,
-      1, // First day of month
+      selectedDay,
       hour,
       minute,
     );
 
-    // If current date is 1st and time hasn't passed yet, use current month
-    // Otherwise, schedule for next month
-    if (scheduledDate.isBefore(now) || now.day > 1) {
-      // Move to first day of next month
+    // If the scheduled time is in the past or invalid day for current month, schedule for next month
+    if (scheduledDate.isBefore(now) || scheduledDate.day != selectedDay) {
+      // Move to next month
       if (now.month == 12) {
         scheduledDate =
-            tz.TZDateTime(tz.local, now.year + 1, 1, 1, hour, minute);
+            tz.TZDateTime(tz.local, now.year + 1, 1, selectedDay, hour, minute);
       } else {
         scheduledDate =
-            tz.TZDateTime(tz.local, now.year, now.month + 1, 1, hour, minute);
+            tz.TZDateTime(tz.local, now.year, now.month + 1, selectedDay, hour, minute);
       }
     }
+
+    print('📅 Monthly notification scheduled for day $selectedDay at $scheduledDate');
 
     await _scheduleNotification(
         hobby, scheduledDate, DateTimeComponents.dayOfMonthAndTime);
@@ -503,6 +514,12 @@ class NotificationService {
       print('❌ Error opening database: $e');
       rethrow;
     }
+  }
+
+  /// Helper function to get weekday name
+  String _getWeekdayName(int weekday) {
+    const weekdays = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return weekdays[weekday];
   }
 
   /// Handle notification tap

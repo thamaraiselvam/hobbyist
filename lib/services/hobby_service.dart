@@ -56,6 +56,7 @@ class HobbyService {
             ? DateTime.fromMillisecondsSinceEpoch(hobbyData['created_at'])
             : null,
         reminderTime: hobbyData['reminder_time'],
+        customDay: hobbyData['custom_day'],
       ));
     }
 
@@ -82,6 +83,7 @@ class HobbyService {
         'priority': hobby.priority,
         'color': hobby.color,
         'reminder_time': hobby.reminderTime,
+        'custom_day': hobby.customDay,
         'created_at': now,
         'updated_at': now,
       },
@@ -140,6 +142,7 @@ class HobbyService {
         'priority': hobby.priority,
         'color': hobby.color,
         'reminder_time': hobby.reminderTime,
+        'custom_day': hobby.customDay,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
       where: 'id = ?',

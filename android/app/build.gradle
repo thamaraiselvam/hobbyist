@@ -48,7 +48,7 @@ android {
 
     defaultConfig {
         applicationId "tham.hobbyist.app"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

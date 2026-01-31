@@ -1,0 +1,56 @@
+# 🔐 Your SHA-1 Certificate Fingerprint
+
+## Copy this SHA-1 and add it to Firebase Console:
+
+SHA-1: 46:9E:B5:ED:AB:9E:CB:22:56:04:E3:D8:D3:88:E4:2E:82:38:B6:4E
+
+## Also add SHA-256 (recommended):
+
+SHA-256: 56:81:E4:06:2E:35:F0:D7:79:EE:96:C5:A7:5F:34:86:48:52:3E:E4:1F:CF:C4:3D:2A:47:28:61:D6:AA:78:9B
+
+---
+
+## 📍 Where to Add This:
+
+1. Go to: https://console.firebase.google.com
+2. Select your Hobbyist project
+3. Click ⚙️ (gear icon) → Project settings
+4. Scroll to "Your apps" section
+5. Click on your Android app (tham.hobbyist.app)
+6. Scroll to "SHA certificate fingerprints"
+7. Click "Add fingerprint"
+8. Paste the SHA-1 above
+9. Click "Save"
+10. Click "Add fingerprint" again and add SHA-256 too
+
+---
+
+## 📥 After Adding:
+
+1. Download the updated `google-services.json` file
+2. Replace it in your project: `android/app/google-services.json`
+3. Run: `flutter clean && flutter pub get`
+4. Run: `flutter run`
+5. Test Google Sign-In! 🚀
+
+---
+
+## ⚠️ Important Notes:
+
+- This SHA-1 is from your DEBUG keystore
+- It's stored at: ~/.android/debug.keystore
+- You can ALWAYS regenerate this fingerprint using the keytool command
+- For production apps, you'll create a RELEASE keystore with a different SHA-1
+
+---
+
+## 💾 Do You Need to Save This?
+
+**NO!** You don't need to save this file. 
+
+Why? Because:
+- The keystore file (~/.android/debug.keystore) already exists on your computer
+- You can always get the SHA-1 again using: 
+  `keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore -storepass android`
+
+However, you SHOULD backup your RELEASE keystore (for production) when you create one!

@@ -21,16 +21,67 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
   final HobbyService _service = HobbyService();
   final SoundService _soundService = SoundService();
   final QuoteService _quoteService = QuoteService();
+  final ScrollController _dayScrollController = ScrollController();
   List<Hobby> _hobbies = [];
   bool _loading = true;
   int _selectedIndex = 0;
   String _currentQuote = '';
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     _loadQuote();
     _loadHobbies();
+    // Animate from start to today after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _animateToToday();
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _dayScrollController.dispose();
+    super.dispose();
+  }
+
+  void _animateToToday() async {
+    if (!mounted || !_dayScrollController.hasClients) return;
+    
+    try {
+      // Calculate centered position for today
+      final screenWidth = MediaQuery.of(context).size.width;
+      final itemWidth = 56.0; // 48px pill + 8px margin
+      final pillWidth = 48.0; // Actual pill width
+      final todayIndex = 60; // Index 60 = today
+      final listPadding = 16.0; // ListView horizontal padding
+      
+      // Position of today's item (from start of list)
+      final todayPosition = todayIndex * itemWidth;
+      
+      // Center calculation: 
+      // We want the pill center at screen center
+      // Scroll position to get left edge of pill to center: todayPosition - (screenWidth / 2)
+      // Then move back by half the pill width: + (pillWidth / 2)
+      // Account for the list padding: + listPadding
+      final centeredPosition = todayPosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
+      
+      final maxScroll = _dayScrollController.position.maxScrollExtent;
+      final targetPosition = centeredPosition.clamp(0.0, maxScroll);
+      
+      // Animate to today
+      await _dayScrollController.animateTo(
+        targetPosition,
+        duration: const Duration(milliseconds: 1000),
+        curve: Curves.easeInOutCubic,
+      );
+    } catch (e) {
+      print('Animation error: $e');
+    }
   }
 
   Future<void> _loadQuote() async {
@@ -49,13 +100,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
   }
 
   Future<void> _toggleToday(Hobby hobby) async {
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final isCompleted = hobby.completions[today]?.completed ?? false;
+    final selectedDay = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    final isCompleted = hobby.completions[selectedDay]?.completed ?? false;
 
     // Update UI immediately
     final updatedCompletions =
         Map<String, HobbyCompletion>.from(hobby.completions);
-    updatedCompletions[today] = HobbyCompletion(
+    updatedCompletions[selectedDay] = HobbyCompletion(
       completed: !isCompleted,
       completedAt: !isCompleted ? DateTime.now() : null,
     );
@@ -80,7 +131,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
   }
 
   int get completedToday {
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
         .where((h) => h.completions[today]?.completed == true)
         .length;
@@ -92,14 +143,14 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
   }
 
   List<Hobby> get inProgressTasks {
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
         .where((h) => h.completions[today]?.completed != true)
         .toList();
   }
 
   List<Hobby> get completedTasks {
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
         .where((h) => h.completions[today]?.completed == true)
         .toList();
@@ -133,6 +184,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 8),
+                  _buildDaySelector(),
+                  const SizedBox(height: 16),
                   _buildOverallProgress(),
                   _buildQuoteSection(),
                   Expanded(
@@ -151,9 +204,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
-                                    'In Progress',
-                                    style: TextStyle(
+                                  Text(
+                                    _isToday() ? 'In Progress' : 'Not Completed',
+                                    style: const TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
@@ -175,9 +228,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                               const SizedBox(height: 32),
                             ],
                             if (completedTasks.isNotEmpty) ...[
-                              const Text(
-                                'Completed Today',
-                                style: TextStyle(
+                              Text(
+                                _isToday() ? 'Completed Today' : 'Completed',
+                                style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -314,7 +367,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  DateFormat('EEEE, MMM dd').format(DateTime.now()),
+                  DateFormat('EEEE, MMM dd').format(_selectedDate),
                   style: const TextStyle(
                     color: Colors.white38,
                     fontSize: 14,
@@ -325,37 +378,111 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
             ),
           ),
           if (globalStreak > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2A2238),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.local_fire_department,
-                    color: todayCompleted
-                        ? const Color(0xFFFF6B35)
-                        : Colors.grey.withOpacity(0.5),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$globalStreak',
-                    style: TextStyle(
+            GestureDetector(
+              onTap: () {
+                setState(() => _selectedIndex = 1); // Navigate to analytics
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2A2238),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.local_fire_department,
                       color: todayCompleted
-                          ? Colors.white
+                          ? const Color(0xFFFF6B35)
                           : Colors.grey.withOpacity(0.5),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$globalStreak',
+                      style: TextStyle(
+                        color: todayCompleted
+                            ? Colors.white
+                            : Colors.grey.withOpacity(0.5),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDaySelector() {
+    return Container(
+      height: 60,
+      child: ListView.builder(
+        controller: _dayScrollController,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: 91, // 60 days back + today + 30 days forward
+        physics: const BouncingScrollPhysics(),
+        cacheExtent: 500, // Cache items for smooth scrolling
+        itemBuilder: (context, index) {
+          // Calculate date: index 0 = 60 days ago, index 60 = today, index 90 = 30 days forward
+          final date = DateTime.now().subtract(Duration(days: 60 - index));
+          final dateStr = DateFormat('yyyy-MM-dd').format(date);
+          final selectedStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+          final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+          
+          final isSelected = dateStr == selectedStr;
+          final isToday = dateStr == todayStr;
+          
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedDate = date;
+              });
+            },
+            child: Container(
+              width: 48,
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? const Color(0xFF6C3FFF) 
+                    : const Color(0xFF2A2238),
+                borderRadius: BorderRadius.circular(24),
+                border: isToday && !isSelected
+                    ? Border.all(color: const Color(0xFF6C3FFF), width: 1.5)
+                    : null,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    DateFormat('EEE').format(date),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: isSelected ? Colors.white : Colors.white54,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    DateFormat('d').format(date),
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.white70,
                     ),
                   ),
                 ],
               ),
             ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -446,13 +573,25 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B2E),
+        color: const Color(0xFF161616),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x0DFFFFFF)),
       ),
       child: Row(
         children: [
+          // Checkbox with priority color
+          Builder(
+            builder: (context) => AnimatedCheckbox(
+              isChecked: isCompleted,
+              onTap: () => _toggleToday(hobby),
+              size: 28,
+              color: _getPriorityColor(hobby.priority),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Name and notes
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,58 +600,62 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                   hobby.name,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                     decoration: isCompleted ? TextDecoration.lineThrough : null,
                     decorationColor: Colors.white38,
                     decorationThickness: 1.5,
                   ),
                 ),
-                if (hobby.notes.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    hobby.notes,
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      decoration:
-                          isCompleted ? TextDecoration.lineThrough : null,
-                      decorationColor: Colors.white38,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 2),
+                Text(
+                  hobby.notes.isNotEmpty ? hobby.notes : _getFrequencyText(hobby.repeatMode),
+                  style: TextStyle(
+                    color: const Color(0xFF71717A),
+                    fontSize: 13,
+                    decoration:
+                        isCompleted ? TextDecoration.lineThrough : null,
+                    decorationColor: Colors.white38,
                   ),
-                ],
-                if (hobby.currentStreak > 0) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.local_fire_department,
-                          color: Color(0xFFFF6B35), size: 16),
-                      const SizedBox(width: 5),
-                      Text(
-                        '${hobby.currentStreak} day streak',
-                        style: const TextStyle(
-                          color: Color(0xFFFF6B35),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 16),
-          Builder(
-            builder: (context) => AnimatedCheckbox(
-              isChecked: isCompleted,
-              onTap: () => _toggleToday(hobby),
-              size: 32,
+          const SizedBox(width: 12),
+          // Streak badge
+          if (hobby.currentStreak > 0) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF6B35).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${hobby.currentStreak}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFFF6B35),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.local_fire_department,
+                    color: Color(0xFFFF6B35),
+                    size: 14,
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
           const SizedBox(width: 4),
           PopupMenuButton(
             padding: EdgeInsets.zero,
@@ -659,5 +802,56 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
         ),
       ),
     );
+  }
+
+  IconData _getIconForHobby(Hobby hobby) {
+    final name = hobby.name.toLowerCase();
+    if (name.contains('paint') || name.contains('draw') || name.contains('art')) {
+      return Icons.palette;
+    } else if (name.contains('piano') || name.contains('music') || name.contains('guitar')) {
+      return Icons.piano;
+    } else if (name.contains('read') || name.contains('book')) {
+      return Icons.menu_book;
+    } else if (name.contains('exercise') || name.contains('workout') || name.contains('yoga')) {
+      return Icons.fitness_center;
+    } else if (name.contains('code') || name.contains('program')) {
+      return Icons.code;
+    } else if (name.contains('write') || name.contains('journal')) {
+      return Icons.edit;
+    }
+    return Icons.check_circle;
+  }
+
+  String _getFrequencyText(String repeatMode) {
+    switch (repeatMode) {
+      case 'Daily':
+        return 'Every day';
+      case 'Weekly':
+        return '1 time a week';
+      case 'Monthly':
+        return 'Monthly goal';
+      default:
+        return 'Daily goal';
+    }
+  }
+
+  bool _isToday() {
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final selected = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    return today == selected;
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.amber;
+      case 'low':
+        return Colors.green;
+      case 'none':
+      default:
+        return const Color(0xFF6C3FFF); // Default purple
+    }
   }
 }

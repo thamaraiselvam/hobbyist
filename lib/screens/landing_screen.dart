@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/analytics_service.dart';
+import '../services/auth_service.dart';
+import 'daily_tasks_screen.dart';
 
 class LandingScreen extends StatefulWidget {
   final VoidCallback onGetStarted;
@@ -14,11 +16,55 @@ class LandingScreen extends StatefulWidget {
 }
 
 class _LandingScreenState extends State<LandingScreen> {
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
     // Track landing page view
     AnalyticsService().logLandingView();
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final userCredential = await _authService.signInWithGoogle();
+      
+      if (userCredential != null) {
+        // Successfully signed in, navigate to dashboard
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const DailyTasksScreen()),
+          );
+        }
+      } else {
+        // User cancelled sign-in or sign-in failed
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sign in cancelled'),
+              backgroundColor: Color(0xFF6C3FFF),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Sign in error: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sign in failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -40,36 +86,7 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFF590df2).withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.auto_awesome,
-              color: Color(0xFF590df2),
-              size: 28,
-            ),
-          ),
-          Container(
-            width: 48,
-            height: 4,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2A2238),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 48),
-        ],
-      ),
-    );
+    return const SizedBox(height: 24);
   }
 
   Widget _buildTitleSection() {
@@ -208,16 +225,70 @@ class _LandingScreenState extends State<LandingScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         children: [
+          // Horizontal separator line
+          Container(
+            height: 1,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF3D3449),
+                  Color(0xFF6C3FFF),
+                  Color(0xFF3D3449),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Google Sign In Button
           SizedBox(
             width: double.infinity,
-            height: 64,
+            height: 56,
             child: ElevatedButton(
-              onPressed: widget.onGetStarted,
+              onPressed: _isLoading ? null : _handleGoogleSignIn,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF590df2),
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
                 elevation: 8,
-                shadowColor: const Color(0xFF590df2).withOpacity(0.3),
+                shadowColor: Colors.white.withOpacity(0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF590df2)),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.login, size: 20, color: Colors.black87),
+                        SizedBox(width: 10),
+                        Text(
+                          'Continue with Google',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Continue Offline Button
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: OutlinedButton(
+              onPressed: widget.onGetStarted,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF590df2),
+                side: const BorderSide(color: Color(0xFF590df2), width: 2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -225,20 +296,32 @@ class _LandingScreenState extends State<LandingScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
+                  Icon(Icons.cloud_off, size: 20),
+                  SizedBox(width: 10),
                   Text(
-                    'Start Streak',
+                    'Continue Offline',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 24),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          // Bottom note text
+          const Text(
+            'All your data stays private and secure on your device.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF7d6f93),
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
           const SizedBox(height: 16),
+          // Bottom indicator
           Container(
             width: 128,
             height: 8,

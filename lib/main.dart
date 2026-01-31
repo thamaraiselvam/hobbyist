@@ -49,20 +49,10 @@ void main() async {
     print('❌ Error initializing Firebase services: $e');
   }
 
-  // Initialize notification service
+  // Initialize notification service (but don't request permission yet)
   try {
     await NotificationService().initialize();
-    final permissionGranted = await NotificationService().requestPermissions();
-    print('🔔 Notification permissions granted: $permissionGranted');
-    
-    final canSchedule = await NotificationService().canScheduleExactAlarms();
-    print('⏰ Can schedule exact alarms: $canSchedule');
-    
-    final pending = await NotificationService().getPendingNotifications();
-    print('📋 Pending notifications: ${pending.length}');
-    for (var notif in pending) {
-      print('   - ID: ${notif.id}, Title: ${notif.title}, Body: ${notif.body}');
-    }
+    print('🔔 Notification service initialized (permissions will be requested on first use)');
   } catch (e) {
     print('❌ Error initializing notifications: $e');
   }

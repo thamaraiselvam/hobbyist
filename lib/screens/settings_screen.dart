@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/hobby_service.dart';
 import '../services/notification_service.dart';
+import '../services/auth_service.dart';
 import 'developer_settings_screen.dart';
+import 'landing_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -22,18 +24,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _completionSoundEnabled = true;
   final HobbyService _service = HobbyService();
   final NotificationService _notificationService = NotificationService();
+  final AuthService _authService = AuthService();
   String _userName = 'Tham';
+  String? _userEmail;
+  bool _isGoogleSignedIn = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
     _loadSettings();
+    _checkAuthStatus();
+  }
+
+  Future<void> _checkAuthStatus() async {
+    final isGoogleSignedIn = await _authService.isGoogleSignedIn();
+    final email = await _service.getSetting('userEmail');
+    
+    if (mounted) {
+      setState(() {
+        _isGoogleSignedIn = isGoogleSignedIn;
+        _userEmail = email;
+      });
+    }
   }
 
   Future<void> _loadUserName() async {
     final name = await _service.getSetting('userName');
-    if (mounted && name != null) {
+    if (mounted && name != null && name.isNotEmpty) {
       setState(() {
         _userName = name;
       });
@@ -53,12 +71,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showEditNameDialog() async {
+    // Don't allow editing if signed in with Google
+    if (_isGoogleSignedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Name is synced from your Google account'),
+          backgroundColor: Color(0xFF6C3FFF),
+        ),
+      );
+      return;
+    }
+    
     final controller = TextEditingController(text: _userName);
     
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2A2238),
+        backgroundColor: const Color(0xFF221834),
         title: const Text(
           'Edit Name',
           style: TextStyle(color: Colors.white),
@@ -109,54 +138,164 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF221834),
+        title: const Text(
+          'Logout',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Are you sure you want to logout? Your hobbies will remain on this device.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      await _authService.signOut();
+      
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => LandingScreen(
+              onGetStarted: () {
+                Navigator.of(context).pushReplacementNamed('/name-input');
+              },
+            ),
+          ),
+          (route) => false,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1625),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: widget.onBack,
-        ),
-        title: const Text('Settings'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'ACCOUNT',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildAccountCard(),
-            const SizedBox(height: 32),
-            const Text(
-              'PREFERENCES',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildPreferencesCard(),
-            const SizedBox(height: 32),
-            _buildDeveloperSettingsCard(),
-            const SizedBox(height: 24),
-            const Center(
-              child: Text(
-                'Hobbyist v1.0.0 — Made for consistency',
+            // Custom header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+              child: const Text(
+                'Settings',
+                textAlign: TextAlign.left,
                 style: TextStyle(
-                  color: Colors.white38,
-                  fontSize: 14,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'ACCOUNT',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildAccountCard(),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'PREFERENCES',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPreferencesCard(),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'SUPPORT',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSupportCard(),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'ABOUT',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildAboutCard(),
+                    const SizedBox(height: 32),
+                    _buildDeveloperSettingsCard(),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            '© 2026 Hobbyist. Made with ',
+                            style: TextStyle(
+                              color: Colors.white38,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const Icon(
+                            Icons.favorite,
+                            color: Colors.red,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'for better hobbies',
+                            style: TextStyle(
+                              color: Colors.white38,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -264,55 +403,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildAccountCard() {
     final initial = _userName.isNotEmpty ? _userName[0].toUpperCase() : 'T';
     
-    return GestureDetector(
-      onTap: _showEditNameDialog,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2A2238),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: const Color(0xFF6C3FFF),
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF221834),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          // Profile Section
+          GestureDetector(
+            onTap: _showEditNameDialog,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 children: [
-                  Text(
-                    _userName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: const Color(0xFF6C3FFF),
+                    child: _isGoogleSignedIn && _userEmail != null
+                        ? const Icon(Icons.person, color: Colors.white, size: 28)
+                        : Text(
+                            initial,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _userName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _isGoogleSignedIn && _userEmail != null 
+                              ? _userEmail! 
+                              : 'Tap to edit name',
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Tap to edit name',
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 14,
-                    ),
-                  ),
+                  if (!_isGoogleSignedIn)
+                    const Icon(Icons.chevron_right, color: Colors.white54),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white54),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -321,7 +473,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2238),
+        color: const Color(0xFF221834),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -347,13 +499,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _service.setSetting('completionSound', value.toString());
             },
           ),
-          const Divider(color: Color(0xFF3D3449), height: 1),
-          _buildNavTile(
-            icon: Icons.lock,
-            iconColor: const Color(0xFF6C3FFF),
-            title: 'Privacy & Security',
-            onTap: () {},
-          ),
+          // Logout button (only show if signed in with Google)
+          if (_isGoogleSignedIn) ...[
+            const Divider(color: Color(0xFF3D3449), height: 1),
+            InkWell(
+              onTap: _handleLogout,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.logout, color: Colors.red, size: 22),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, color: Colors.red),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -440,11 +619,152 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildSupportCard() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF221834),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          _buildNavTile(
+            icon: Icons.star_outline,
+            iconColor: const Color(0xFFFFD700),
+            title: 'Rate the App',
+            onTap: () {
+              // TODO: Open app store rating
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Opening app store...'),
+                  backgroundColor: Color(0xFF6C3FFF),
+                ),
+              );
+            },
+          ),
+          const Divider(color: Color(0xFF382a54), height: 1),
+          _buildNavTile(
+            icon: Icons.feedback_outlined,
+            iconColor: const Color(0xFF6C3FFF),
+            title: 'Send Feedback',
+            onTap: () {
+              // TODO: Open email or feedback form
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Opening feedback form...'),
+                  backgroundColor: Color(0xFF6C3FFF),
+                ),
+              );
+            },
+          ),
+          const Divider(color: Color(0xFF382a54), height: 1),
+          _buildNavTile(
+            icon: Icons.description_outlined,
+            iconColor: const Color(0xFF10B981),
+            title: 'Terms of Service',
+            onTap: () {
+              // TODO: Open terms of service
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Opening Terms of Service...'),
+                  backgroundColor: Color(0xFF6C3FFF),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAboutCard() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF221834),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: _buildNavTile(
+        icon: Icons.info_outline,
+        iconColor: const Color(0xFF6C3FFF),
+        title: 'Version 1.0.0',
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: const Color(0xFF221834),
+              title: const Text(
+                'About Hobbyist',
+                style: TextStyle(color: Colors.white),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Version 1.0.0',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Track your hobbies, build streaks, and stay consistent with your goals.',
+                    style: TextStyle(
+                      color: Colors.white60,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Text(
+                        'Made with ',
+                        style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.favorite,
+                        color: Colors.red,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'for better hobbies',
+                        style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF6C3FFF),
+                  ),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildDeveloperSettingsCard() {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2238),
+        color: const Color(0xFF221834),
         borderRadius: BorderRadius.circular(16),
       ),
       child: _buildNavTile(

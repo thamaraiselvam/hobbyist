@@ -2,9 +2,9 @@
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Hobby Analytics</title>
+<title>Hobby Streaks Dashboard</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
@@ -14,16 +14,18 @@
                     colors: {
                         "primary": "#590df2",
                         "background-light": "#f6f5f8",
-                        "background-dark": "#161022",
-                        "card-dark": "#231b35",
+                        "background-dark": "#0A0A0A",
+                        "surface-dark": "#161616",
                     },
                     fontFamily: {
-                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                        "display": ["Inter", "sans-serif"]
                     },
                     borderRadius: {
                         "DEFAULT": "0.25rem",
                         "lg": "0.5rem",
                         "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
                         "full": "9999px"
                     },
                 },
@@ -32,18 +34,24 @@
     </script>
 <style type="text/tailwindcss">
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background-color: #0A0A0A;
+        }
+        .glow-purple {
+            filter: drop-shadow(0 0 8px rgba(89, 13, 242, 0.4));
         }
         .heatmap-cell {
             aspect-ratio: 1/1;
         }
-        .hide-scrollbar::-webkit-scrollbar {
+        .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        body {
+            min-height: max(884px, 100dvh);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
 <style>
@@ -52,132 +60,192 @@
     }
   </style>
   </head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen pb-24">
-<header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-4 py-4 flex items-center justify-between border-b border-slate-200 dark:border-white/5">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary" style="font-size: 28px;">analytics</span>
-<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Hobby Analytics</h1>
-</div>
-<button class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-200/50 dark:bg-white/10 text-slate-700 dark:text-white">
-<span class="material-symbols-outlined">settings</span>
-</button>
-</header>
-<main class="max-w-md mx-auto p-4 space-y-6">
-<section class="grid grid-cols-2 gap-4">
-<div class="bg-white dark:bg-card-dark p-5 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm">
-<div class="flex items-center justify-between mb-3">
-<p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current Streak</p>
-<span class="material-symbols-outlined text-orange-500 text-xl" style="font-variation-settings: 'FILL' 1">local_fire_department</span>
-</div>
-<p class="text-3xl font-bold">14 <span class="text-xs font-medium text-slate-400">Days</span></p>
-<p class="text-xs mt-2 text-emerald-500 font-medium flex items-center gap-1">
-<span class="material-symbols-outlined text-sm">trending_up</span> +2% vs last week
-                </p>
-</div>
-<div class="bg-white dark:bg-card-dark p-5 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm">
-<div class="flex items-center justify-between mb-3">
-<p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Done</p>
-<span class="material-symbols-outlined text-primary text-xl">task_alt</span>
-</div>
-<p class="text-3xl font-bold">124 <span class="text-xs font-medium text-slate-400">Tasks</span></p>
-<p class="text-xs mt-2 text-primary font-medium">85% Completion rate</p>
-</div>
-</section>
-<section class="bg-white dark:bg-card-dark p-5 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm">
-<div class="flex items-center justify-between mb-4">
-<h3 class="text-lg font-bold">Consistency</h3>
-</div>
-<div class="flex p-1 bg-slate-100 dark:bg-white/5 rounded-lg mb-6">
-<button class="flex-1 py-1.5 text-xs font-semibold rounded-md bg-white dark:bg-primary shadow-sm">Weekly</button>
-<button class="flex-1 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">Monthly</button>
-<button class="flex-1 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">Yearly</button>
-</div>
-<div class="space-y-4">
-<div class="grid grid-cols-7 gap-3 mb-2">
-<div class="text-center text-[10px] font-bold text-slate-400 uppercase">Mon</div>
-<div class="text-center text-[10px] font-bold text-slate-400 uppercase">Tue</div>
-<div class="text-center text-[10px] font-bold text-slate-400 uppercase">Wed</div>
-<div class="text-center text-[10px] font-bold text-slate-400 uppercase">Thu</div>
-<div class="text-center text-[10px] font-bold text-slate-400 uppercase">Fri</div>
-<div class="text-center text-[10px] font-bold text-slate-400 uppercase">Sat</div>
-<div class="text-center text-[10px] font-bold text-slate-400 uppercase">Sun</div>
-<div class="heatmap-cell bg-primary/40 rounded-lg"></div>
-<div class="heatmap-cell bg-primary/90 rounded-lg ring-2 ring-primary ring-offset-2 ring-offset-white dark:ring-offset-card-dark"></div>
-<div class="heatmap-cell bg-primary/70 rounded-lg"></div>
-<div class="heatmap-cell bg-primary/40 rounded-lg"></div>
-<div class="heatmap-cell bg-primary/20 rounded-lg"></div>
-<div class="heatmap-cell bg-primary rounded-lg"></div>
-<div class="heatmap-cell bg-primary/60 rounded-lg"></div>
-</div>
-<div class="flex items-center justify-end gap-2">
-<span class="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">Less active</span>
-<div class="flex gap-1">
-<div class="w-2.5 h-2.5 rounded-[2px] bg-slate-200 dark:bg-white/5"></div>
-<div class="w-2.5 h-2.5 rounded-[2px] bg-primary/30"></div>
-<div class="w-2.5 h-2.5 rounded-[2px] bg-primary/60"></div>
-<div class="w-2.5 h-2.5 rounded-[2px] bg-primary"></div>
-</div>
-<span class="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">More active</span>
-</div>
-</div>
-</section>
-<section class="space-y-4">
-<h3 class="text-lg font-bold px-1">Insights</h3>
-<div class="bg-primary/10 dark:bg-primary/20 border border-primary/20 p-4 rounded-xl flex items-start gap-4">
-<div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-<span class="material-symbols-outlined text-primary">auto_awesome</span>
-</div>
-<div>
-<p class="text-sm font-semibold">Weekly Growth</p>
-<p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">You completed <span class="text-primary font-bold">20% more</span> hobbies this week than your previous average. Great momentum!</p>
-</div>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-white dark:bg-card-dark p-5 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center text-center">
-<span class="text-[10px] font-bold text-slate-400 uppercase mb-3">Highest Completion Day</span>
-<span class="text-lg font-bold text-primary">Tuesday</span>
-<p class="text-[10px] text-slate-500 mt-1">92% success rate</p>
-</div>
-<div class="bg-white dark:bg-card-dark p-5 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center text-center">
-<span class="text-[10px] font-bold text-slate-400 uppercase mb-3">Daily Average</span>
-<span class="text-lg font-bold text-primary">5.4 Tasks</span>
-<p class="text-[10px] text-slate-500 mt-1">Up from 4.2</p>
-</div>
-</div>
-<div class="bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-100 dark:border-white/5 flex items-center justify-between">
+<body class="bg-background-dark text-white font-display">
+<header class="sticky top-0 z-50 bg-background-dark/80 backdrop-blur-md px-4 py-10 flex items-center justify-center">
 <div class="flex items-center gap-3">
-<span class="material-symbols-outlined text-emerald-500">check_circle</span>
+<span class="material-symbols-outlined text-primary text-5xl">local_fire_department</span>
+<h1 class="text-4xl font-extrabold tracking-tight">Hobby Streaks</h1>
+</div>
+</header>
+<main class="max-w-md mx-auto pb-32">
+<section class="px-4 py-2 grid grid-cols-2 gap-4">
+<div class="bg-surface-dark rounded-[2rem] p-5 border border-white/5 flex flex-col justify-between h-44 shadow-[0_8px_30px_rgb(0,0,0,0.25)] relative">
+<div class="flex justify-between items-center w-full">
+<span class="text-[10px] font-bold tracking-[0.12em] uppercase text-slate-400">Current Streak</span>
+<span class="material-symbols-outlined text-orange-500 text-xl">local_fire_department</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-5xl font-extrabold text-white tracking-tight">0</span>
+<span class="text-lg font-medium text-slate-400">Days</span>
+</div>
+<div class="text-emerald-500 text-sm font-semibold">Keep it up!</div>
+</div>
+<div class="bg-surface-dark rounded-[2rem] p-5 border border-white/5 flex flex-col justify-between h-44 shadow-[0_8px_30px_rgb(0,0,0,0.25)] relative">
+<div class="flex justify-between items-center w-full">
+<span class="text-[10px] font-bold tracking-[0.12em] uppercase text-slate-400">Total Done</span>
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-5xl font-extrabold text-white tracking-tight">0</span>
+<span class="text-lg font-medium text-slate-400">Tasks</span>
+</div>
+<div class="text-emerald-500 text-sm font-semibold">0% Today</div>
+</div>
+</section>
+<section class="px-4 my-6">
+<div class="flex bg-surface-dark p-1 rounded-xl border border-white/5">
+<button class="flex-1 py-2 text-xs font-bold tracking-wider uppercase text-white bg-white/10 rounded-lg">Weekly</button>
+<button class="flex-1 py-2 text-xs font-bold tracking-wider uppercase text-slate-500">Monthly</button>
+<button class="flex-1 py-2 text-xs font-bold tracking-wider uppercase text-slate-500">Yearly</button>
+</div>
+</section>
+<section class="px-4 mb-8">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-white text-lg font-bold leading-tight tracking-tight">30-Day Performance</h3>
+</div>
+<div class="bg-surface-dark rounded-2xl p-4 border border-white/5">
+<div class="flex flex-col gap-2">
+<div class="flex min-h-[160px] flex-col gap-4 py-2">
+<svg fill="none" height="120" preserveAspectRatio="none" viewBox="-3 0 478 150" width="100%" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H326.769H0V109Z" fill="url(#paint0_linear)"></path>
+<path d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25" stroke="#590df2" stroke-linecap="round" stroke-width="4"></path>
+<defs>
+<linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear" x1="236" x2="236" y1="1" y2="149">
+<stop stop-color="#590df2" stop-opacity="0.3"></stop>
+<stop offset="1" stop-color="#590df2" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+</svg>
+<div class="flex justify-between px-2">
+<p class="text-slate-500 text-[10px] font-bold tracking-widest uppercase">1D</p>
+<p class="text-slate-500 text-[10px] font-bold tracking-widest uppercase">15D</p>
+<p class="text-slate-500 text-[10px] font-bold tracking-widest uppercase">30D</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="px-4 mb-8">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-white text-lg font-bold leading-tight tracking-tight">Activity Map</h3>
+<p class="text-slate-400 text-sm">October</p>
+</div>
+<div class="bg-surface-dark rounded-2xl p-5 border border-white/5">
+<div class="grid grid-cols-7 gap-2">
+<div class="text-center text-[10px] font-bold text-slate-500 pb-2">M</div>
+<div class="text-center text-[10px] font-bold text-slate-500 pb-2">T</div>
+<div class="text-center text-[10px] font-bold text-slate-500 pb-2">W</div>
+<div class="text-center text-[10px] font-bold text-slate-500 pb-2">T</div>
+<div class="text-center text-[10px] font-bold text-slate-500 pb-2">F</div>
+<div class="text-center text-[10px] font-bold text-slate-500 pb-2">S</div>
+<div class="text-center text-[10px] font-bold text-slate-500 pb-2">S</div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-90"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-20"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-60"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-40"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-20"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-20"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-10"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-60"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-80"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-80"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-20"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-40"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-10"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-10"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-60"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-100"></div>
+<div class="heatmap-cell bg-primary rounded-full opacity-20"></div>
+</div>
+<div class="mt-4 flex items-center justify-end gap-2">
+<span class="text-[10px] text-slate-500 font-bold tracking-wide uppercase">Activity Intensity</span>
+<div class="flex gap-1">
+<div class="w-3 h-3 rounded-full bg-primary opacity-20"></div>
+<div class="w-3 h-3 rounded-full bg-primary opacity-60"></div>
+<div class="w-3 h-3 rounded-full bg-primary opacity-100"></div>
+</div>
+</div>
+</div>
+</section>
+<section class="px-4 mb-10">
+<h3 class="text-white text-lg font-bold leading-tight tracking-tight mb-4">All Tasks</h3>
+<div class="flex flex-col gap-3">
+<div class="bg-surface-dark p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-orange-500 text-xl">palette</span>
+</div>
 <div>
-<p class="text-sm font-bold">Morning Routine</p>
-<p class="text-[10px] text-slate-400">100% completion this week</p>
+<p class="font-bold text-white">Digital Painting</p>
+<p class="text-xs text-slate-500">Every day</p>
 </div>
 </div>
-<span class="material-symbols-outlined text-slate-300">chevron_right</span>
+<div class="flex items-center gap-1.5 bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-500/20">
+<span class="text-orange-500 font-extrabold text-sm">12</span>
+<span class="material-symbols-outlined text-orange-500 text-sm">local_fire_department</span>
+</div>
+</div>
+<div class="bg-surface-dark p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl">piano</span>
+</div>
+<div>
+<p class="font-bold text-white">Piano Practice</p>
+<p class="text-xs text-slate-500">4 times a week</p>
+</div>
+</div>
+<div class="flex items-center gap-1.5 bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-500/20">
+<span class="text-orange-500 font-extrabold text-sm">8</span>
+<span class="material-symbols-outlined text-orange-500 text-sm">local_fire_department</span>
+</div>
+</div>
+<div class="bg-surface-dark p-4 rounded-2xl border border-white/5 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-blue-500 text-xl">menu_book</span>
+</div>
+<div>
+<p class="font-bold text-white">Reading</p>
+<p class="text-xs text-slate-500">Daily goal</p>
+</div>
+</div>
+<div class="flex items-center gap-1.5 bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-500/20">
+<span class="text-orange-500 font-extrabold text-sm">5</span>
+<span class="material-symbols-outlined text-orange-500 text-sm">local_fire_department</span>
+</div>
+</div>
 </div>
 </section>
 </main>
-<nav class="fixed bottom-0 left-0 right-0 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-white/5 px-6 py-3 pb-8 flex items-center justify-between">
-<button class="flex flex-col items-center gap-1 text-slate-400">
-<span class="material-symbols-outlined">home</span>
-<span class="text-[10px] font-bold uppercase tracking-widest">Home</span>
-</button>
-<button class="flex flex-col items-center gap-1 text-slate-400">
-<span class="material-symbols-outlined">checklist</span>
-<span class="text-[10px] font-bold uppercase tracking-widest">Tasks</span>
-</button>
-<div class="relative -top-6">
-<button class="w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center">
-<span class="material-symbols-outlined text-3xl">add</span>
-</button>
+<nav class="fixed bottom-0 left-0 right-0 bg-background-dark/80 backdrop-blur-xl border-t border-white/5 px-8 py-4 flex justify-between items-center z-50">
+<div class="flex flex-col items-center gap-1 opacity-40">
+<span class="material-symbols-outlined text-2xl text-white">home</span>
 </div>
-<button class="flex flex-col items-center gap-1 text-primary">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">analytics</span>
-<span class="text-[10px] font-bold uppercase tracking-widest">Stats</span>
-</button>
-<button class="flex flex-col items-center gap-1 text-slate-400">
-<span class="material-symbols-outlined">person</span>
-<span class="text-[10px] font-bold uppercase tracking-widest">Me</span>
-</button>
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-2xl">analytics</span>
+<div class="w-1 h-1 bg-primary rounded-full"></div>
+</div>
+<div class="flex flex-col items-center gap-1 opacity-40 bg-primary/10 p-2 rounded-full -mt-4 border border-primary/20">
+<span class="material-symbols-outlined text-3xl text-primary">add</span>
+</div>
+<div class="flex flex-col items-center gap-1 opacity-40">
+<span class="material-symbols-outlined text-2xl text-white">calendar_today</span>
+</div>
+<div class="flex flex-col items-center gap-1 opacity-40">
+<span class="material-symbols-outlined text-2xl text-white">person</span>
+</div>
 </nav>
 
 </body></html>

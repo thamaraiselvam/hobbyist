@@ -8,6 +8,7 @@ class Hobby {
   final Map<String, HobbyCompletion> completions; // date -> completion info
   final DateTime? createdAt;
   final String? reminderTime; // Time in HH:mm format (e.g., "09:00")
+  final int? customDay; // For weekly: 0-6 (Mon-Sun), For monthly: 1-31
 
   Hobby({
     required this.id,
@@ -19,6 +20,7 @@ class Hobby {
     Map<String, HobbyCompletion>? completions,
     this.createdAt,
     this.reminderTime,
+    this.customDay,
   }) : completions = completions ?? {};
 
   int get currentStreak {
@@ -91,6 +93,7 @@ class Hobby {
     Map<String, HobbyCompletion>? completions,
     DateTime? createdAt,
     String? reminderTime,
+    int? customDay,
   }) =>
       Hobby(
         id: id,
@@ -102,6 +105,7 @@ class Hobby {
         completions: completions ?? this.completions,
         createdAt: createdAt ?? this.createdAt,
         reminderTime: reminderTime ?? this.reminderTime,
+        customDay: customDay ?? this.customDay,
       );
 }
 

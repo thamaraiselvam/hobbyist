@@ -6,6 +6,7 @@
 .pub/
 build/
 *.lock
+google-services.json
 
 # Android
 android/local.properties

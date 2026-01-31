@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       dbPath,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -42,6 +42,7 @@ class DatabaseHelper {
         priority TEXT NOT NULL DEFAULT 'medium',
         color INTEGER NOT NULL,
         reminder_time TEXT,
+        custom_day INTEGER,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -124,6 +125,10 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       // Add reminder_time column to hobbies table
       await db.execute('ALTER TABLE hobbies ADD COLUMN reminder_time TEXT');
+    }
+    if (oldVersion < 3) {
+      // Add custom_day column to hobbies table
+      await db.execute('ALTER TABLE hobbies ADD COLUMN custom_day INTEGER');
     }
   }
 

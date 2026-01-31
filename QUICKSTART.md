@@ -1,182 +1,154 @@
 # Hobbyist - Quick Start Guide
 
-## 🎯 Overview
-Hobbyist - A complete Flutter app for tracking daily hobbies with GitHub-style contribution analytics, motivational quotes, and elegant design.
+## 🚀 Google Sign-In Not Working?
 
-## ✨ Features Implemented
+### Step 1: Enable in Firebase Console
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Select your project
+3. Navigate to **Authentication** → **Sign-in method**
+4. Click **Google** and toggle **Enable**
+5. Set support email and **Save**
 
-### 1. **Onboarding Flow**
-- ✅ Splash screen with custom branding
-- ✅ Landing page with feature highlights
-- ✅ User name collection
-- ✅ Automatic navigation to dashboard after onboarding
+### Step 2: Add SHA-1 Certificate (Android Only)
 
-### 2. **Hobby Management**
-- ✅ Create new hobbies with name, description, and custom color
-- ✅ Edit existing hobbies
-- ✅ Delete hobbies with confirmation dialog
-- ✅ Color picker for visual identification
-- ✅ SQLite database for persistent storage
-
-### 3. **Daily Tracking**
-- ✅ Mark hobbies complete/incomplete by tapping
-- ✅ Track completions by date
-- ✅ Animated checkbox feedback
-- ✅ Sound effects on completion
-- ✅ Celebration animations
-
-### 4. **Analytics Dashboard**
-- ✅ GitHub-style contribution chart (12 weeks)
-- ✅ Heatmap visualization (darker = more completions)
-- ✅ Month labels and day indicators
-- ✅ Legend showing activity levels
-- ✅ Today's hobby list with completion status
-- ✅ Random motivational quotes on each load
-
-### 5. **Settings & Customization**
-- ✅ User profile management
-- ✅ Sound toggle
-- ✅ About section
-
-## 📁 Project Structure
-
+**Get your SHA-1:**
+```bash
+keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore
 ```
-hobbyist/
-├── lib/
-│   ├── main.dart                      # App entry & theme
-│   ├── models/
-│   │   └── hobby.dart                 # Data model with JSON serialization
-│   ├── services/
-│   │   └── hobby_service.dart         # CRUD operations & storage
-│   ├── screens/
-│   │   ├── dashboard_screen.dart      # Main screen with chart
-│   │   └── hobby_form_screen.dart     # Add/edit form
-│   └── widgets/
-│       └── contribution_chart.dart    # GitHub-style heatmap
-├── android/                           # Android configuration
-├── ios/                               # iOS configuration
-├── pubspec.yaml                       # Dependencies
-└── README.md                          # Documentation
-```
+Password: `android`
 
-## 🚀 How to Run
+**Add to Firebase:**
+1. Firebase Console → Project Settings
+2. Select your Android app
+3. Add the SHA-1 fingerprint
+4. Download updated `google-services.json`
+5. Replace file in `android/app/google-services.json`
 
-### Prerequisites
-- Flutter SDK installed (3.0.0 or higher)
-- Android Studio / Xcode (for emulators)
-- VS Code with Flutter extension (recommended)
+### Step 3: Test the App
 
-### Steps
-
-1. **Navigate to project directory:**
-   ```bash
-   cd hobby_tracker
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run on emulator/device:**
-   ```bash
-   # List available devices
-   flutter devices
-   
-   # Run on specific device
-   flutter run -d <device_id>
-   
-   # Or just run on first available device
-   flutter run
-   ```
-
-4. **For web (if needed):**
-   ```bash
-   flutter run -d chrome
-   ```
-
-## 📱 How to Use the App
-
-### Creating Your First Hobby
-1. Tap the **+** button (bottom right)
-2. Enter hobby name (e.g., "Morning Yoga")
-3. Add description (e.g., "15 minutes stretching")
-4. Tap the color bar to choose a color
-5. Tap **Create Hobby**
-
-### Tracking Daily Progress
-- Tap any hobby card to mark it complete for today
-- The checkmark appears when completed
-- Tap again to mark as incomplete
-
-### Viewing Analytics
-- The contribution chart shows 12 weeks of history
-- Each square represents one day
-- Darker greens = more hobbies completed that day
-- Scroll horizontally to see full chart
-
-### Editing a Hobby
-1. Tap the **edit** icon on any hobby card
-2. Modify details
-3. Tap **Update Hobby**
-
-### Deleting a Hobby
-1. Tap the **delete** icon
-2. Confirm deletion in dialog
-
-## 🎨 Color Coding
-- Empty hobby list shows helpful onboarding message
-- Each hobby has a unique color for easy identification
-- Contribution chart uses green intensity (like GitHub)
-
-## 💾 Data Storage
-- All data stored locally using SharedPreferences
-- Data persists between app sessions
-- No internet connection required
-
-## 🔧 Technologies Used
-- **Flutter**: Cross-platform UI framework
-- **Dart**: Programming language
-- **shared_preferences**: Local storage
-- **intl**: Date formatting
-- **flutter_colorpicker**: Color selection widget
-
-## 📊 Chart Details
-- **12 weeks** of historical data
-- **7 days** per week (Sunday to Saturday)
-- **5 intensity levels**: 0, 1, 2, 3, 4+ completions
-- Month labels at top
-- Day labels (M, W, F) on left
-
-## 🐛 Troubleshooting
-
-### "flutter: command not found"
-- Install Flutter SDK or use FVM (Flutter Version Manager)
-- Add Flutter to your PATH
-
-### Build errors
+**Run with logs:**
 ```bash
 flutter clean
 flutter pub get
 flutter run
 ```
 
-### Hot reload not working
-- Press 'r' in terminal for hot reload
-- Press 'R' for hot restart
+**Expected logs when working:**
+```
+🔐 Starting Google Sign-In...
+✅ Google account selected: [your-email]
+🔑 Got auth tokens
+🔓 Signing in to Firebase...
+✅ Firebase sign-in successful: [your-email]
+💾 User data saved
+```
 
-## 🎯 Future Enhancements Ideas
-- Export data to CSV
-- Weekly/monthly statistics
-- Habit streaks counter
-- Reminders/notifications
-- Multiple themes
-- Cloud sync
-- Share achievements
-
-## 📄 License
-Created for personal use and learning purposes.
+**If you see errors:**
+- Check that Google Sign-In is enabled in Firebase
+- Verify SHA-1 is correct and added to Firebase
+- Ensure internet connection is active
+- Use real device or emulator with Google Play Services
 
 ---
 
-**Happy Habit Tracking! 🚀**
+## 📱 Landing Page Features
+
+### Visual Elements
+- ✅ Gradient separator line above buttons
+- ✅ White "Continue with Google" button
+- ✅ "or" divider between options
+- ✅ Purple outlined "Continue Offline" button
+- ✅ Privacy note: "All your data stays private and secure on your device."
+- ✅ Bottom indicator bar
+
+### User Flows
+
+**Option 1: Google Sign-In**
+1. Tap "Continue with Google"
+2. Select Google account
+3. **Automatically navigate to Dashboard**
+4. Name synced from Google account
+5. Email shown in Settings
+
+**Option 2: Offline Mode**
+1. Tap "Continue Offline"
+2. Enter your name
+3. Navigate to Dashboard
+4. Works completely offline
+5. No email tracking
+
+---
+
+## 🔧 Build & Deploy
+
+### Quick Build (Debug)
+```bash
+flutter build apk --debug
+```
+
+### Full Build (Release)
+```bash
+flutter build apk --release
+```
+
+### iOS Build
+```bash
+flutter build ios --release
+```
+
+---
+
+## 🐛 Common Issues
+
+### Google Sign-In returns to landing page
+- **Cause**: Firebase OAuth not configured
+- **Fix**: Complete Step 1 & 2 above
+
+### "Sign in cancelled" message
+- **Cause**: User closed popup without selecting account
+- **Fix**: Normal behavior, try again
+
+### Loading spinner stuck
+- **Cause**: Network timeout or Firebase error
+- **Fix**: Check internet connection, restart app
+
+### App crashes on sign-in
+- **Cause**: Missing google-services.json or incorrect minSdk
+- **Fix**: Verify files and ensure minSdkVersion is 23+
+
+---
+
+## 📂 Project Structure
+
+```
+lib/
+├── services/
+│   ├── auth_service.dart       # 🔐 Google Sign-In logic
+│   ├── hobby_service.dart      # Database operations
+│   └── notification_service.dart
+├── screens/
+│   ├── landing_screen.dart     # 🏠 Entry point with login
+│   ├── settings_screen.dart    # ⚙️ Shows email & logout
+│   └── daily_tasks_screen.dart # 📊 Main dashboard
+└── main.dart                   # App entry
+```
+
+---
+
+## ✅ Testing Checklist
+
+Before deploying:
+- [ ] Google Sign-In enabled in Firebase
+- [ ] SHA-1 added to Firebase (Android)
+- [ ] google-services.json is latest version
+- [ ] Build completes without errors
+- [ ] Google Sign-In navigates to dashboard
+- [ ] Name shows correctly in Settings
+- [ ] Email shows for Google users
+- [ ] Logout button appears for Google users
+- [ ] Offline mode still works
+- [ ] Hobbies persist after logout
+
+---
+
+**Need more help?** See `GOOGLE_SIGNIN_SETUP.md` for detailed setup instructions.
