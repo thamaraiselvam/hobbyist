@@ -2,19 +2,27 @@ import 'package:sqflite/sqflite.dart';
 import '../models/hobby.dart';
 import '../database/database_helper.dart';
 import 'notification_service.dart';
+import 'analytics_service.dart';
+import 'performance_service.dart';
+import 'crashlytics_service.dart';
 
 class HobbyService {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final NotificationService _notificationService = NotificationService();
+  final AnalyticsService _analytics = AnalyticsService();
+  final PerformanceService _performance = PerformanceService();
+  final CrashlyticsService _crashlytics = CrashlyticsService();
 
   Future<List<Hobby>> loadHobbies() async {
-    final db = await _dbHelper.database;
+    return await _performance.traceDatabaseQuery('load_hobbies', () async {
+      try {
+        final db = await _dbHelper.database;
 
-    // Get all hobbies
-    final List<Map<String, dynamic>> hobbiesData = await db.query(
-      'hobbies',
-      orderBy: 'created_at DESC',
-    );
+        // Get all hobbies
+        final List<Map<String, dynamic>> hobbiesData = await db.query(
+          'hobbies',
+          orderBy: 'created_at DESC',
+        );
 
     // Load completions for each hobby
     List<Hobby> hobbies = [];
@@ -51,7 +59,12 @@ class HobbyService {
       ));
     }
 
-    return hobbies;
+        return hobbies;
+      } catch (e, stackTrace) {
+        await _crashlytics.logError(e, stackTrace, reason: 'Failed to load hobbies');
+        rethrow;
+      }
+    });
   }
 
   Future<void> addHobby(Hobby hobby) async {
@@ -87,6 +100,20 @@ class HobbyService {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+    }
+
+    // Track hobby creation in analytics
+    await _analytics.logHobbyCreated(
+      hobbyId: hobby.id,
+      priority: hobby.priority,
+      repeatMode: hobby.repeatMode,
+      color: hobby.color,
+    );
+
+    // Check if this is the first hobby
+    final hobbies = await loadHobbies();
+    if (hobbies.length == 1) {
+      await _analytics.logFirstHobbyCreated();
     }
 
     // Schedule notification if reminder time is set
@@ -140,6 +167,13 @@ class HobbyService {
       );
     }
 
+    // Track hobby update in analytics
+    await _analytics.logHobbyUpdated(
+      hobbyId: hobby.id,
+      priority: hobby.priority,
+      repeatMode: hobby.repeatMode,
+    );
+
     // Reschedule notification
     await _notificationService.cancelNotification(hobby.id);
     if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
@@ -157,6 +191,9 @@ class HobbyService {
 
     // Cancel notification
     await _notificationService.cancelNotification(id);
+
+    // Track hobby deletion
+    await _analytics.logHobbyDeleted(hobbyId: id);
 
     // Delete hobby (completions will be deleted automatically due to CASCADE)
     await db.delete(
@@ -180,6 +217,8 @@ class HobbyService {
       whereArgs: [hobbyId, date],
     );
 
+    bool isCompleted = false;
+    
     if (existing.isEmpty) {
       // Insert new completion
       await db.insert('completions', {
@@ -188,19 +227,50 @@ class HobbyService {
         'completed': 1,
         'completed_at': DateTime.now().millisecondsSinceEpoch,
       });
+      isCompleted = true;
     } else {
       // Toggle existing completion
-      final isCompleted = existing[0]['completed'] == 1;
+      isCompleted = existing[0]['completed'] != 1;
       await db.update(
         'completions',
         {
-          'completed': isCompleted ? 0 : 1,
+          'completed': isCompleted ? 1 : 0,
           'completed_at':
-              isCompleted ? null : DateTime.now().millisecondsSinceEpoch,
+              isCompleted ? DateTime.now().millisecondsSinceEpoch : null,
         },
         where: 'hobby_id = ? AND date = ?',
         whereArgs: [hobbyId, date],
       );
+    }
+
+    // Get updated hobby to check streak
+    final hobbies = await loadHobbies();
+    final hobby = hobbies.firstWhere((h) => h.id == hobbyId);
+    
+    // Track completion toggle
+    await _analytics.logCompletionToggled(
+      hobbyId: hobbyId,
+      completed: isCompleted,
+      currentStreak: hobby.currentStreak,
+    );
+
+    // Track streak milestones
+    if (isCompleted && hobby.currentStreak > 0) {
+      await _analytics.logStreakAchieved(
+        hobbyId: hobbyId,
+        streakCount: hobby.currentStreak,
+      );
+    }
+
+    // Track first completion
+    if (isCompleted) {
+      final allCompletions = hobbies.fold<int>(
+        0,
+        (sum, h) => sum + h.completions.values.where((c) => c.completed).length,
+      );
+      if (allCompletions == 1) {
+        await _analytics.logFirstCompletion();
+      }
     }
   }
 
@@ -227,6 +297,12 @@ class HobbyService {
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    // Track settings changes
+    await _analytics.logSettingChanged(
+      settingName: key,
+      settingValue: value,
     );
   }
 

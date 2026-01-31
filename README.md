@@ -70,6 +70,11 @@ hobbyist/
 - `intl`: Date formatting
 - `flutter_colorpicker`: Color selection for hobbies
 
+## Documentation
+
+- **Technical Documentation**: See `/docs` directory for database schema, test coverage reports, and Firebase integration details
+- **Build Guide**: See `APK_DISTRIBUTION_READY.md` for building and distributing the app
+
 ## License
 
 This project is created for personal use and learning purposes.

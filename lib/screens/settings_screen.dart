@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/hobby_service.dart';
+import '../services/notification_service.dart';
 import 'developer_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _pushNotificationsEnabled = true;
   bool _completionSoundEnabled = true;
   final HobbyService _service = HobbyService();
+  final NotificationService _notificationService = NotificationService();
   String _userName = 'Tham';
 
   @override
@@ -338,7 +340,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSwitchTile(
             icon: Icons.vibration,
             iconColor: const Color(0xFF8B5CF6),
-            title: 'Completion Vibration',
+            title: 'Sound and Vibration',
             value: _completionSoundEnabled,
             onChanged: (value) {
               setState(() => _completionSoundEnabled = value);

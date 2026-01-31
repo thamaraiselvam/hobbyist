@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'hobby_service.dart';
+import 'analytics_service.dart';
 
 class SoundService {
   static final SoundService _instance = SoundService._internal();
@@ -7,6 +8,7 @@ class SoundService {
   SoundService._internal();
 
   final HobbyService _hobbyService = HobbyService();
+  final AnalyticsService _analytics = AnalyticsService();
 
   Future<void> playCompletionSound() async {
     try {
@@ -18,6 +20,9 @@ class SoundService {
 
       // Play only haptic feedback (vibration)
       await _playHapticFeedback();
+      
+      // Track completion sound
+      await _analytics.logCompletionSound();
     } catch (e) {
       print('Error playing vibration: $e');
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'daily_tasks_screen.dart';
 import '../services/hobby_service.dart';
+import '../services/analytics_service.dart';
 
 class NameInputScreen extends StatefulWidget {
   const NameInputScreen({super.key});
@@ -27,8 +28,15 @@ class _NameInputScreenState extends State<NameInputScreen> {
   }
 
   Future<void> _saveName() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) return;
+    final rawName = _nameController.text.trim();
+    if (rawName.isEmpty) return;
+
+    // Auto-capitalize each word (e.g., "john doe" -> "John Doe")
+    final name = rawName.split(' ')
+        .map((word) => word.isEmpty 
+            ? word 
+            : word[0].toUpperCase() + word.substring(1).toLowerCase())
+        .join(' ');
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasCompletedOnboarding', true);
@@ -36,6 +44,9 @@ class _NameInputScreenState extends State<NameInputScreen> {
     // Save name to SQLite
     final service = HobbyService();
     await service.setSetting('userName', name);
+
+    // Track onboarding completion
+    await AnalyticsService().logOnboardingComplete();
 
     if (mounted) {
       Navigator.of(context).pushReplacement(

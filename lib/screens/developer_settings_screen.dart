@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../services/hobby_service.dart';
+import '../services/notification_service.dart';
 import '../models/hobby.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +14,7 @@ class DeveloperSettingsScreen extends StatefulWidget {
 
 class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
   final HobbyService _service = HobbyService();
+  final NotificationService _notificationService = NotificationService();
   bool _isGenerating = false;
 
   final List<String> _hobbyNames = [
@@ -256,6 +258,75 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
     }
   }
 
+  Future<void> _testNotification() async {
+    // Check if push notifications are enabled in settings
+    final pushEnabled = await _service.getSetting('pushNotifications');
+    if (pushEnabled == 'false') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Push notifications are disabled in Settings'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Check if notifications are enabled at system level
+      final enabled = await _notificationService.areNotificationsEnabled();
+      if (!enabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enable notifications in System Settings'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        // Request permissions
+        await _notificationService.requestPermissions();
+        return;
+      }
+
+      // Check exact alarm permission
+      final canSchedule = await _notificationService.canScheduleExactAlarms();
+      if (!canSchedule) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enable exact alarms in System Settings'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Show test notification
+      await _notificationService.showTestNotification();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Test notification sent!'),
+            backgroundColor: Color(0xFF6C3FFF),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -289,6 +360,41 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
               ),
               child: Column(
                 children: [
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFB800).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.notification_add,
+                        color: Color(0xFFFFB800),
+                        size: 20,
+                      ),
+                    ),
+                    title: const Text(
+                      'Test Notification',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Send a test notification immediately',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 13,
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: Colors.white54,
+                    ),
+                    onTap: _testNotification,
+                  ),
+                  const Divider(color: Color(0xFF3D3449), height: 1),
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),

@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
+import '../services/analytics_service.dart';
 
-class LandingScreen extends StatelessWidget {
+class LandingScreen extends StatefulWidget {
   final VoidCallback onGetStarted;
 
   const LandingScreen({
     Key? key,
     required this.onGetStarted,
   }) : super(key: key);
+
+  @override
+  State<LandingScreen> createState() => _LandingScreenState();
+}
+
+class _LandingScreenState extends State<LandingScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Track landing page view
+    AnalyticsService().logLandingView();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,7 +212,7 @@ class LandingScreen extends StatelessWidget {
             width: double.infinity,
             height: 64,
             child: ElevatedButton(
-              onPressed: onGetStarted,
+              onPressed: widget.onGetStarted,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF590df2),
                 foregroundColor: Colors.white,

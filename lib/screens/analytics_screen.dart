@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/hobby.dart';
+import '../services/analytics_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   final List<Hobby> hobbies;
@@ -23,6 +24,13 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String _selectedPeriod = 'Weekly';
+
+  @override
+  void initState() {
+    super.initState();
+    // Track analytics screen view
+    AnalyticsService().logAnalyticsViewed();
+  }
 
   Map<String, dynamic> get currentStreakData {
     if (widget.hobbies.isEmpty) return {'streak': 0, 'todayCompleted': false};

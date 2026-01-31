@@ -1,6 +1,10 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../models/hobby.dart';
 
 class NotificationService {
@@ -123,6 +127,21 @@ class NotificationService {
     _initialized = true;
   }
 
+  /// Check if notification permissions are granted
+  Future<bool> areNotificationsEnabled() async {
+    final androidImplementation =
+        _notifications.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidImplementation != null) {
+      final granted =
+          await androidImplementation.areNotificationsEnabled();
+      return granted ?? false;
+    }
+
+    return true; // iOS and other platforms
+  }
+
   /// Request notification permissions (required for Android 13+)
   Future<bool> requestPermissions() async {
     // Android permissions
@@ -187,12 +206,24 @@ class NotificationService {
   /// Schedule a daily notification for a hobby
   Future<bool> scheduleNotification(Hobby hobby) async {
     try {
+      print('📅 Attempting to schedule notification for: ${hobby.name}');
+      
+      // Check if push notifications are enabled in app settings
+      final settingsEnabled = await _areNotificationsEnabledInSettings();
+      if (!settingsEnabled) {
+        print('⚠️ Push notifications DISABLED in app settings. Skipping notification for ${hobby.name}');
+        return false; // Return false but don't throw error
+      }
+      
+      print('✅ Push notifications ENABLED in app settings. Proceeding...');
+
       if (!_initialized) {
         await initialize();
       }
 
       // Parse reminder time
       if (hobby.reminderTime == null || hobby.reminderTime!.isEmpty) {
+        print('ℹ️ No reminder time set for ${hobby.name}');
         return false; // No reminder set
       }
 
@@ -207,7 +238,7 @@ class NotificationService {
       // Check if we can schedule exact alarms
       final canSchedule = await canScheduleExactAlarms();
       if (!canSchedule) {
-        print('Cannot schedule exact alarms. Permission not granted.');
+        print('⚠️ Cannot schedule exact alarms. Permission not granted.');
         // Still return true to allow task creation, just skip notification
         return true;
       }
@@ -232,7 +263,7 @@ class NotificationService {
 
       return true;
     } catch (e) {
-      print('Error scheduling notification: $e');
+      print('❌ Error scheduling notification: $e');
       // Return true to allow task creation even if notification fails
       return true;
     }
@@ -399,6 +430,79 @@ class NotificationService {
   /// Get all pending notifications (for debugging)
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
+  }
+
+  /// Show an immediate test notification
+  Future<void> showTestNotification() async {
+    if (!_initialized) {
+      await initialize();
+    }
+
+    const androidDetails = AndroidNotificationDetails(
+      'hobby_reminders',
+      'Hobby Reminders',
+      channelDescription: 'Notifications for hobby reminders and streaks',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      enableVibration: true,
+      playSound: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      999999, // Test notification ID
+      '🎉 Test Notification',
+      'Notifications are working! You will receive reminders for your hobbies.',
+      notificationDetails,
+    );
+  }
+
+  /// Check if notifications are enabled in app settings
+  Future<bool> _areNotificationsEnabledInSettings() async {
+    try {
+      final db = await _getDatabase();
+      final result = await db.query(
+        'settings',
+        where: 'key = ?',
+        whereArgs: ['pushNotifications'],
+      );
+      
+      if (result.isEmpty) {
+        print('⚠️ pushNotifications setting not found in database, defaulting to enabled');
+        return true; // Default to enabled
+      }
+      
+      final value = result[0]['value'];
+      final isEnabled = value != 'false';
+      print('🔔 Push notifications setting: $value (enabled: $isEnabled)');
+      return isEnabled;
+    } catch (e) {
+      print('❌ Error checking notification settings: $e');
+      return true; // Default to enabled on error
+    }
+  }
+
+  /// Get database instance
+  Future<Database> _getDatabase() async {
+    try {
+      final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
+      final String dbPath = join(appDocumentsDir.path, 'hobbyist.db');
+      return await openDatabase(dbPath);
+    } catch (e) {
+      print('❌ Error opening database: $e');
+      rethrow;
+    }
   }
 
   /// Handle notification tap
