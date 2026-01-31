@@ -1,13 +1,15 @@
 import 'package:sqflite/sqflite.dart';
 import '../models/hobby.dart';
 import '../database/database_helper.dart';
+import 'notification_service.dart';
 
 class HobbyService {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final NotificationService _notificationService = NotificationService();
 
   Future<List<Hobby>> loadHobbies() async {
     final db = await _dbHelper.database;
-    
+
     // Get all hobbies
     final List<Map<String, dynamic>> hobbiesData = await db.query(
       'hobbies',
@@ -45,6 +47,7 @@ class HobbyService {
         createdAt: hobbyData['created_at'] != null
             ? DateTime.fromMillisecondsSinceEpoch(hobbyData['created_at'])
             : null,
+        reminderTime: hobbyData['reminder_time'],
       ));
     }
 
@@ -65,6 +68,7 @@ class HobbyService {
         'repeat_mode': hobby.repeatMode,
         'priority': hobby.priority,
         'color': hobby.color,
+        'reminder_time': hobby.reminderTime,
         'created_at': now,
         'updated_at': now,
       },
@@ -84,6 +88,16 @@ class HobbyService {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
+
+    // Schedule notification if reminder time is set
+    if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
+      print('📅 Scheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
+      final success = await _notificationService.scheduleNotification(hobby);
+      if (success) {
+        final pending = await _notificationService.getPendingNotifications();
+        print('✅ Notification scheduled. Total pending: ${pending.length}');
+      }
+    }
   }
 
   Future<void> updateHobby(Hobby hobby) async {
@@ -98,6 +112,7 @@ class HobbyService {
         'repeat_mode': hobby.repeatMode,
         'priority': hobby.priority,
         'color': hobby.color,
+        'reminder_time': hobby.reminderTime,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
       where: 'id = ?',
@@ -124,11 +139,25 @@ class HobbyService {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
+
+    // Reschedule notification
+    await _notificationService.cancelNotification(hobby.id);
+    if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
+      print('📅 Rescheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
+      final success = await _notificationService.scheduleNotification(hobby);
+      if (success) {
+        final pending = await _notificationService.getPendingNotifications();
+        print('✅ Notification rescheduled. Total pending: ${pending.length}');
+      }
+    }
   }
 
   Future<void> deleteHobby(String id) async {
     final db = await _dbHelper.database;
-    
+
+    // Cancel notification
+    await _notificationService.cancelNotification(id);
+
     // Delete hobby (completions will be deleted automatically due to CASCADE)
     await db.delete(
       'hobbies',
@@ -166,7 +195,8 @@ class HobbyService {
         'completions',
         {
           'completed': isCompleted ? 0 : 1,
-          'completed_at': isCompleted ? null : DateTime.now().millisecondsSinceEpoch,
+          'completed_at':
+              isCompleted ? null : DateTime.now().millisecondsSinceEpoch,
         },
         where: 'hobby_id = ? AND date = ?',
         whereArgs: [hobbyId, date],
@@ -212,11 +242,10 @@ class HobbyService {
   // Reset database - for developer settings
   Future<void> resetDatabase() async {
     final db = await _dbHelper.database;
-    
+
     // Delete all data
     await db.delete('hobbies');
     await db.delete('completions');
     await db.delete('settings');
   }
 }
-

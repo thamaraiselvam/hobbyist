@@ -29,7 +29,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should show name input screen
-      expect(find.text('What should we call\nyou?'), findsOneWidget);
+      expect(find.text('What should we call you?'), findsOneWidget);
 
       // Enter name
       await tester.enterText(find.byType(TextField), 'Test User');
@@ -43,7 +43,8 @@ void main() {
       expect(find.text('Your Hobbies'), findsOneWidget);
     });
 
-    testWidgets('skip onboarding if already completed', (WidgetTester tester) async {
+    testWidgets('skip onboarding if already completed',
+        (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({'hasCompletedOnboarding': true});
 
       await tester.pumpWidget(const MyApp());
@@ -168,7 +169,8 @@ void main() {
       expect(find.text('TOTAL DONE'), findsOneWidget);
     });
 
-    testWidgets('view analytics after completing task', (WidgetTester tester) async {
+    testWidgets('view analytics after completing task',
+        (WidgetTester tester) async {
       await tester.pumpWidget(const MyApp());
       await tester.pumpAndSettle(const Duration(milliseconds: 3000));
 

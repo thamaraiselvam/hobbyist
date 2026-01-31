@@ -21,8 +21,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
       onOpen: (db) async {
         // Enable foreign keys
         await db.execute('PRAGMA foreign_keys = ON');
@@ -40,6 +41,7 @@ class DatabaseHelper {
         repeat_mode TEXT NOT NULL DEFAULT 'daily',
         priority TEXT NOT NULL DEFAULT 'medium',
         color INTEGER NOT NULL,
+        reminder_time TEXT,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -116,6 +118,13 @@ class DatabaseHelper {
       'value': 'false',
       'updated_at': DateTime.now().millisecondsSinceEpoch,
     });
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add reminder_time column to hobbies table
+      await db.execute('ALTER TABLE hobbies ADD COLUMN reminder_time TEXT');
+    }
   }
 
   Future<void> close() async {

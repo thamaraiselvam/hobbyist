@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'hobby_service.dart';
 
@@ -7,33 +6,20 @@ class SoundService {
   factory SoundService() => _instance;
   SoundService._internal();
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
   final HobbyService _hobbyService = HobbyService();
 
   Future<void> playCompletionSound() async {
     try {
-      // Check if completion sound is enabled in settings
-      final soundEnabled = await _hobbyService.getSetting('completionSound');
-      if (soundEnabled == 'false') {
+      // Check if completion vibration is enabled in settings
+      final vibrationEnabled = await _hobbyService.getSetting('completionSound');
+      if (vibrationEnabled == 'false') {
         return;
       }
 
-      // Play sound and haptic feedback together
-      await Future.wait([
-        _playSound(),
-        _playHapticFeedback(),
-      ]);
+      // Play only haptic feedback (vibration)
+      await _playHapticFeedback();
     } catch (e) {
-      print('Error playing sound: $e');
-    }
-  }
-
-  Future<void> _playSound() async {
-    try {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource('sounds/completion.wav'));
-    } catch (e) {
-      print('Error playing audio: $e');
+      print('Error playing vibration: $e');
     }
   }
 
@@ -50,6 +36,6 @@ class SoundService {
   }
 
   void dispose() {
-    _audioPlayer.dispose();
+    // No resources to dispose
   }
 }

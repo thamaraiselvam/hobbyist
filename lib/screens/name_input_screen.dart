@@ -32,7 +32,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasCompletedOnboarding', true);
-    
+
     // Save name to SQLite
     final service = HobbyService();
     await service.setSetting('userName', name);
@@ -60,7 +60,9 @@ class _NameInputScreenState extends State<NameInputScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 32.0),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom,
               ),
               child: IntrinsicHeight(
                 child: Column(
@@ -68,7 +70,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
                   children: [
                     const SizedBox(height: 80),
                     const Text(
-                      'What should we call\nyou?',
+                      'What should we call you?',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 48,
@@ -112,7 +114,8 @@ class _NameInputScreenState extends State<NameInputScreen> {
                             width: 2,
                           ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 16),
                       ),
                       textCapitalization: TextCapitalization.words,
                       autofocus: true,
@@ -138,7 +141,9 @@ class _NameInputScreenState extends State<NameInputScreen> {
                               Text(
                                 'Start My Journey',
                                 style: TextStyle(
-                                  color: _isButtonEnabled ? Colors.white : Colors.white38,
+                                  color: _isButtonEnabled
+                                      ? Colors.white
+                                      : Colors.white38,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -146,7 +151,9 @@ class _NameInputScreenState extends State<NameInputScreen> {
                               const SizedBox(width: 8),
                               Icon(
                                 Icons.arrow_forward,
-                                color: _isButtonEnabled ? Colors.white : Colors.white38,
+                                color: _isButtonEnabled
+                                    ? Colors.white
+                                    : Colors.white38,
                                 size: 20,
                               ),
                             ],

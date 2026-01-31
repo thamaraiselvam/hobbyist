@@ -7,6 +7,7 @@ class Hobby {
   final int color;
   final Map<String, HobbyCompletion> completions; // date -> completion info
   final DateTime? createdAt;
+  final String? reminderTime; // Time in HH:mm format (e.g., "09:00")
 
   Hobby({
     required this.id,
@@ -17,17 +18,18 @@ class Hobby {
     required this.color,
     Map<String, HobbyCompletion>? completions,
     this.createdAt,
+    this.reminderTime,
   }) : completions = completions ?? {};
 
   int get currentStreak {
     int streak = 0;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     // Check if today has any completion (don't break streak for current day)
     final todayKey = _formatDate(today);
     bool todayStarted = completions[todayKey]?.completed == true;
-    
+
     // Start from yesterday and count backwards
     for (int i = 1; i < 365; i++) {
       final date = today.subtract(Duration(days: i));
@@ -38,12 +40,12 @@ class Hobby {
         break;
       }
     }
-    
+
     // Add today to streak if completed
     if (todayStarted) {
       streak++;
     }
-    
+
     return streak;
   }
 
@@ -60,6 +62,7 @@ class Hobby {
         'color': color,
         'completions': completions.map((k, v) => MapEntry(k, v.toJson())),
         'createdAt': createdAt?.toIso8601String(),
+        'reminderTime': reminderTime,
       };
 
   factory Hobby.fromJson(Map<String, dynamic> json) => Hobby(
@@ -76,6 +79,7 @@ class Hobby {
         createdAt: json['createdAt'] != null
             ? DateTime.parse(json['createdAt'])
             : null,
+        reminderTime: json['reminderTime'],
       );
 
   Hobby copyWith({
@@ -86,6 +90,7 @@ class Hobby {
     int? color,
     Map<String, HobbyCompletion>? completions,
     DateTime? createdAt,
+    String? reminderTime,
   }) =>
       Hobby(
         id: id,
@@ -96,6 +101,7 @@ class Hobby {
         color: color ?? this.color,
         completions: completions ?? this.completions,
         createdAt: createdAt ?? this.createdAt,
+        reminderTime: reminderTime ?? this.reminderTime,
       );
 }
 

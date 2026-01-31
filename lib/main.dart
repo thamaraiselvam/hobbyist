@@ -4,15 +4,34 @@ import 'screens/splash_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/name_input_screen.dart';
 import 'screens/daily_tasks_screen.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
+  // Initialize notification service
+  try {
+    await NotificationService().initialize();
+    final permissionGranted = await NotificationService().requestPermissions();
+    print('🔔 Notification permissions granted: $permissionGranted');
+    
+    final canSchedule = await NotificationService().canScheduleExactAlarms();
+    print('⏰ Can schedule exact alarms: $canSchedule');
+    
+    final pending = await NotificationService().getPendingNotifications();
+    print('📋 Pending notifications: ${pending.length}');
+    for (var notif in pending) {
+      print('   - ID: ${notif.id}, Title: ${notif.title}, Body: ${notif.body}');
+    }
+  } catch (e) {
+    print('❌ Error initializing notifications: $e');
+  }
+
   runApp(const HobbyTrackerApp());
 }
 
@@ -65,7 +84,8 @@ class HobbyTrackerApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/':
-            return MaterialPageRoute(builder: (context) => const SplashScreen());
+            return MaterialPageRoute(
+                builder: (context) => const SplashScreen());
           case '/landing':
             return MaterialPageRoute(
               builder: (context) => LandingScreen(
@@ -75,11 +95,14 @@ class HobbyTrackerApp extends StatelessWidget {
               ),
             );
           case '/name-input':
-            return MaterialPageRoute(builder: (context) => const NameInputScreen());
+            return MaterialPageRoute(
+                builder: (context) => const NameInputScreen());
           case '/dashboard':
-            return MaterialPageRoute(builder: (context) => const DailyTasksScreen());
+            return MaterialPageRoute(
+                builder: (context) => const DailyTasksScreen());
           default:
-            return MaterialPageRoute(builder: (context) => const SplashScreen());
+            return MaterialPageRoute(
+                builder: (context) => const SplashScreen());
         }
       },
     );

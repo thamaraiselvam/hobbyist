@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
+import '../utils/default_hobbies.dart';
 
 class AddHobbyScreen extends StatefulWidget {
   final Hobby? hobby;
-  
+
   const AddHobbyScreen({Key? key, this.hobby}) : super(key: key);
 
   @override
@@ -16,18 +17,39 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   final _nameController = TextEditingController();
   final _notesController = TextEditingController();
   final HobbyService _service = HobbyService();
+
+  String _repeatMode = 'weekly';
+  String _priority = 'medium';
+  TimeOfDay _notificationTime = const TimeOfDay(hour: 8, minute: 0);
+  bool _notifyEnabled = true;
   
-  String _repeatMode = 'Daily';
-  String _priority = 'Medium';
+  final List<String> _weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  int _selectedWeekDay = 0; // Single day for weekly (0=Monday)
+  int _selectedMonthDay = 1; // Day of month for monthly (1-31)
   
+  List<HobbyData> _filteredHobbies = DefaultHobbies.hobbies;
+  bool _showSuggestions = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.hobby != null) {
       _nameController.text = widget.hobby!.name;
       _notesController.text = widget.hobby!.notes;
-      _repeatMode = widget.hobby!.repeatMode[0].toUpperCase() + widget.hobby!.repeatMode.substring(1);
-      _priority = widget.hobby!.priority[0].toUpperCase() + widget.hobby!.priority.substring(1);
+      _repeatMode = widget.hobby!.repeatMode;
+      _priority = widget.hobby!.priority;
+
+      // Load notification time if exists
+      if (widget.hobby!.reminderTime != null &&
+          widget.hobby!.reminderTime!.isNotEmpty) {
+        final timeParts = widget.hobby!.reminderTime!.split(':');
+        if (timeParts.length == 2) {
+          _notificationTime = TimeOfDay(
+            hour: int.tryParse(timeParts[0]) ?? 8,
+            minute: int.tryParse(timeParts[1]) ?? 0,
+          );
+        }
+      }
     }
   }
 
@@ -40,13 +62,19 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
 
   Future<void> _saveHobby() async {
     if (_formKey.currentState!.validate()) {
+      // Format notification time as HH:mm
+      final notificationTimeString = _notifyEnabled
+          ? '${_notificationTime.hour.toString().padLeft(2, '0')}:${_notificationTime.minute.toString().padLeft(2, '0')}'
+          : '';
+
       if (widget.hobby != null) {
         // Update existing hobby
         final updatedHobby = widget.hobby!.copyWith(
           name: _nameController.text,
           notes: _notesController.text,
-          repeatMode: _repeatMode.toLowerCase(),
-          priority: _priority.toLowerCase(),
+          repeatMode: _repeatMode,
+          priority: _priority,
+          reminderTime: notificationTimeString,
         );
         await _service.updateHobby(updatedHobby);
       } else {
@@ -55,161 +83,605 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           name: _nameController.text,
           notes: _notesController.text,
-          repeatMode: _repeatMode.toLowerCase(),
-          priority: _priority.toLowerCase(),
-          color: const Color(0xFF6C3FFF).value,
+          repeatMode: _repeatMode,
+          priority: _priority,
+          color: const Color(0xFF590df2).value,
+          reminderTime: notificationTimeString,
         );
         await _service.addHobby(hobby);
       }
-      
+
       if (mounted) Navigator.pop(context);
     }
+  }
+
+  Future<void> _selectTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _notificationTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF590df2),
+              onPrimary: Colors.white,
+              surface: Color(0xFF221834),
+              onSurface: Colors.white,
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: const Color(0xFF221834),
+              hourMinuteShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              dayPeriodShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != _notificationTime) {
+      setState(() {
+        _notificationTime = picked;
+      });
+    }
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
+  }
+
+  String _getDaySuffix(int day) {
+    if (day >= 11 && day <= 13) {
+      return 'th';
+    }
+    switch (day % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _filteredHobbies = DefaultHobbies.search(query);
+      _showSuggestions = query.isNotEmpty && _filteredHobbies.isNotEmpty;
+    });
+  }
+
+  void _selectHobby(HobbyData hobby) {
+    setState(() {
+      _nameController.text = hobby.name;
+      _showSuggestions = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF1A1625),
+        color: Color(0xFF161022),
       ),
       child: SafeArea(
         child: Scaffold(
           backgroundColor: Colors.transparent,
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6C3FFF),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      widget.hobby != null ? 'EDIT HOBBY TASK' : 'NEW HOBBY TASK',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    TextFormField(
-                      controller: _nameController,
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                      decoration: InputDecoration(
-                        hintText: 'Hobby Name (e.g., Exercise)',
-                        hintStyle: const TextStyle(
-                          color: Colors.white38,
-                          fontSize: 18,
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xFF2A2238),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.all(20),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a hobby name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _notesController,
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                      maxLines: 5,
-                      decoration: InputDecoration(
-                        hintText: 'Add details or notes',
-                        hintStyle: const TextStyle(
-                          color: Colors.white38,
-                          fontSize: 16,
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xFF2A2238),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.all(20),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildDropdown(
-                            value: _repeatMode,
-                            items: ['Daily', 'Weekly', 'Monthly'],
-                            onChanged: (value) => setState(() => _repeatMode = value!),
-                            label: 'Repeat Mode',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildDropdown(
-                            value: _priority,
-                            items: ['Low', 'Medium', 'High'],
-                            onChanged: (value) => setState(() => _priority = value!),
-                            label: 'Priority',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: _saveHobby,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6C3FFF),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        widget.hobby != null ? 'Update' : 'Create',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white70,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
+          body: Stack(
+            children: [
+              // Blurred background
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.black26,
                 ),
               ),
+              // Bottom sheet
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF161022),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(40),
+                      topRight: Radius.circular(40),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Handle bar
+                            const SizedBox(height: 12),
+                            Center(
+                              child: Container(
+                                width: 48,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF433168),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Title
+                            Text(
+                              'ADD NEW HOBBY TASK',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: const Color(0xFFa490cb),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            // Search input with suggestions
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                TextFormField(
+                                  controller: _nameController,
+                                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                                  onChanged: _onSearchChanged,
+                                  decoration: InputDecoration(
+                                    hintText: 'e.g., Read book - 30 mins',
+                                    hintStyle: const TextStyle(
+                                      color: Color(0xFFa490cb),
+                                      fontSize: 16,
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFF221834),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter a hobby name';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                // Suggestions list
+                                if (_showSuggestions) ...[
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    constraints: const BoxConstraints(maxHeight: 200),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF221834),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: const Color(0xFF382a54)),
+                                    ),
+                                    child: ListView.separated(
+                                      shrinkWrap: true,
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      itemCount: _filteredHobbies.take(6).length,
+                                      separatorBuilder: (context, index) => const Divider(
+                                        color: Color(0xFF382a54),
+                                        height: 1,
+                                      ),
+                                      itemBuilder: (context, index) {
+                                        final hobby = _filteredHobbies[index];
+                                        return InkWell(
+                                          onTap: () => _selectHobby(hobby),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 12,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Text(
+                                                  hobby.emoji,
+                                                  style: const TextStyle(fontSize: 20),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Text(
+                                                  hobby.name,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            // Frequency section
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF221834),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: const Color(0xFF382a54)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.repeat, color: Color(0xFFa490cb), size: 16),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'FREQUENCY',
+                                        style: TextStyle(
+                                          color: const Color(0xFFa490cb),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Frequency buttons
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF161022).withOpacity(0.4),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        _buildFrequencyButton('weekly', 'Weekly'),
+                                        _buildFrequencyButton('daily', 'Daily'),
+                                        _buildFrequencyButton('monthly', 'Monthly'),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  // Conditional frequency selector based on mode
+                                  if (_repeatMode == 'weekly') ...[
+                                    // Week days selector (single selection)
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: List.generate(7, (index) {
+                                        final isSelected = _selectedWeekDay == index;
+                                        return GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _selectedWeekDay = index;
+                                            });
+                                          },
+                                          child: Container(
+                                            width: 36,
+                                            height: 36,
+                                            decoration: BoxDecoration(
+                                              color: isSelected ? const Color(0xFF590df2) : Colors.transparent,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: isSelected 
+                                                    ? const Color(0xFF590df2) 
+                                                    : Colors.white.withOpacity(0.05),
+                                              ),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                _weekDays[index],
+                                                style: TextStyle(
+                                                  color: isSelected ? Colors.white : const Color(0xFF433168),
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                    ),
+                                  ] else if (_repeatMode == 'daily') ...[
+                                    // Daily - just show info text
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF161022).withOpacity(0.4),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.today, color: Color(0xFFa490cb), size: 20),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            'Repeats every day',
+                                            style: TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ] else if (_repeatMode == 'monthly') ...[
+                                    // Monthly - show day picker slider
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(Icons.calendar_month, color: Color(0xFFa490cb), size: 20),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              'Day of month: ${_selectedMonthDay}${_getDaySuffix(_selectedMonthDay)}',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        SliderTheme(
+                                          data: SliderThemeData(
+                                            activeTrackColor: const Color(0xFF590df2),
+                                            inactiveTrackColor: const Color(0xFF590df2).withOpacity(0.2),
+                                            thumbColor: const Color(0xFF590df2),
+                                            overlayColor: const Color(0xFF590df2).withOpacity(0.2),
+                                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+                                            trackHeight: 4,
+                                          ),
+                                          child: Slider(
+                                            value: _selectedMonthDay.toDouble(),
+                                            min: 1,
+                                            max: 31,
+                                            divisions: 30,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _selectedMonthDay = value.toInt();
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                        // Show day markers
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text('1', style: TextStyle(color: Color(0xFFa490cb), fontSize: 10)),
+                                              Text('15', style: TextStyle(color: Color(0xFFa490cb), fontSize: 10)),
+                                              Text('31', style: TextStyle(color: Color(0xFFa490cb), fontSize: 10)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  const SizedBox(height: 20),
+                                  Divider(color: const Color(0xFF382a54), height: 1),
+                                  const SizedBox(height: 20),
+                                  // Notify Me toggle
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 32,
+                                            height: 32,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF590df2).withOpacity(0.1),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.notifications,
+                                              color: Color(0xFF590df2),
+                                              size: 18,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Text(
+                                            'Notify Me',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Switch(
+                                        value: _notifyEnabled,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _notifyEnabled = value;
+                                          });
+                                        },
+                                        activeColor: const Color(0xFF590df2),
+                                        activeTrackColor: const Color(0xFF590df2).withOpacity(0.5),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_notifyEnabled) ...[
+                                    const SizedBox(height: 16),
+                                    // Notification time
+                                    InkWell(
+                                      onTap: _selectTime,
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF161022).withOpacity(0.4),
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(color: Colors.white.withOpacity(0.05)),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.alarm,
+                                              color: Color(0xFFa490cb),
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'REMINDER TIME',
+                                                    style: TextStyle(
+                                                      color: const Color(0xFFa490cb),
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w700,
+                                                      letterSpacing: 1.2,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    _formatTime(_notificationTime),
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.expand_more,
+                                              color: Color(0xFF6B6B6B),
+                                              size: 18,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            // Priority section
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 4),
+                                  child: Text(
+                                    'TASK PRIORITY',
+                                    style: TextStyle(
+                                      color: const Color(0xFFa490cb),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.8,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    _buildPriorityButton('none', 'None', null),
+                                    const SizedBox(width: 8),
+                                    _buildPriorityButton('low', 'Low', Colors.green),
+                                    const SizedBox(width: 8),
+                                    _buildPriorityButton('medium', 'Med', Colors.amber),
+                                    const SizedBox(width: 8),
+                                    _buildPriorityButton('high', 'High', Colors.red),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 32),
+                            // Create button
+                            ElevatedButton(
+                              onPressed: _saveHobby,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF590df2),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 8,
+                                shadowColor: const Color(0xFF590df2).withOpacity(0.3),
+                              ),
+                              child: Text(
+                                widget.hobby != null ? 'Update Activity' : 'Create Activity',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            // Cancel button
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFa490cb),
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                              ),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFrequencyButton(String value, String label) {
+    final isSelected = _repeatMode == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _repeatMode = value;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF590df2) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFFa490cb),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -217,38 +689,52 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
     );
   }
 
-  Widget _buildDropdown({
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2238),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isExpanded: true,
-          dropdownColor: const Color(0xFF2A2238),
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white54),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
+  Widget _buildPriorityButton(String value, String label, Color? dotColor) {
+    final isSelected = _priority == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _priority = value;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF590df2).withOpacity(0.1) : const Color(0xFF221834),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? const Color(0xFF590df2).withOpacity(0.4) : Colors.transparent,
+            ),
           ),
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(item),
-            );
-          }).toList(),
-          onChanged: onChanged,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (dotColor != null) ...[
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : const Color(0xFFa490cb),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
 }
+

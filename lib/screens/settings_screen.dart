@@ -167,24 +167,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildBottomNav() {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF2A2238),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 12,
-          bottom: 12 + MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom,
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1733),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: const Color(0xFF3D3560),
+          width: 1,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.check_circle_outline, 'Tasks', 0),
-            _buildNavItem(Icons.local_fire_department_outlined, 'Streaks', 1),
-            _buildNavItem(Icons.settings_outlined, 'Settings', 2),
-          ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Container(
+          height: 70,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItemIcon(Icons.check_circle, 0),
+              _buildNavItemIcon(Icons.local_fire_department, 1),
+              _buildNavItem(Icons.settings, 'Settings', 2),
+            ],
+          ),
         ),
       ),
     );
@@ -192,28 +196,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = index == 2; // Settings is index 2
-    return GestureDetector(
-      onTap: () => widget.onNavigate(index),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
+    return Expanded(
+      flex: 2,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => widget.onNavigate(index),
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF6C3FFF) : Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? Colors.white : Colors.white54,
+                  size: 24,
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItemIcon(IconData icon, int index) {
+    final isSelected = index == 2; // Settings is index 2
+    return Expanded(
+      flex: 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => widget.onNavigate(index),
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            child: Icon(
               icon,
-              color: isSelected ? const Color(0xFF6C3FFF) : Colors.white54,
+              color: isSelected ? const Color(0xFF6C3FFF) : Colors.white38,
               size: 28,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? const Color(0xFF6C3FFF) : Colors.white54,
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -296,9 +336,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(color: Color(0xFF3D3449), height: 1),
           _buildSwitchTile(
-            icon: Icons.volume_up,
+            icon: Icons.vibration,
             iconColor: const Color(0xFF8B5CF6),
-            title: 'Completion Sound',
+            title: 'Completion Vibration',
             value: _completionSoundEnabled,
             onChanged: (value) {
               setState(() => _completionSoundEnabled = value);

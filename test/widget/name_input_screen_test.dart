@@ -17,20 +17,23 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    testWidgets('should display name input screen', (WidgetTester tester) async {
+    testWidgets('should display name input screen',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: NameInputScreen(),
         ),
       );
 
-      expect(find.text('What should we call\nyou?'), findsOneWidget);
-      expect(find.text('Set a display name for your hobby profile.'), findsOneWidget);
+      expect(find.text('What should we call you?'), findsOneWidget);
+      expect(find.text('Set a display name for your hobby profile.'),
+          findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
       expect(find.text('Start My Journey'), findsOneWidget);
     });
 
-    testWidgets('should disable button when text is empty', (WidgetTester tester) async {
+    testWidgets('should disable button when text is empty',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: NameInputScreen(),
@@ -44,7 +47,8 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('should enable button when text is entered', (WidgetTester tester) async {
+    testWidgets('should enable button when text is entered',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: NameInputScreen(),
@@ -61,7 +65,8 @@ void main() {
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('should not enable button with only whitespace', (WidgetTester tester) async {
+    testWidgets('should not enable button with only whitespace',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: NameInputScreen(),

@@ -2,7 +2,7 @@
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Add New Hobby Task</title>
+<title>Add Task - Dynamic Hobby Search</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -23,41 +23,60 @@
                         "DEFAULT": "0.25rem",
                         "lg": "0.5rem",
                         "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
                         "full": "9999px"
                     },
                 },
             },
         }
     </script>
-<style type="text/tailwindcss">body {
-    font-family: "Plus Jakarta Sans", sans-serif;
-    min-height: max(884px, 100dvh)
-    }
-.backdrop-blur-md {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px)
-    }
-.no-scrollbar::-webkit-scrollbar {
-    display: none
-    }
-.no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none
-    }
-select {
-    appearance: none;
-    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuC-p2wwCfh4am4W_3I2n4qFJqGk3KcU1fL_zGzySLAzqPKQLYm4_XEFOdX6NyyX5fJ_GSRlwURvyf3Ayqdr0ZPfHMJcE_e5FwM2H2CJ_dqDPLgv2FUHBdJAvKmgKr_YFbhf7A_8NzSjWg1ovs3JmlgUxSdi3Nao3ko6NkqnFszSEvy3zqkfumca4zjcNmz5ZpLr-EtMfVCpp1x1fV-qhRqonaZeVXkXm3rFbPPWt5dFGdrARoPs8cH8_prxPQTy2OgtSP0oq2uwl5ex);
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1.25em
-    }</style>
+<style type="text/tailwindcss">
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            min-height: 100dvh;
+        }
+        .backdrop-blur-md {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px)
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .toggle-checkbox:checked {
+            @apply right-0 border-primary bg-primary;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            @apply bg-primary/20;
+        }.hobby-input:placeholder-shown ~ .hobby-suggestions {
+            opacity: 0;
+            max-height: 0;
+            margin-top: 0;
+            pointer-events: none;
+            transform: translateY(-8px);
+        }
+        .hobby-suggestions {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 1;
+            max-height: 100px;
+            margin-top: 0.75rem;
+            transform: translateY(0);
+        }
+    </style>
 <style>
     body {
       min-height: max(884px, 100dvh);
     }
   </style>
   </head>
-<body class="bg-background-light dark:bg-background-dark min-h-screen font-display flex items-center justify-center p-0 m-0 overflow-hidden">
+<body class="bg-background-light dark:bg-background-dark font-display flex items-center justify-center p-0 m-0 overflow-hidden text-gray-900 dark:text-white">
 <div class="absolute inset-0 z-0 flex flex-col p-6 opacity-40">
 <div class="flex justify-between items-center mb-8">
 <div class="h-10 w-10 rounded-full bg-primary/20"></div>
@@ -72,47 +91,115 @@ select {
 </div>
 </div>
 <div class="fixed inset-0 bg-black/40 backdrop-blur-md z-10 flex flex-col justify-end">
-<div class="bg-white dark:bg-[#161022] w-full max-w-md mx-auto rounded-t-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col transition-all duration-300">
+<div class="bg-white dark:bg-[#161022] w-full max-w-md mx-auto rounded-t-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col max-h-[95vh]">
 <div class="flex flex-col items-center pt-3 pb-1">
 <div class="h-1.5 w-12 rounded-full bg-gray-200 dark:bg-[#433168]"></div>
 </div>
 <div class="px-4 py-4">
-<h4 class="text-gray-400 dark:text-[#a490cb] text-xs font-bold leading-normal tracking-[0.2em] text-center uppercase">New Hobby Task</h4>
+<h4 class="text-gray-400 dark:text-[#a490cb] text-[10px] font-bold leading-normal tracking-[0.2em] text-center uppercase">Add New Hobby Task</h4>
 </div>
-<div class="px-6 pb-10 space-y-4">
-<div>
-<input class="form-input w-full border-none bg-gray-50 dark:bg-[#221834] rounded-2xl h-16 px-6 text-lg font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#a490cb] focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Hobby Name (e.g., Exercise)" type="text"/>
-</div>
-<div>
-<textarea class="form-textarea w-full border-none bg-gray-50 dark:bg-[#221834] rounded-2xl p-6 text-base font-normal text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#a490cb] focus:ring-2 focus:ring-primary/50 transition-all resize-none min-h-[140px]" placeholder="Add details or notes"></textarea>
-</div>
-<div class="grid grid-cols-2 gap-3">
+<div class="px-6 pb-8 space-y-6 overflow-y-auto no-scrollbar">
+<div class="flex flex-col">
+<div class="relative group">
 <div class="relative">
-<select class="form-select w-full border-none bg-gray-50 dark:bg-[#221834] rounded-xl h-14 pl-4 pr-10 text-sm font-medium text-gray-700 dark:text-[#a490cb] focus:ring-2 focus:ring-primary/50 transition-all">
-<option disabled="" selected="" value="">Repeat Mode</option>
-<option>Daily</option>
-<option>Weekdays</option>
-<option>Weekly</option>
-<option>Monthly</option>
-</select>
-</div>
-<div class="relative">
-<select class="form-select w-full border-none bg-gray-50 dark:bg-[#221834] rounded-xl h-14 pl-4 pr-10 text-sm font-medium text-gray-700 dark:text-[#a490cb] focus:ring-2 focus:ring-primary/50 transition-all">
-<option disabled="" selected="" value="">Priority</option>
-<option>None</option>
-<option>Low (Green)</option>
-<option>Medium (Yellow)</option>
-<option>High (Red)</option>
-</select>
-</div>
-</div>
-<div class="pt-6">
-<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-primary/20 transition-transform active:scale-[0.98]">
-<span>Create</span>
+<input class="hobby-input peer form-input w-full border-none bg-gray-100 dark:bg-[#221834] rounded-2xl h-14 px-6 pr-12 text-base font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-[#a490cb] focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Search for a hobby..." type="text"/>
+<span class="material-symbols-outlined absolute right-5 top-1/2 -translate-y-1/2 text-primary">search</span>
+<div class="hobby-suggestions flex flex-wrap gap-2 px-1 overflow-x-auto no-scrollbar">
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#221834] border border-transparent dark:border-[#382a54] hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0">
+<span class="text-base">🏃</span>
+<span class="text-[11px] font-bold text-gray-600 dark:text-[#a490cb]">Run</span>
 </button>
-<button class="w-full mt-3 text-gray-400 dark:text-[#a490cb] font-medium py-2 text-sm tracking-wide">
-                        Cancel
-                    </button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#221834] border border-transparent dark:border-[#382a54] hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0">
+<span class="text-base">📚</span>
+<span class="text-[11px] font-bold text-gray-600 dark:text-[#a490cb]">Read</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#221834] border border-transparent dark:border-[#382a54] hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0">
+<span class="text-base">🧘</span>
+<span class="text-[11px] font-bold text-gray-600 dark:text-[#a490cb]">Yoga</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-[#221834] border border-transparent dark:border-[#382a54] hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0">
+<span class="text-base">🎸</span>
+<span class="text-[11px] font-bold text-gray-600 dark:text-[#a490cb]">Guitar</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-gray-100 dark:bg-[#221834] rounded-[24px] p-5 space-y-5 border border-transparent dark:border-[#382a54]">
+<div class="space-y-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-gray-400 dark:text-[#a490cb] text-sm">repeat</span>
+<p class="text-[10px] font-bold text-gray-400 dark:text-[#a490cb] uppercase tracking-[0.15em]">Frequency</p>
+</div>
+<div class="flex p-1 bg-white/50 dark:bg-[#161022]/40 rounded-xl">
+<button class="flex-1 py-2 px-3 rounded-lg bg-primary text-white text-[11px] font-bold shadow-sm transition-all">Weekly</button>
+<button class="flex-1 py-2 px-3 rounded-lg text-gray-500 dark:text-[#a490cb] text-[11px] font-bold transition-all">Daily</button>
+<button class="flex-1 py-2 px-3 rounded-lg text-gray-500 dark:text-[#a490cb] text-[11px] font-bold transition-all">Monthly</button>
+</div>
+</div>
+<div class="space-y-3 pt-1">
+<div class="flex justify-between items-center gap-1">
+<button class="w-9 h-9 rounded-full border border-primary/30 bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">M</button>
+<button class="w-9 h-9 rounded-full border border-gray-200 dark:border-white/5 text-gray-400 dark:text-white/20 text-[10px] font-bold flex items-center justify-center">T</button>
+<button class="w-9 h-9 rounded-full border border-primary bg-primary text-white text-[10px] font-bold flex items-center justify-center shadow-lg shadow-primary/20">W</button>
+<button class="w-9 h-9 rounded-full border border-gray-200 dark:border-white/5 text-gray-400 dark:text-white/20 text-[10px] font-bold flex items-center justify-center">T</button>
+<button class="w-9 h-9 rounded-full border border-primary/30 bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">F</button>
+<button class="w-9 h-9 rounded-full border border-gray-200 dark:border-white/5 text-gray-400 dark:text-white/20 text-[10px] font-bold flex items-center justify-center">S</button>
+<button class="w-9 h-9 rounded-full border border-gray-200 dark:border-white/5 text-gray-400 dark:text-white/20 text-[10px] font-bold flex items-center justify-center">S</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-[#382a54]">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[18px]">notifications</span>
+</div>
+<span class="text-sm font-semibold text-gray-900 dark:text-white">Notify Me</span>
+</div>
+<div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 dark:border-[#433168] dark:bg-[#161022] checked:right-0 right-4 duration-200" id="notify-toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-[#433168] cursor-pointer" for="notify-toggle"></label>
+</div>
+</div>
+<div class="space-y-4 pt-1">
+<div class="flex items-center gap-3 bg-white/50 dark:bg-[#161022]/40 p-4 rounded-2xl border border-gray-200 dark:border-white/5 transition-all">
+<div class="flex items-center gap-3 flex-1">
+<span class="material-symbols-outlined text-gray-400 dark:text-[#a490cb] text-[20px]">alarm</span>
+<div>
+<p class="text-[10px] font-bold text-gray-400 dark:text-[#a490cb] uppercase tracking-wider">Reminder Time</p>
+<span class="text-sm font-semibold text-gray-900 dark:text-white">08:00 AM</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-400 text-[18px]">expand_more</span>
+</div>
+</div>
+</div>
+<div class="space-y-3">
+<p class="text-[10px] font-bold text-gray-400 dark:text-[#a490cb] uppercase tracking-widest px-1">Task Priority</p>
+<div class="grid grid-cols-4 gap-2">
+<button class="flex flex-col items-center justify-center py-3 rounded-xl bg-gray-100 dark:bg-[#221834] border border-transparent">
+<span class="text-[10px] font-bold text-gray-600 dark:text-[#a490cb]">None</span>
+</button>
+<button class="flex flex-col items-center justify-center py-3 rounded-xl bg-gray-100 dark:bg-[#221834] border border-transparent">
+<div class="h-1.5 w-1.5 rounded-full bg-emerald-500 mb-1"></div>
+<span class="text-[10px] font-bold text-gray-600 dark:text-[#a490cb]">Low</span>
+</button>
+<button class="flex flex-col items-center justify-center py-3 rounded-xl bg-primary/10 border border-primary/40">
+<div class="h-1.5 w-1.5 rounded-full bg-amber-500 mb-1"></div>
+<span class="text-[10px] font-bold text-primary dark:text-white">Med</span>
+</button>
+<button class="flex flex-col items-center justify-center py-3 rounded-xl bg-gray-100 dark:bg-[#221834] border border-transparent">
+<div class="h-1.5 w-1.5 rounded-full bg-rose-500 mb-1"></div>
+<span class="text-[10px] font-bold text-gray-600 dark:text-[#a490cb]">High</span>
+</button>
+</div>
+</div>
+<div class="pt-4 space-y-3">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-primary/30 transition-transform active:scale-[0.98]">
+<span>Create Activity</span>
+</button>
+<button class="w-full text-gray-400 dark:text-[#a490cb] font-medium py-1 text-sm tracking-wide">
+                    Cancel
+                </button>
 </div>
 </div>
 <div class="h-8 bg-white dark:bg-[#161022]"></div>
