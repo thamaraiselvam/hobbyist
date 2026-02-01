@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AnimatedCheckbox extends StatefulWidget {
   final bool isChecked;
-  final VoidCallback onTap;
+  final VoidCallback? onTap; // Made nullable
   final Color color;
   final double size;
 
@@ -63,8 +63,10 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
 
   @override
   Widget build(BuildContext context) {
+    final isEnabled = widget.onTap != null;
+    
     return GestureDetector(
-      onTap: widget.onTap,
+      onTap: isEnabled ? widget.onTap : null,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -73,13 +75,13 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
             height: widget.size,
             decoration: BoxDecoration(
               color: widget.isChecked
-                  ? widget.color
+                  ? widget.color.withOpacity(isEnabled ? 1.0 : 0.3)
                   : Colors.transparent,
               shape: BoxShape.circle,
               border: Border.all(
                 color: widget.isChecked
-                    ? widget.color
-                    : const Color(0xFF4A4458),
+                    ? widget.color.withOpacity(isEnabled ? 1.0 : 0.3)
+                    : (isEnabled ? const Color(0xFF4A4458) : const Color(0xFF2A2738)),
                 width: 2,
               ),
             ),
@@ -87,7 +89,7 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
                 ? CustomPaint(
                     painter: CheckmarkPainter(
                       progress: _checkAnimation.value,
-                      color: Colors.white,
+                      color: Colors.white.withOpacity(isEnabled ? 1.0 : 0.5),
                     ),
                   )
                 : null,

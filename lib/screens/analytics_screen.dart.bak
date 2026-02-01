@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -27,6 +28,7 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String _selectedPeriod = 'Weekly';
+  int? _selectedDataPointIndex;
   final HobbyService _hobbyService = HobbyService();
 
   @override
@@ -216,10 +218,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         currentPeriod = totalCompletedThisMonth;
         previousPeriod = totalCompletedLastMonth;
         break;
-      case 'Yearly':
-        currentPeriod = totalCompletedThisYear;
-        previousPeriod = totalCompletedLastYear;
-        break;
       default:
         currentPeriod = totalCompletedThisWeek;
         previousPeriod = totalCompletedLastWeek;
@@ -241,6 +239,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   // Find the earliest date with any completion data
+  DateTime? get _earliestCompletionDate {
+    DateTime? earliest;
+    
+    for (var hobby in widget.hobbies) {
+      for (var dateKey in hobby.completions.keys) {
+        try {
+          final date = DateTime.parse(dateKey);
+          if (earliest == null || date.isBefore(earliest)) {
+            earliest = date;
+          }
+        } catch (e) {
+          // Skip invalid dates
+        }
+      }
+    }
+    
+    return earliest;
+  }
+
   List<double> get performanceData {
     List<double> data = [];
     final now = DateTime.now();
@@ -276,26 +293,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         }
         break;
         
-      case 'Yearly':
-        // Show 52 weeks (grouped by week)
-        for (int i = 51; i >= 0; i--) {
-          final startOfWeek = now.subtract(Duration(days: now.weekday - 1 + (i * 7)));
-          int weekCount = 0;
-          
-          // Count all completions in this week (7 days)
-          for (int d = 0; d < 7; d++) {
-            final date = startOfWeek.add(Duration(days: d));
-            final dateKey = DateFormat('yyyy-MM-dd').format(date);
-            for (var hobby in widget.hobbies) {
-              if (hobby.completions[dateKey]?.completed == true) {
-                weekCount++;
-              }
-            }
-          }
-          data.add(weekCount.toDouble());
-        }
-        break;
-        
       default:
         // Default to weekly
         for (int i = 6; i >= 0; i--) {
@@ -320,8 +317,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         return '7-Day Performance';
       case 'Monthly':
         return '30-Day Performance';
-      case 'Yearly':
-        return '52-Week Performance';
       default:
         return '7-Day Performance';
     }
@@ -331,21 +326,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final now = DateTime.now();
     switch (_selectedPeriod) {
       case 'Weekly':
-        // Return day names (MON, TUE, WED, etc.)
+        // Return 7 day labels (Mon, Tue, Wed, etc.)
         return List.generate(7, (i) {
           final date = now.subtract(Duration(days: 6 - i));
-          return DateFormat('EEE').format(date).toUpperCase(); // MON, TUE, WED
+          return DateFormat('E').format(date); // Mon, Tue, Wed
         });
       case 'Monthly':
-        // Return day counter with D prefix (D1, D2, D3, etc.)
-        return List.generate(30, (i) => 'D${i + 1}');
-      case 'Yearly':
-        // Return week counter with W prefix (W1, W2, W3, etc.)
-        return List.generate(52, (i) => 'W${i + 1}');
+        // Return 30 day labels (show every 5th day)
+        return List.generate(30, (i) {
+          final date = now.subtract(Duration(days: 29 - i));
+          return DateFormat('d').format(date); // 1, 2, 3, ... 30
+        });
       default:
         return List.generate(7, (i) {
           final date = now.subtract(Duration(days: 6 - i));
-          return DateFormat('EEE').format(date).toUpperCase();
+          return DateFormat('E').format(date);
         });
     }
   }
@@ -462,6 +457,49 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     }
   }
 
+  void _handleChartTouch(Offset localPosition, List<double> chartData) {
+    if (chartData.isEmpty) return;
+    
+    final index = (localPosition.dx / MediaQuery.of(context).size.width * chartData.length).floor().clamp(0, chartData.length - 1);
+    
+    if (index >= 0 && index < chartData.length && index != _selectedDataPointIndex) {
+      setState(() => _selectedDataPointIndex = index);
+    }
+  }
+
+  double _calculateTooltipPosition(int index, int dataLength, BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final chartWidth = screenWidth - 64; // accounting for padding
+    final position = (index / (dataLength - 1).clamp(1, double.infinity)) * chartWidth;
+    
+    // Keep tooltip within bounds (32px padding on each side, tooltip width ~100px)
+    const tooltipWidth = 100.0;
+    const padding = 32.0;
+    
+    // Center the tooltip on the data point
+    var leftPosition = position - (tooltipWidth / 2) + padding;
+    
+    // Clamp to screen bounds
+    if (leftPosition < padding) {
+      leftPosition = padding;
+    } else if (leftPosition + tooltipWidth > screenWidth - padding) {
+      leftPosition = screenWidth - padding - tooltipWidth;
+    }
+    
+    return leftPosition;
+  }
+
+  String _getTooltipText(int index, List<double> chartData) {
+    final value = chartData[index].toInt();
+    
+    // Only show task count, no "days ago" message
+    if (value == 1) {
+      return '1 task';
+    } else {
+      return '$value tasks';
+    }
+  }
+
   Future<void> _refreshData() async {
     await widget.onRefresh();
   }
@@ -487,6 +525,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     children: [
                       const SizedBox(height: 24),
                       _buildStatsCards(),
+                      const SizedBox(height: 24),
+                      _buildPeriodSelector(),
+                      const SizedBox(height: 24),
+                      _buildPerformanceChart(),
                       const SizedBox(height: 24),
                       _buildBarChart(),
                       const SizedBox(height: 32),
@@ -846,7 +888,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           children: [
             _buildPeriodButton('WEEKLY', _selectedPeriod == 'Weekly'),
             _buildPeriodButton('MONTHLY', _selectedPeriod == 'Monthly'),
-            _buildPeriodButton('YEARLY', _selectedPeriod == 'Yearly'),
           ],
         ),
       ),
@@ -857,14 +898,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          String period;
-          if (label == 'WEEKLY') {
-            period = 'Weekly';
-          } else if (label == 'MONTHLY') {
-            period = 'Monthly';
-          } else {
-            period = 'Yearly';
-          }
+          final period = label == 'WEEKLY' ? 'Weekly' : 'Monthly';
           setState(() => _selectedPeriod = period);
         },
         child: Container(
@@ -888,25 +922,146 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildCompactPeriodButton(String label, bool isSelected, String period) {
-    return GestureDetector(
-      onTap: () {
-        setState(() => _selectedPeriod = period);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6C3FFF) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : const Color(0xFFa490cb),
+  Widget _buildPerformanceChart() {
+    final growth = currentGrowth;
+    final showBadge = growth != 0;
+    final growthSign = growth >= 0 ? '+' : '';
+    final chartData = performanceData;
+    final labels = performanceLabels;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                performanceTitle,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              if (showBadge)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: growth >= 0 
+                      ? const Color(0xFF10B981).withOpacity(0.1)
+                      : const Color(0xFFFF6B35).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '$growthSign${growth.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: growth >= 0 
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFFFF6B35),
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161616),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0x0DFFFFFF)),
+            ),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTapDown: (details) {
+                    _handleChartTouch(details.localPosition, chartData);
+                  },
+                  onHorizontalDragStart: (details) {
+                    _handleChartTouch(details.localPosition, chartData);
+                  },
+                  onHorizontalDragUpdate: (details) {
+                    _handleChartTouch(details.localPosition, chartData);
+                  },
+                  onHorizontalDragEnd: (details) {
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (mounted) {
+                        setState(() => _selectedDataPointIndex = null);
+                      }
+                    });
+                  },
+                  child: SizedBox(
+                    height: 120,
+                    child: Stack(
+                      children: [
+                        CustomPaint(
+                          size: const Size(double.infinity, 120),
+                          painter: PerformanceChartPainter(
+                            chartData,
+                            selectedIndex: _selectedDataPointIndex,
+                            earliestDate: _earliestCompletionDate,
+                          ),
+                        ),
+                        if (_selectedDataPointIndex != null && _selectedDataPointIndex! < chartData.length)
+                          Positioned(
+                            top: 8, // Position below the top edge with padding
+                            left: _calculateTooltipPosition(_selectedDataPointIndex!, chartData.length, context),
+                            child: Container(
+                              constraints: const BoxConstraints(
+                                minWidth: 60,
+                                maxWidth: 120,
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8B5CF6),
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                _getTooltipText(_selectedDataPointIndex!, chartData),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: labels
+                      .map((label) => Text(
+                            label,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF71717A),
+                              letterSpacing: 2.0,
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -942,9 +1097,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       case 'Monthly':
         chartTitle = '30-Day Performance';
         break;
-      case 'Yearly':
-        chartTitle = '52-Week Performance';
-        break;
       default:
         chartTitle = 'Daily Performance';
     }
@@ -954,36 +1106,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                chartTitle,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              // Compact period selector
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF221834),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildCompactPeriodButton('W', _selectedPeriod == 'Weekly', 'Weekly'),
-                    _buildCompactPeriodButton('M', _selectedPeriod == 'Monthly', 'Monthly'),
-                    _buildCompactPeriodButton('Y', _selectedPeriod == 'Yearly', 'Yearly'),
-                  ],
-                ),
-              ),
-            ],
+          Text(
+            chartTitle,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
           ),
           const SizedBox(height: 16),
           Container(
@@ -1001,7 +1131,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     // Y-axis labels
                     SizedBox(
                       width: 30,
-                      height: 160,
+                      height: 200,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -1024,7 +1154,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     // Bar chart - all fit on screen
                     Expanded(
                       child: SizedBox(
-                        height: 160,
+                        height: 200,
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1049,47 +1179,100 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             return Expanded(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: _selectedPeriod == 'Yearly' ? 0.3 : (_selectedPeriod == 'Monthly' ? 0.5 : 1),
+                                  horizontal: _selectedPeriod == 'Monthly' ? 0.5 : 1,
                                 ),
-                                child: TweenAnimationBuilder<double>(
-                                  duration: Duration(milliseconds: 600 + (index * 80)),
-                                  curve: Curves.easeOutCubic,
-                                  tween: Tween(begin: 0.0, end: barHeight.clamp(2.0, 160.0).toDouble()),
-                                  builder: (context, animatedHeight, child) {
-                                    return Container(
-                                      width: double.infinity,
-                                      height: animatedHeight,
-                                      decoration: BoxDecoration(
-                                        color: barColor,
-                                        borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(3),
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    // Show value on tap with haptic feedback
+                                    HapticFeedback.lightImpact();
+                                    ScaffoldMessenger.of(context).clearSnackBars();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              '${safeLabels[index]}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const Text(' : '),
+                                            Text(
+                                              '${value.toInt()}',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 16,
+                                                color: barColor,
+                                              ),
+                                            ),
+                                            const Text(' completions'),
+                                          ],
                                         ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: barColor.withOpacity(0.4),
-                                            blurRadius: 2,
-                                            offset: const Offset(0, 1),
-                                          ),
-                                        ],
+                                        duration: const Duration(milliseconds: 1200),
+                                        backgroundColor: const Color(0xFF2A2738),
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                       ),
                                     );
                                   },
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      // Animated bar with solid dark color
+                                      TweenAnimationBuilder<double>(
+                                        duration: Duration(milliseconds: 600 + (index * 80)),
+                                        curve: Curves.easeOutCubic,
+                                        tween: Tween(begin: 0.0, end: barHeight.clamp(2.0, 160.0).toDouble()),
+                                        builder: (context, animatedHeight, child) {
+                                          return Container(
+                                            width: double.infinity,
+                                            height: animatedHeight,
+                                            decoration: BoxDecoration(
+                                              color: barColor,
+                                              borderRadius: const BorderRadius.vertical(
+                                                top: Radius.circular(3),
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: barColor.withOpacity(0.4),
+                                                  blurRadius: 2,
+                                                  offset: const Offset(0, 1),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      // Show labels only for weekly (7 bars) or every 5th for monthly
+                                      if (_selectedPeriod == 'Weekly' || 
+                                          (_selectedPeriod == 'Monthly' && (index % 5 == 0 || index == safeLabels.length - 1)))
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 4),
+                                          child: Text(
+                                            safeLabels[index],
+                                            style: const TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF71717A),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.visible,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );
                           }),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // X-axis labels - independent from bars
-                Row(
-                  children: [
-                    const SizedBox(width: 38), // Align with bars (y-axis width + padding)
-                    Expanded(
-                      child: _buildXAxisLabels(safeLabels),
                     ),
                   ],
                 ),
@@ -1100,50 +1283,108 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       ),
     );
   }
-
-  Widget _buildXAxisLabels(List<String> allLabels) {
-    List<String> labelsToShow = [];
     
-    if (_selectedPeriod == 'Weekly') {
-      // Show all 7 labels: MON, TUE, WED, THU, FRI, SAT, SUN
-      labelsToShow = allLabels;
-    } else if (_selectedPeriod == 'Monthly') {
-      // Show D1, D6, D12, D18, D24, D30
-      labelsToShow = [
-        allLabels[0],   // D1
-        allLabels[5],   // D6
-        allLabels[11],  // D12
-        allLabels[17],  // D18
-        allLabels[23],  // D24
-        allLabels[29],  // D30
-      ];
-    } else if (_selectedPeriod == 'Yearly') {
-      // Show W1, W10, W20, W30, W40, W52
-      labelsToShow = [
-        allLabels[0],   // W1
-        allLabels[9],   // W10
-        allLabels[19],  // W20
-        allLabels[29],  // W30
-        allLabels[39],  // W40
-        allLabels[51],  // W52
-      ];
-    }
+    // Dark, muted colors for better visibility
+    final colors = [
+      const Color(0xFF6366F1), // Dark indigo
+      const Color(0xFF7C3AED), // Dark purple
+      const Color(0xFF2563EB), // Dark blue
+      const Color(0xFF059669), // Dark emerald
+      const Color(0xFFD97706), // Dark amber
+      const Color(0xFFDC2626), // Dark red
+      const Color(0xFF4338CA), // Deep indigo
+    ];
     
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: labelsToShow.map((label) => 
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          style: const TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF71717A),
-            height: 1.0,
+    final colorIndex = index % colors.length;
+    final barColor = colors[colorIndex];
+    
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 1),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            // Show value on tap with haptic feedback
+            HapticFeedback.lightImpact();
+            ScaffoldMessenger.of(context).clearSnackBars();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${safeLabels[index]}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const Text(' : '),
+                    Text(
+                      '${value.toInt()}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        color: barColor,
+                      ),
+                    ),
+                    const Text(' completions'),
+                  ],
+                ),
+                duration: const Duration(milliseconds: 1200),
+                backgroundColor: const Color(0xFF2A2738),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+            );
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // Animated bar with solid dark color
+              TweenAnimationBuilder<double>(
+                duration: Duration(milliseconds: 600 + (index * 80)),
+                curve: Curves.easeOutCubic,
+                tween: Tween(begin: 0.0, end: barHeight.clamp(2.0, 160.0).toDouble()),
+                builder: (context, animatedHeight, child) {
+                  return Container(
+                    width: double.infinity,
+                    height: animatedHeight,
+                    decoration: BoxDecoration(
+                      color: barColor,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(6),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: barColor.withOpacity(0.4),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              // X-axis label below bar
+              Text(
+                safeLabels[index],
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF71717A),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-        )
-      ).toList(),
+        ),
+      ),
     );
   }
 
@@ -1190,7 +1431,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         'date': date,
         'dateKey': dateKey,
         'completed': anyCompleted,
-        'count': dayTaskCount, // Track count for intensity
+        'priority': highestPriority,
       });
     }
 
@@ -1238,70 +1479,76 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   children: yearData.map((data) => _buildActivityCell(data)).toList(),
                 ),
                 const SizedBox(height: 16),
-                // Legend - GitHub-style intensity
+                // Legend - Priority colors
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const Text(
-                      'Less',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF71717A),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
                     // None
                     Container(
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF161B22),
+                        color: const Color(0xFF1A1625),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const SizedBox(width: 3),
-                    // Level 1
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0E4429),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    // Level 2
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF006D32),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    // Level 3
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF26A641),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    // Level 4
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF39D353),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     const Text(
-                      'More',
+                      'None',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF71717A),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Low
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6BCF7F),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Low',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF71717A),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Medium
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFD93D),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Med',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF71717A),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // High
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF6B6B),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'High',
                       style: TextStyle(
                         fontSize: 10,
                         color: Color(0xFF71717A),
@@ -1319,39 +1566,58 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _buildActivityCell(Map<String, dynamic> data) {
     final bool isCompleted = data['completed'];
-    final int count = data['count'] ?? 0;
+    final String? priority = data['priority'];
     final date = data['date'] as DateTime;
     final today = DateTime.now();
     final isToday = date.year == today.year && 
                     date.month == today.month && 
                     date.day == today.day;
     
-    // GitHub-style green colors based on activity intensity
     Color cellColor;
-    if (!isCompleted || count == 0) {
-      cellColor = const Color(0xFF161B22); // Dark gray for no activity
-    } else if (count == 1) {
-      cellColor = const Color(0xFF0E4429); // Light green
-    } else if (count == 2) {
-      cellColor = const Color(0xFF006D32); // Medium green
-    } else if (count == 3) {
-      cellColor = const Color(0xFF26A641); // Bright green
+    if (isCompleted) {
+      // Use priority-based colors
+      switch (priority) {
+        case 'high':
+          cellColor = const Color(0xFFFF6B6B); // Red
+          break;
+        case 'medium':
+          cellColor = const Color(0xFFFFD93D); // Yellow
+          break;
+        case 'low':
+          cellColor = const Color(0xFF6BCF7F); // Green
+          break;
+        default:
+          cellColor = const Color(0xFF10B981); // Default green
+      }
     } else {
-      cellColor = const Color(0xFF39D353); // Brightest green (4+)
+      cellColor = const Color(0xFF1A1625); // Empty/not completed
     }
     
-    return Container(
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(
-        color: cellColor,
-        borderRadius: BorderRadius.circular(2),
-        border: isToday
-            ? Border.all(
-                color: Colors.white.withOpacity(0.6),
-                width: 1,
-              )
-            : null,
+    return GestureDetector(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${DateFormat('MMM d, yyyy').format(date)}: ${isCompleted ? "✓ Active" : "○ No activity"}',
+            ),
+            duration: const Duration(milliseconds: 800),
+            backgroundColor: const Color(0xFF2A2738),
+          ),
+        );
+      },
+      child: Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          color: cellColor,
+          borderRadius: BorderRadius.circular(2),
+          border: isToday
+              ? Border.all(
+                  color: Colors.white.withOpacity(0.6),
+                  width: 1,
+                )
+              : null,
+        ),
       ),
     );
   }
@@ -1641,14 +1907,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Color _getPriorityColor(String priority) {
     switch (priority.toLowerCase()) {
       case 'high':
-        return const Color(0xFFF700C5); // Bright magenta
+        return Colors.red;
       case 'medium':
-        return const Color(0xFF00C2A7); // Teal/cyan
+        return Colors.amber;
       case 'low':
-        return const Color(0xFFFFC347); // Orange/gold
+        return Colors.green;
       case 'none':
       default:
-        return const Color(0xFFFF8056); // Coral
+        return const Color(0xFF6C3FFF); // Default purple
     }
   }
 
@@ -1734,18 +2000,202 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             padding: const EdgeInsets.all(12),
             decoration: isSelected
                 ? BoxDecoration(
-                    color: Colors.white,
+                    border: Border.all(
+                      color: const Color(0xFFFF6B35),
+                      width: 2,
+                    ),
                     borderRadius: BorderRadius.circular(24),
                   )
                 : null,
             child: Icon(
               icon,
-              color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
+              color: isSelected ? const Color(0xFFFF6B35) : Colors.white38,
               size: 26,
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+class PerformanceChartPainter extends CustomPainter {
+  final List<double> data;
+  final int? selectedIndex;
+  final DateTime? earliestDate; // Track earliest completion date
+
+  PerformanceChartPainter(this.data, {this.selectedIndex, this.earliestDate});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final solidPaint = Paint()
+      ..color = const Color(0xFF590df2)
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final dottedPaint = Paint()
+      ..color = const Color(0xFF590df2).withOpacity(0.4)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFF590df2).withOpacity(0.3),
+          const Color(0xFF590df2).withOpacity(0),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.fill;
+
+    // Find the index where future projection starts (after today)
+    // Data is ordered from oldest to newest (today is the last element)
+    int todayIndex = data.length - 1; // Last element is always today
+    
+    final maxValue = data.isEmpty ? 1.0 : data.reduce(math.max);
+    final minValue = data.isEmpty ? 0.0 : data.reduce(math.min);
+    final range = maxValue - minValue;
+
+    final path = Path();
+    final fillPath = Path();
+    final dottedPath = Path();
+    
+    List<Offset> points = [];
+
+    // Calculate all points first
+    for (int i = 0; i < data.length; i++) {
+      final x = (i / math.max(data.length - 1, 1)) * size.width;
+      final normalizedValue = range > 0 ? (data[i] - minValue) / range : 0.5;
+      final y = size.height - (normalizedValue * size.height * 0.8) - (size.height * 0.1);
+      points.add(Offset(x, y));
+    }
+
+    if (points.isEmpty) return;
+
+    // Start paths
+    fillPath.moveTo(0, size.height);
+    fillPath.lineTo(points[0].dx, points[0].dy);
+    path.moveTo(points[0].dx, points[0].dy);
+
+    // Draw smooth curves using cubic bezier
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = i > 0 ? points[i - 1] : points[i];
+      final p1 = points[i];
+      final p2 = points[i + 1];
+      final p3 = i < points.length - 2 ? points[i + 2] : points[i + 1];
+
+      // Calculate control points for smooth curve with higher tension for smoother appearance
+      final tension = 0.25; // Reduced from 0.4 for smoother curves
+      final cp1x = p1.dx + (p2.dx - p0.dx) * tension;
+      final cp1y = p1.dy + (p2.dy - p0.dy) * tension;
+      final cp2x = p2.dx - (p3.dx - p1.dx) * tension;
+      final cp2y = p2.dy - (p3.dy - p1.dy) * tension;
+
+      // Decide whether this segment should be solid or dotted
+      // Solid for past/present (up to today), dotted for future
+      if (i < todayIndex) {
+        // Solid line for past and today
+        path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.dx, p2.dy);
+      } else {
+        // Dotted line for future projection
+        if (i == todayIndex) {
+          dottedPath.moveTo(p1.dx, p1.dy);
+        }
+        dottedPath.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.dx, p2.dy);
+      }
+      
+      fillPath.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.dx, p2.dy);
+    }
+
+    // Close fill path
+    fillPath.lineTo(points.last.dx, size.height);
+    fillPath.lineTo(0, size.height);
+    fillPath.close();
+
+    // Draw gradient fill and lines
+    canvas.drawPath(fillPath, fillPaint);
+    
+    // Draw solid line for past/present data
+    canvas.drawPath(path, solidPaint);
+    
+    // Draw dotted line for future projection
+    if (todayIndex < data.length - 1) {
+      _drawDashedPath(canvas, dottedPath, dottedPaint);
+    }
+
+    // NOTE: Data point pins/circles removed as per user request
+
+    // Draw selected point indicator (for tooltip interaction)
+    if (selectedIndex != null && selectedIndex! >= 0 && selectedIndex! < points.length) {
+      final point = points[selectedIndex!];
+      
+      // Draw vertical line
+      final linePaint = Paint()
+        ..color = const Color(0xFF590df2).withOpacity(0.3)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke;
+      canvas.drawLine(
+        Offset(point.dx, 0),
+        Offset(point.dx, size.height),
+        linePaint,
+      );
+
+      // Draw outer glow circle
+      final glowPaint = Paint()
+        ..color = const Color(0xFF590df2).withOpacity(0.3)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(point, 10, glowPaint);
+
+      // Draw main circle
+      final circlePaint = Paint()
+        ..color = const Color(0xFF590df2)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(point, 6, circlePaint);
+
+      // Draw white outline
+      final circleOutlinePaint = Paint()
+        ..color = Colors.white
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke;
+      canvas.drawCircle(point, 6, circleOutlinePaint);
+    }
+  }
+
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
+    final dashWidth = 8.0;
+    final dashSpace = 6.0;
+    
+    final metrics = path.computeMetrics();
+    for (final metric in metrics) {
+      double distance = 0.0;
+      bool draw = true;
+      
+      while (distance < metric.length) {
+        final length = draw ? dashWidth : dashSpace;
+        final end = math.min(distance + length, metric.length);
+        
+        if (draw) {
+          final extractPath = metric.extractPath(distance, end);
+          canvas.drawPath(extractPath, paint);
+        }
+        
+        distance = end;
+        draw = !draw;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(PerformanceChartPainter oldDelegate) {
+    return oldDelegate.selectedIndex != selectedIndex || 
+           oldDelegate.data != data ||
+           oldDelegate.earliestDate != earliestDate;
   }
 }

@@ -1,29 +1,57 @@
 import 'package:firebase_performance/firebase_performance.dart';
+import '../database/database_helper.dart';
 
 /// PerformanceService - Manages performance monitoring and custom traces
 /// 
 /// This service integrates Firebase Performance Monitoring to track
 /// app startup time, screen rendering, and custom performance metrics.
+/// Performance monitoring is enabled by default as it doesn't collect PII.
 class PerformanceService {
   static final PerformanceService _instance = PerformanceService._internal();
   static FirebasePerformance? _performance;
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   factory PerformanceService() => _instance;
 
   PerformanceService._internal();
 
+  /// Check if telemetry is enabled (default ON, can be disabled by user)
+  Future<bool> _isTelemetryEnabled() async {
+    try {
+      final db = await _dbHelper.database;
+      final result = await db.query(
+        'settings',
+        where: 'key = ?',
+        whereArgs: ['telemetry_enabled'],
+      );
+      if (result.isEmpty) return true; // Default ON
+      return result.first['value'] != 'false'; // Only false if explicitly disabled
+    } catch (e) {
+      print('⚠️ Failed to check telemetry setting: $e');
+      return true; // Default ON
+    }
+  }
+
   /// Initialize Performance Monitoring
   static Future<void> initialize() async {
     _performance = FirebasePerformance.instance;
 
-    // Enable performance monitoring in release mode only
+    // Default ON - analytics and performance enabled by default (no PII collected)
     await _performance!.setPerformanceCollectionEnabled(true);
 
-    print('📊 Performance Monitoring initialized');
+    print('📊 Performance Monitoring initialized (enabled by default)');
+  }
+  
+  /// Update Performance collection based on telemetry setting
+  Future<void> updateCollectionEnabled() async {
+    final enabled = await _isTelemetryEnabled();
+    await _performance?.setPerformanceCollectionEnabled(enabled);
+    print('📊 Performance collection: ${enabled ? "ENABLED" : "DISABLED"}');
   }
 
   /// Start a custom trace
   Future<Trace?> startTrace(String traceName) async {
+    if (!await _isTelemetryEnabled()) return null;
     final trace = _performance?.newTrace(traceName);
     await trace?.start();
     return trace;
@@ -73,6 +101,11 @@ class PerformanceService {
     Map<String, String>? attributes,
     Map<String, int>? metrics,
   }) async {
+    if (!await _isTelemetryEnabled()) {
+      // If telemetry disabled, just run the operation without tracing
+      return await operation();
+    }
+    
     final trace = _performance?.newTrace(operationName);
     
     // Add custom attributes

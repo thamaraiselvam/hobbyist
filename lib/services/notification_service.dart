@@ -486,11 +486,11 @@ class NotificationService {
       final result = await db.query(
         'settings',
         where: 'key = ?',
-        whereArgs: ['pushNotifications'],
+        whereArgs: ['push_notifications'],
       );
       
       if (result.isEmpty) {
-        print('⚠️ pushNotifications setting not found in database, defaulting to enabled');
+        print('⚠️ push_notifications setting not found in database, defaulting to enabled');
         return true; // Default to enabled
       }
       

@@ -20,7 +20,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   final HobbyService _service = HobbyService();
   final NotificationService _notificationService = NotificationService();
 
-  String _repeatMode = 'weekly';
+  String _repeatMode = 'daily';
   String _priority = 'medium';
   TimeOfDay _notificationTime = const TimeOfDay(hour: 8, minute: 0);
   bool _notifyEnabled = false; // Default OFF
@@ -369,8 +369,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                     ),
                                     child: Row(
                                       children: [
-                                        _buildFrequencyButton('weekly', 'Weekly'),
                                         _buildFrequencyButton('daily', 'Daily'),
+                                        _buildFrequencyButton('weekly', 'Weekly'),
                                         _buildFrequencyButton('monthly', 'Monthly'),
                                       ],
                                     ),
@@ -405,7 +405,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                               child: Text(
                                                 _weekDays[index],
                                                 style: TextStyle(
-                                                  color: isSelected ? Colors.white : const Color(0xFF433168),
+                                                  color: isSelected ? Colors.white : Colors.white,
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w700,
                                                 ),
@@ -430,7 +430,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                           Text(
                                             'Repeats every day',
                                             style: TextStyle(
-                                              color: Colors.white70,
+                                              color: Colors.white,
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -642,13 +642,13 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                 const SizedBox(height: 12),
                                 Row(
                                   children: [
-                                    _buildPriorityButton('none', 'None', null),
+                                    _buildPriorityButton('none', 'None', const Color(0xFFFF8056)),
                                     const SizedBox(width: 8),
-                                    _buildPriorityButton('low', 'Low', Colors.green),
+                                    _buildPriorityButton('low', 'Low', const Color(0xFFFFC347)),
                                     const SizedBox(width: 8),
-                                    _buildPriorityButton('medium', 'Med', Colors.amber),
+                                    _buildPriorityButton('medium', 'Med', const Color(0xFF00C2A7)),
                                     const SizedBox(width: 8),
-                                    _buildPriorityButton('high', 'High', Colors.red),
+                                    _buildPriorityButton('high', 'High', const Color(0xFFF700C5)),
                                   ],
                                 ),
                               ],
@@ -725,7 +725,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? Colors.white : const Color(0xFFa490cb),
+              color: isSelected ? Colors.white : Colors.white,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
@@ -770,7 +770,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : const Color(0xFFa490cb),
+                  color: isSelected ? Colors.white : Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),

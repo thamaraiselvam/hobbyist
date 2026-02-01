@@ -4,6 +4,8 @@ import '../services/hobby_service.dart';
 import '../services/notification_service.dart';
 import '../models/hobby.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DeveloperSettingsScreen extends StatefulWidget {
   const DeveloperSettingsScreen({Key? key}) : super(key: key);
@@ -258,9 +260,105 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
     }
   }
 
+  Future<void> _create100DayTask() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2A2238),
+        title: const Text(
+          'Create 100-Day Test Task?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'This will create a Daily task called "create app" with 100 consecutive days of completions (from 100 days ago to today).\n\nCurrent streak: 100 days\nBest streak: 100 days',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6C3FFF),
+            ),
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _isGenerating = true;
+    });
+
+    try {
+      final now = DateTime.now();
+      final createdAt = now.subtract(const Duration(days: 100));
+      
+      // Create the hobby
+      final hobby = Hobby(
+        id: 'test_100day_${DateTime.now().millisecondsSinceEpoch}',
+        name: 'create app',
+        repeatMode: 'Daily',
+        priority: 'High',
+        color: 0xFFFF6B6B, // Red color for high priority
+        bestStreak: 100,
+        createdAt: createdAt,
+        completions: {},
+      );
+      
+      // Add 100 consecutive days of completions
+      for (int i = 99; i >= 0; i--) {
+        final date = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
+        final dateKey = DateFormat('yyyy-MM-dd').format(date);
+        
+        hobby.completions[dateKey] = HobbyCompletion(
+          completed: true,
+          completedAt: date.add(const Duration(hours: 10)),
+        );
+      }
+      
+      // Save to Firestore
+      await _service.addHobby(hobby);
+      
+      if (mounted) {
+        setState(() {
+          _isGenerating = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Created "create app" with 100 days streak!'),
+            backgroundColor: Color(0xFF6C3FFF),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error creating 100-day task: $e');
+      if (mounted) {
+        setState(() {
+          _isGenerating = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _testNotification() async {
     // Check if push notifications are enabled in settings
-    final pushEnabled = await _service.getSetting('pushNotifications');
+    final pushEnabled = await _service.getSetting('push_notifications');
     if (pushEnabled == 'false') {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -439,6 +537,52 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                             color: Colors.white54,
                           ),
                     onTap: _isGenerating ? null : _generateRandomHobbies,
+                  ),
+                  const Divider(color: Color(0xFF3D3449), height: 1),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF6B35).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.local_fire_department,
+                        color: Color(0xFFFF6B35),
+                        size: 20,
+                      ),
+                    ),
+                    title: const Text(
+                      'Create 100-Day Streak Task',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Creates "create app" with 100 days completion',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 13,
+                      ),
+                    ),
+                    trailing: _isGenerating
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFFFF6B35),
+                              ),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.chevron_right,
+                            color: Colors.white54,
+                          ),
+                    onTap: _isGenerating ? null : _create100DayTask,
                   ),
                 ],
               ),

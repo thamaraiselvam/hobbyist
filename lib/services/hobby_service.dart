@@ -5,6 +5,7 @@ import 'notification_service.dart';
 import 'analytics_service.dart';
 import 'performance_service.dart';
 import 'crashlytics_service.dart';
+import 'rating_service.dart';
 
 class HobbyService {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
@@ -12,6 +13,7 @@ class HobbyService {
   final AnalyticsService _analytics = AnalyticsService();
   final PerformanceService _performance = PerformanceService();
   final CrashlyticsService _crashlytics = CrashlyticsService();
+  final RatingService _ratingService = RatingService();
 
   Future<List<Hobby>> loadHobbies() async {
     return await _performance.traceDatabaseQuery('load_hobbies', () async {
@@ -44,7 +46,7 @@ class HobbyService {
         );
       }
 
-      hobbies.add(Hobby(
+      final hobby = Hobby(
         id: hobbyData['id'],
         name: hobbyData['name'],
         notes: hobbyData['notes'] ?? '',
@@ -57,7 +59,30 @@ class HobbyService {
             : null,
         reminderTime: hobbyData['reminder_time'],
         customDay: hobbyData['custom_day'],
-      ));
+        bestStreak: hobbyData['best_streak'] ?? 0,
+      );
+      
+      // One-time fix: Calculate true historical best streak from completions
+      final calculatedBestStreak = hobby.calculateBestStreakFromHistory();
+      
+      // Best streak should be the max of stored value, historical best, and current streak
+      final trueBestStreak = [hobby.bestStreak, calculatedBestStreak, hobby.currentStreak]
+          .reduce((a, b) => a > b ? a : b);
+      
+      // Update if the calculated best streak is higher than stored value
+      if (trueBestStreak > hobby.bestStreak) {
+        await db.update(
+          'hobbies',
+          {'best_streak': trueBestStreak},
+          where: 'id = ?',
+          whereArgs: [hobby.id],
+        );
+        // Create updated hobby with correct bestStreak
+        hobbies.add(hobby.copyWith(bestStreak: trueBestStreak));
+        print('🔧 Fixed bestStreak for ${hobby.name}: ${hobby.bestStreak} -> $trueBestStreak');
+      } else {
+        hobbies.add(hobby);
+      }
     }
 
         return hobbies;
@@ -84,6 +109,7 @@ class HobbyService {
         'color': hobby.color,
         'reminder_time': hobby.reminderTime,
         'custom_day': hobby.customDay,
+        'best_streak': hobby.bestStreak,
         'created_at': now,
         'updated_at': now,
       },
@@ -143,6 +169,7 @@ class HobbyService {
         'color': hobby.color,
         'reminder_time': hobby.reminderTime,
         'custom_day': hobby.customDay,
+        'best_streak': hobby.bestStreak,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
       where: 'id = ?',
@@ -210,7 +237,7 @@ class HobbyService {
     await _dbHelper.clearAllData();
   }
 
-  Future<void> toggleCompletion(String hobbyId, String date) async {
+  Future<Hobby?> toggleCompletion(String hobbyId, String date) async {
     final db = await _dbHelper.database;
 
     // Check if completion exists
@@ -250,6 +277,35 @@ class HobbyService {
     final hobbies = await loadHobbies();
     final hobby = hobbies.firstWhere((h) => h.id == hobbyId);
     
+    print('🔥 DEBUG: Hobby: ${hobby.name}');
+    print('🔥 DEBUG: Current streak: ${hobby.currentStreak}');
+    print('🔥 DEBUG: Best streak (before): ${hobby.bestStreak}');
+    
+    // Calculate the true best streak from all completion history
+    final calculatedBestStreak = hobby.calculateBestStreakFromHistory();
+    print('🔥 DEBUG: Calculated historical best: $calculatedBestStreak');
+    
+    // Best streak = longest consecutive streak in completion history
+    // This recalculates based on actual data, so it can go down if completions are removed
+    final newBestStreak = calculatedBestStreak > hobby.currentStreak 
+        ? calculatedBestStreak 
+        : hobby.currentStreak;
+    
+    print('🔥 DEBUG: New best streak: $newBestStreak');
+    
+    // Update best streak in database
+    await db.update(
+      'hobbies',
+      {
+        'best_streak': newBestStreak,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [hobbyId],
+    );
+    
+    print('🔥 DEBUG: Best streak updated in database');
+    
     // Track completion toggle
     await _analytics.logCompletionToggled(
       hobbyId: hobbyId,
@@ -274,7 +330,14 @@ class HobbyService {
       if (allCompletions == 1) {
         await _analytics.logFirstCompletion();
       }
+      
+      // Increment completion count and check for rating prompt
+      await _ratingService.incrementCompletionCount();
+      await _ratingService.checkAndShowRatingPrompt();
     }
+    
+    // Return the updated hobby
+    return hobby.copyWith(bestStreak: newBestStreak);
   }
 
   // Settings methods

@@ -166,7 +166,6 @@ await AnalyticsService().logHobbyCreated(
 - Upload/download files (images, videos, documents)
 - Profile pictures
 - Hobby images/attachments
-- Export/import data files
 - Backup databases to cloud
 
 **When to add**:

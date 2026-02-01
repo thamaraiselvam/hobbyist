@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import '../services/hobby_service.dart';
 import '../services/notification_service.dart';
 import '../services/auth_service.dart';
+import '../services/performance_service.dart';
+import '../services/crashlytics_service.dart';
+import '../utils/page_transitions.dart';
+import 'add_hobby_screen.dart';
 import 'developer_settings_screen.dart';
 import 'landing_screen.dart';
+import 'feedback_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -22,6 +27,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _pushNotificationsEnabled = true;
   bool _completionSoundEnabled = true;
+  bool _telemetryEnabled = true; // Default ON - analytics and crash reports enabled by default (no PII collected)
   final HobbyService _service = HobbyService();
   final NotificationService _notificationService = NotificationService();
   final AuthService _authService = AuthService();
@@ -59,13 +65,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final completionSound = await _service.getSetting('completionSound');
-    final pushNotifications = await _service.getSetting('pushNotifications');
+    final completionSound = await _service.getSetting('completion_sound');
+    final pushNotifications = await _service.getSetting('push_notifications');
+    final telemetry = await _service.getSetting('telemetry_enabled');
     
     if (mounted) {
       setState(() {
         _completionSoundEnabled = completionSound != 'false';
         _pushNotificationsEnabled = pushNotifications != 'false';
+        _telemetryEnabled = telemetry != 'false'; // Default ON - only false if explicitly disabled
       });
     }
   }
@@ -243,6 +251,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildPreferencesCard(),
                     const SizedBox(height: 32),
                     const Text(
+                      'DATA',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDataCard(),
+                    const SizedBox(height: 32),
+                    const Text(
                       'SUPPORT',
                       style: TextStyle(
                         color: Colors.white54,
@@ -267,6 +287,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildAboutCard(),
                     const SizedBox(height: 32),
                     _buildDeveloperSettingsCard(),
+                    // Logout button at the end (only show if signed in with Google)
+                    if (_isGoogleSignedIn) ...[
+                      const SizedBox(height: 32),
+                      _buildLogoutCard(),
+                    ],
                     const SizedBox(height: 24),
                     Center(
                       child: Row(
@@ -326,8 +351,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItemIcon(Icons.check_circle, 0),
-              _buildNavItemIcon(Icons.local_fire_department, 1),
-              _buildNavItem(Icons.settings, 'Settings', 2),
+              _buildNavItemIcon(Icons.list_alt, 1),
+              _buildCreateButton(),
+              _buildNavItemIcon(Icons.local_fire_department, 2),
+              _buildNavItemIcon(Icons.settings, 3),
             ],
           ),
         ),
@@ -335,53 +362,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
-    final isSelected = index == 2; // Settings is index 2
-    return Expanded(
-      flex: 2,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => widget.onNavigate(index),
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF6C3FFF) : Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  color: isSelected ? Colors.white : Colors.white54,
-                  size: 24,
-                ),
-                if (isSelected) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ],
-            ),
+  Widget _buildCreateButton() {
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          SlidePageRoute(
+            page: const AddHobbyScreen(),
+            direction: AxisDirection.up,
           ),
+        );
+      },
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6C3FFF).withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 28,
         ),
       ),
     );
   }
 
   Widget _buildNavItemIcon(IconData icon, int index) {
-    final isSelected = index == 2; // Settings is index 2
+    final isSelected = index == 3; // Settings is now index 3
     return Expanded(
-      flex: 1,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -389,10 +410,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           borderRadius: BorderRadius.circular(24),
           child: Container(
             padding: const EdgeInsets.all(12),
+            decoration: isSelected
+                ? BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                  )
+                : null,
             child: Icon(
               icon,
-              color: isSelected ? const Color(0xFF6C3FFF) : Colors.white38,
-              size: 28,
+              color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
+              size: 26,
             ),
           ),
         ),
@@ -485,7 +512,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _pushNotificationsEnabled,
             onChanged: (value) {
               setState(() => _pushNotificationsEnabled = value);
-              _service.setSetting('pushNotifications', value.toString());
+              _service.setSetting('push_notifications', value.toString());
             },
           ),
           const Divider(color: Color(0xFF3D3449), height: 1),
@@ -496,43 +523,121 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _completionSoundEnabled,
             onChanged: (value) {
               setState(() => _completionSoundEnabled = value);
-              _service.setSetting('completionSound', value.toString());
+              _service.setSetting('completion_sound', value.toString());
             },
           ),
-          // Logout button (only show if signed in with Google)
-          if (_isGoogleSignedIn) ...[
-            const Divider(color: Color(0xFF3D3449), height: 1),
-            InkWell(
-              onTap: _handleLogout,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.logout, color: Colors.red, size: 22),
+          const Divider(color: Color(0xFF3D3449), height: 1),
+          // FR-022 & FR-023: Telemetry opt-in with disclosure
+          GestureDetector(
+            onTap: () => _showTelemetryDisclosure(),
+            child: Container(
+              color: Colors.transparent,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(width: 16),
-                    const Expanded(
-                      child: Text(
-                        'Logout',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                    child: const Icon(Icons.analytics_outlined, color: Color(0xFFEF4444), size: 22),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      'Analytics & Crash Reports',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: const Color(0xFF221834),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          title: const Text(
+                            'Privacy Information',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          content: const Text(
+                            'We collect anonymous usage data to improve the app.\n\n'
+                            '✅ What we collect:\n'
+                            '• Screen views and feature usage\n'
+                            '• Crash reports and errors\n'
+                            '• App performance metrics\n\n'
+                            '❌ What we DON\'T collect:\n'
+                            '• Your hobby names or notes\n'
+                            '• Completion history or dates\n'
+                            '• Email or personal information\n\n'
+                            'All your hobby data stays on your device.',
+                            style: TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 14,
+                              height: 1.5,
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text(
+                                'Got it',
+                                style: TextStyle(
+                                  color: Color(0xFF6C3FFF),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      );
+                    },
+                    child: const Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: Color(0xFF94A3B8),
                     ),
-                    const Icon(Icons.chevron_right, color: Colors.red),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  Switch(
+                    value: _telemetryEnabled,
+                    onChanged: (value) async {
+                      setState(() => _telemetryEnabled = value);
+                      await _service.setSetting('telemetry_enabled', value.toString());
+                      // Update Firebase services immediately
+                      await PerformanceService().updateCollectionEnabled();
+                      await CrashlyticsService().updateCollectionEnabled();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(value 
+                              ? 'Analytics enabled. Thank you for helping improve the app!' 
+                              : 'Analytics disabled. Your data stays private.'),
+                            backgroundColor: value ? const Color(0xFF10B981) : const Color(0xFF6C3FFF),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    activeColor: const Color(0xFF10B981),
+                    activeTrackColor: const Color(0xFF10B981).withOpacity(0.5),
+                    inactiveThumbColor: Colors.white,
+                    inactiveTrackColor: const Color(0xFF3D3449),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -571,8 +676,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF6C3FFF),
-            activeTrackColor: const Color(0xFF8B5CF6).withOpacity(0.5),
+            activeColor: const Color(0xFF10B981),
+            activeTrackColor: const Color(0xFF10B981).withOpacity(0.5),
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: const Color(0xFF3D3449),
           ),
@@ -585,36 +690,90 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required IconData icon,
     required Color iconColor,
     required String title,
+    String? subtitle,
     required VoidCallback onTap,
+    bool isEnabled = true,
   }) {
     return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
+      onTap: isEnabled ? onTap : null,
+      child: Opacity(
+        opacity: isEnabled ? 1.0 : 0.5,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ),
-            const Icon(Icons.chevron_right, color: Colors.white54),
-          ],
+              Icon(
+                Icons.chevron_right, 
+                color: isEnabled ? Colors.white54 : Colors.white24,
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDataCard() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF221834),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          _buildNavTile(
+            icon: Icons.file_download_outlined,
+            iconColor: const Color(0xFF3B82F6),
+            title: 'Export Data',
+            subtitle: 'Coming Soon',
+            isEnabled: false,
+            onTap: () {},
+          ),
+          const Divider(color: Color(0xFF382a54), height: 1),
+          _buildNavTile(
+            icon: Icons.file_upload_outlined,
+            iconColor: const Color(0xFF8B5CF6),
+            title: 'Import Data',
+            subtitle: 'Coming Soon',
+            isEnabled: false,
+            onTap: () {},
+          ),
+        ],
       ),
     );
   }
@@ -648,11 +807,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             iconColor: const Color(0xFF6C3FFF),
             title: 'Send Feedback',
             onTap: () {
-              // TODO: Open email or feedback form
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Opening feedback form...'),
-                  backgroundColor: Color(0xFF6C3FFF),
+              Navigator.push(
+                context,
+                SlidePageRoute(
+                  page: const FeedbackScreen(),
+                  direction: AxisDirection.left,
                 ),
               );
             },
@@ -780,6 +939,142 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildLogoutCard() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF221834),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: InkWell(
+        onTap: _handleLogout,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.logout, color: Colors.red, size: 22),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Text(
+                  'Logout',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Colors.red),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// FR-023: Telemetry disclosure dialog
+  void _showTelemetryDisclosure() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1625),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.privacy_tip_outlined, color: Color(0xFF6C3FFF)),
+            SizedBox(width: 12),
+            Text(
+              'Privacy & Data Collection',
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDisclosureSection(
+                'What We Collect (if enabled)',
+                [
+                  '✓ App usage patterns (screens visited, feature usage)',
+                  '✓ Performance metrics (load times, crashes)',
+                  '✓ Anonymous hobby statistics (count, completion rates)',
+                  '✓ Device info (OS version, app version)',
+                ],
+                Colors.white,
+              ),
+              const SizedBox(height: 16),
+              _buildDisclosureSection(
+                'What We NEVER Collect',
+                [
+                  '✗ Hobby names, notes, or descriptions',
+                  '✗ Your email address or personal info',
+                  '✗ Location data',
+                  '✗ Contacts or photos',
+                ],
+                const Color(0xFFEF4444),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'All your hobby data stays on your device. Enabling telemetry helps us fix bugs and improve the app.',
+                style: TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Got it',
+              style: TextStyle(color: Color(0xFF6C3FFF), fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDisclosureSection(String title, List<String> items, Color textColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...items.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 6, left: 8),
+              child: Text(
+                item,
+                style: TextStyle(
+                  color: textColor.withOpacity(0.9),
+                  fontSize: 13,
+                  height: 1.3,
+                ),
+              ),
+            )),
+      ],
     );
   }
 }

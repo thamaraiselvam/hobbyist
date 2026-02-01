@@ -13,7 +13,7 @@ class SoundService {
   Future<void> playCompletionSound() async {
     try {
       // Check if completion vibration is enabled in settings
-      final vibrationEnabled = await _hobbyService.getSetting('completionSound');
+      final vibrationEnabled = await _hobbyService.getSetting('completion_sound');
       if (vibrationEnabled == 'false') {
         return;
       }

@@ -1,14 +1,17 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import '../models/hobby.dart';
+import '../database/database_helper.dart';
 
 /// AnalyticsService - Centralized analytics tracking service
 /// 
 /// This service manages all Firebase Analytics events throughout the app.
 /// It follows the singleton pattern to ensure consistent tracking across the app.
+/// Analytics collection is enabled by default as no PII is collected.
 class AnalyticsService {
   static final AnalyticsService _instance = AnalyticsService._internal();
   static FirebaseAnalytics? _analytics;
   static FirebaseAnalyticsObserver? _observer;
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   factory AnalyticsService() => _instance;
 
@@ -22,14 +25,33 @@ class AnalyticsService {
 
   /// Get the analytics observer for route tracking
   static FirebaseAnalyticsObserver? get observer => _observer;
+  
+  /// Check if telemetry is enabled (default ON, can be disabled by user)
+  Future<bool> _isTelemetryEnabled() async {
+    try {
+      final db = await _dbHelper.database;
+      final result = await db.query(
+        'settings',
+        where: 'key = ?',
+        whereArgs: ['telemetry_enabled'],
+      );
+      if (result.isEmpty) return true; // Default ON
+      return result.first['value'] != 'false'; // Only false if explicitly disabled
+    } catch (e) {
+      print('⚠️ Failed to check telemetry setting: $e');
+      return true; // Default ON
+    }
+  }
 
   /// Track app open event
   Future<void> logAppOpen() async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logAppOpen();
   }
 
   /// Track screen view
   Future<void> logScreenView(String screenName) async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logScreenView(
       screenName: screenName,
       screenClass: screenName,
@@ -42,6 +64,7 @@ class AnalyticsService {
 
   /// Track when user completes onboarding
   Future<void> logOnboardingComplete() async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'user_onboarding_complete',
       parameters: {
@@ -52,6 +75,7 @@ class AnalyticsService {
 
   /// Track landing page view
   Future<void> logLandingView() async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'landing_page_viewed',
     );
@@ -68,6 +92,7 @@ class AnalyticsService {
     required String repeatMode,
     int? color,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'hobby_created',
       parameters: {
@@ -86,6 +111,7 @@ class AnalyticsService {
     String? priority,
     String? repeatMode,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     final Map<String, Object> params = {
       'hobby_id': hobbyId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
@@ -105,6 +131,7 @@ class AnalyticsService {
     required String hobbyId,
     String? reason,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'hobby_deleted',
       parameters: {
@@ -125,6 +152,7 @@ class AnalyticsService {
     required bool completed,
     int? currentStreak,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'completion_toggled',
       parameters: {
@@ -141,6 +169,7 @@ class AnalyticsService {
     required String hobbyId,
     required int streakCount,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     // Only log milestones: 7, 14, 30, 50, 100, 365 days
     final milestones = [7, 14, 30, 50, 100, 365];
     if (!milestones.contains(streakCount)) return;
@@ -158,6 +187,7 @@ class AnalyticsService {
 
   /// Track completion sound played
   Future<void> logCompletionSound() async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'completion_sound_played',
     );
@@ -169,6 +199,7 @@ class AnalyticsService {
 
   /// Track analytics screen view
   Future<void> logAnalyticsViewed() async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'analytics_viewed',
       parameters: {
@@ -182,6 +213,7 @@ class AnalyticsService {
     required String settingName,
     required String settingValue,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'setting_changed',
       parameters: {
@@ -194,6 +226,7 @@ class AnalyticsService {
 
   /// Track quote displayed
   Future<void> logQuoteDisplayed() async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'quote_displayed',
     );
@@ -208,6 +241,7 @@ class AnalyticsService {
     required String queryType,
     required int durationMs,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'db_query_performance',
       parameters: {
@@ -228,6 +262,7 @@ class AnalyticsService {
     required int completedToday,
     required double averageCompletionRate,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'daily_stats',
       parameters: {
@@ -244,11 +279,13 @@ class AnalyticsService {
     required String name,
     required String value,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.setUserProperty(name: name, value: value);
   }
 
   /// Track app session duration
   Future<void> logSessionEnd({required int durationSeconds}) async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'session_end',
       parameters: {
@@ -264,6 +301,7 @@ class AnalyticsService {
 
   /// Track when user creates their first hobby
   Future<void> logFirstHobbyCreated() async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'first_hobby_created',
       parameters: {
@@ -274,6 +312,7 @@ class AnalyticsService {
 
   /// Track when user completes their first hobby
   Future<void> logFirstCompletion() async {
+    if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'first_completion',
       parameters: {

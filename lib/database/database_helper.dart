@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       dbPath,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -43,6 +43,7 @@ class DatabaseHelper {
         color INTEGER NOT NULL,
         reminder_time TEXT,
         custom_day INTEGER,
+        best_streak INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -119,6 +120,13 @@ class DatabaseHelper {
       'value': 'false',
       'updated_at': DateTime.now().millisecondsSinceEpoch,
     });
+    
+    // Privacy-by-default: telemetry OFF by default (FR-022)
+    await db.insert('settings', {
+      'key': 'telemetry_enabled',
+      'value': 'false',
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    });
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -129,6 +137,82 @@ class DatabaseHelper {
     if (oldVersion < 3) {
       // Add custom_day column to hobbies table
       await db.execute('ALTER TABLE hobbies ADD COLUMN custom_day INTEGER');
+    }
+    
+    if (oldVersion < 4) {
+      // Add best_streak column to hobbies table for tracking max streak (unbounded per FR-014)
+      await db.execute('ALTER TABLE hobbies ADD COLUMN best_streak INTEGER NOT NULL DEFAULT 0');
+      
+      // Calculate and set initial best_streak values for existing hobbies
+      print('🔄 Migrating: Calculating best streaks for existing hobbies...');
+      final hobbies = await db.query('hobbies');
+      for (var hobby in hobbies) {
+        final hobbyId = hobby['id'] as String;
+        
+        // Load completions for this hobby
+        final completionsData = await db.query(
+          'completions',
+          where: 'hobby_id = ? AND completed = 1',
+          whereArgs: [hobbyId],
+          orderBy: 'date DESC',
+        );
+        
+        // Calculate best streak from completion history
+        int maxStreak = 0;
+        int currentStreak = 0;
+        DateTime? lastDate;
+        
+        for (var comp in completionsData.reversed) {
+          final dateStr = comp['date'] as String;
+          final dateParts = dateStr.split('-');
+          final date = DateTime(
+            int.parse(dateParts[0]),
+            int.parse(dateParts[1]),
+            int.parse(dateParts[2]),
+          );
+          
+          if (lastDate == null) {
+            currentStreak = 1;
+          } else {
+            final daysDiff = lastDate.difference(date).inDays;
+            if (daysDiff == 1) {
+              currentStreak++;
+            } else {
+              if (currentStreak > maxStreak) maxStreak = currentStreak;
+              currentStreak = 1;
+            }
+          }
+          
+          lastDate = date;
+        }
+        
+        if (currentStreak > maxStreak) maxStreak = currentStreak;
+        
+        // Update hobby with calculated best streak
+        if (maxStreak > 0) {
+          await db.update(
+            'hobbies',
+            {'best_streak': maxStreak},
+            where: 'id = ?',
+            whereArgs: [hobbyId],
+          );
+          print('✅ Set best_streak=$maxStreak for hobby: ${hobby['name']}');
+        }
+      }
+      
+      // Add telemetry_enabled setting (default OFF per FR-022 privacy-by-default)
+      final telemetryExists = await db.query(
+        'settings',
+        where: 'key = ?',
+        whereArgs: ['telemetry_enabled'],
+      );
+      if (telemetryExists.isEmpty) {
+        await db.insert('settings', {
+          'key': 'telemetry_enabled',
+          'value': 'false',
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        });
+      }
     }
   }
 

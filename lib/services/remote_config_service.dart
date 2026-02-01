@@ -33,8 +33,7 @@ class RemoteConfigService {
       'cache_duration_hours': 12,
       'fetch_timeout_seconds': 60,
       
-      // Feature limits
-      'max_streak_days': 365,
+      // Feature limits (removed max_streak_days - streaks are unbounded per spec FR-014)
       'enable_premium_features': false,
       
       // A/B Testing

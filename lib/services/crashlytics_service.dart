@@ -1,17 +1,37 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import '../database/database_helper.dart';
 
 /// CrashlyticsService - Manages crash reporting and error tracking
 /// 
 /// This service integrates Firebase Crashlytics to automatically capture
 /// crashes, non-fatal errors, and custom logs for debugging production issues.
+/// Crash reporting is enabled by default as no PII is collected.
 class CrashlyticsService {
   static final CrashlyticsService _instance = CrashlyticsService._internal();
   static FirebaseCrashlytics? _crashlytics;
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   factory CrashlyticsService() => _instance;
 
   CrashlyticsService._internal();
+
+  /// Check if telemetry is enabled (default ON, can be disabled by user)
+  Future<bool> _isTelemetryEnabled() async {
+    try {
+      final db = await _dbHelper.database;
+      final result = await db.query(
+        'settings',
+        where: 'key = ?',
+        whereArgs: ['telemetry_enabled'],
+      );
+      if (result.isEmpty) return true; // Default ON
+      return result.first['value'] != 'false'; // Only false if explicitly disabled
+    } catch (e) {
+      print('⚠️ Failed to check telemetry setting: $e');
+      return true; // Default ON
+    }
+  }
 
   /// Initialize Crashlytics
   static Future<void> initialize() async {
@@ -26,14 +46,18 @@ class CrashlyticsService {
       return true;
     };
 
-    // In debug mode, don't send crash reports
-    if (kDebugMode) {
-      await _crashlytics!.setCrashlyticsCollectionEnabled(false);
-    } else {
-      await _crashlytics!.setCrashlyticsCollectionEnabled(true);
-    }
+    // Default ON - analytics and crash reports enabled by default
+    // User can disable in settings
+    await _crashlytics!.setCrashlyticsCollectionEnabled(true);
 
-    print('🔥 Crashlytics initialized');
+    print('🔥 Crashlytics initialized (enabled by default)');
+  }
+  
+  /// Update Crashlytics collection based on telemetry setting
+  Future<void> updateCollectionEnabled() async {
+    final enabled = await _isTelemetryEnabled();
+    await _crashlytics?.setCrashlyticsCollectionEnabled(enabled);
+    print('🔥 Crashlytics collection: ${enabled ? "ENABLED" : "DISABLED"}');
   }
 
   /// Log a non-fatal error
@@ -43,6 +67,7 @@ class CrashlyticsService {
     String? reason,
     bool fatal = false,
   }) async {
+    if (!await _isTelemetryEnabled()) return;
     await _crashlytics?.recordError(
       exception,
       stackTrace,
@@ -52,17 +77,20 @@ class CrashlyticsService {
   }
 
   /// Log a message to Crashlytics
-  void log(String message) {
+  Future<void> log(String message) async {
+    if (!await _isTelemetryEnabled()) return;
     _crashlytics?.log(message);
   }
 
   /// Set custom key-value pairs for crash context
-  void setCustomKey(String key, dynamic value) {
+  Future<void> setCustomKey(String key, dynamic value) async {
+    if (!await _isTelemetryEnabled()) return;
     _crashlytics?.setCustomKey(key, value);
   }
 
   /// Set user identifier (use anonymous ID, not PII)
-  void setUserIdentifier(String identifier) {
+  Future<void> setUserIdentifier(String identifier) async {
+    if (!await _isTelemetryEnabled()) return;
     _crashlytics?.setUserIdentifier(identifier);
   }
 

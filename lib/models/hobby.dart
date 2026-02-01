@@ -9,6 +9,7 @@ class Hobby {
   final DateTime? createdAt;
   final String? reminderTime; // Time in HH:mm format (e.g., "09:00")
   final int? customDay; // For weekly: 0-6 (Mon-Sun), For monthly: 1-31
+  final int bestStreak; // Max historical streak (unbounded per FR-014)
 
   Hobby({
     required this.id,
@@ -21,6 +22,7 @@ class Hobby {
     this.createdAt,
     this.reminderTime,
     this.customDay,
+    this.bestStreak = 0,
   }) : completions = completions ?? {};
 
   int get currentStreak {
@@ -51,6 +53,54 @@ class Hobby {
     return streak;
   }
 
+  /// Calculate the maximum historical streak from all completions
+  int calculateBestStreakFromHistory() {
+    if (completions.isEmpty) return 0;
+    
+    // Get all completed dates sorted chronologically
+    final completedDates = completions.entries
+        .where((e) => e.value.completed)
+        .map((e) => e.key)
+        .toList()..sort();
+    
+    if (completedDates.isEmpty) return 0;
+    
+    int maxStreak = 1;
+    int currentStreak = 1;
+    
+    for (int i = 1; i < completedDates.length; i++) {
+      final prevDateParts = completedDates[i - 1].split('-');
+      final currDateParts = completedDates[i].split('-');
+      
+      final prevDate = DateTime(
+        int.parse(prevDateParts[0]),
+        int.parse(prevDateParts[1]),
+        int.parse(prevDateParts[2]),
+      );
+      
+      final currDate = DateTime(
+        int.parse(currDateParts[0]),
+        int.parse(currDateParts[1]),
+        int.parse(currDateParts[2]),
+      );
+      
+      final daysDiff = currDate.difference(prevDate).inDays;
+      
+      if (daysDiff == 1) {
+        // Consecutive day
+        currentStreak++;
+        if (currentStreak > maxStreak) {
+          maxStreak = currentStreak;
+        }
+      } else {
+        // Streak broken
+        currentStreak = 1;
+      }
+    }
+    
+    return maxStreak;
+  }
+
   static String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
@@ -65,6 +115,7 @@ class Hobby {
         'completions': completions.map((k, v) => MapEntry(k, v.toJson())),
         'createdAt': createdAt?.toIso8601String(),
         'reminderTime': reminderTime,
+        'bestStreak': bestStreak,
       };
 
   factory Hobby.fromJson(Map<String, dynamic> json) => Hobby(
@@ -82,6 +133,7 @@ class Hobby {
             ? DateTime.parse(json['createdAt'])
             : null,
         reminderTime: json['reminderTime'],
+        bestStreak: json['bestStreak'] ?? 0,
       );
 
   Hobby copyWith({
@@ -94,6 +146,7 @@ class Hobby {
     DateTime? createdAt,
     String? reminderTime,
     int? customDay,
+    int? bestStreak,
   }) =>
       Hobby(
         id: id,
@@ -106,6 +159,7 @@ class Hobby {
         createdAt: createdAt ?? this.createdAt,
         reminderTime: reminderTime ?? this.reminderTime,
         customDay: customDay ?? this.customDay,
+        bestStreak: bestStreak ?? this.bestStreak,
       );
 }
 
