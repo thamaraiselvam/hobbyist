@@ -78,19 +78,6 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
     }
   }
 
-  Color _getPriorityColor(String priority) {
-    switch (priority) {
-      case 'high':
-        return const Color(0xFFF700C5); // Bright magenta
-      case 'medium':
-        return const Color(0xFF00C2A7); // Teal/cyan
-      case 'low':
-        return const Color(0xFFFFC347); // Orange/gold
-      default:
-        return const Color(0xFFFF8056); // Coral
-    }
-  }
-
   String _getFrequencyText(String repeatMode) {
     switch (repeatMode) {
       case 'daily':
@@ -269,12 +256,12 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
         children: [
           Row(
             children: [
-              // Priority indicator
+              // Color indicator
               Container(
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: _getPriorityColor(hobby.priority),
+                  color: Color(hobby.color),
                   shape: BoxShape.circle,
                 ),
               ),

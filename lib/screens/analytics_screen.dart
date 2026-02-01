@@ -1169,20 +1169,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           anyCompleted = true;
           dayTaskCount++; // Count each task completion
           contributionCount++; // Add to total count
-          
-          // Determine highest priority (high > medium > low > default)
-          if (highestPriority == null) {
-            highestPriority = hobby.priority;
-          } else {
-            // Priority order: high > medium > low > default
-            if (hobby.priority == 'high') {
-              highestPriority = 'high';
-            } else if (hobby.priority == 'medium' && highestPriority != 'high') {
-              highestPriority = 'medium';
-            } else if (hobby.priority == 'low' && highestPriority != 'high' && highestPriority != 'medium') {
-              highestPriority = 'low';
-            }
-          }
         }
       }
       
@@ -1552,8 +1538,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       // Not scheduled - show subtle skeleton
       cellColor = const Color(0xFF1A1625); // Very dark purple, subtle outline
     } else if (isCompleted) {
-      // Scheduled and completed - priority color
-      cellColor = _getPriorityColor(hobby.priority);
+      // Scheduled and completed - use hobby color
+      cellColor = Color(hobby.color);
     } else {
       // Scheduled but not completed - medium gray
       cellColor = const Color(0xFF2A2738);
@@ -1565,40 +1551,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     cellDate.month == today.month && 
                     cellDate.day == today.day;
     
-    return GestureDetector(
-      onTap: () {
-        String status;
-        if (!isScheduled) {
-          status = "○ Not scheduled";
-        } else if (isCompleted) {
-          status = "✓ Completed";
-        } else {
-          status = "○ Not completed";
-        }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${hobby.name} - ${DateFormat('MMM d').format(cellDate)}: $status',
-            ),
-            duration: const Duration(milliseconds: 800),
-            backgroundColor: const Color(0xFF2A2738),
-          ),
-        );
-      },
-      child: Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(
-          color: cellColor,
-          borderRadius: BorderRadius.circular(2),
-          border: isToday
-              ? Border.all(
-                  color: Colors.white.withOpacity(0.6),
-                  width: 1,
-                )
-              : null,
-        ),
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        color: cellColor,
+        borderRadius: BorderRadius.circular(2),
+        border: isToday
+            ? Border.all(
+                color: Colors.white.withOpacity(0.6),
+                width: 1,
+              )
+            : null,
       ),
     );
   }
@@ -1635,20 +1599,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         return 'Monthly goal';
       default:
         return 'Daily goal';
-    }
-  }
-
-  Color _getPriorityColor(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return const Color(0xFFF700C5); // Bright magenta
-      case 'medium':
-        return const Color(0xFF00C2A7); // Teal/cyan
-      case 'low':
-        return const Color(0xFFFFC347); // Orange/gold
-      case 'none':
-      default:
-        return const Color(0xFFFF8056); // Coral
     }
   }
 

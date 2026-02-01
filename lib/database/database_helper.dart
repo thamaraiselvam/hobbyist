@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       dbPath,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -39,7 +39,6 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         notes TEXT,
         repeat_mode TEXT NOT NULL DEFAULT 'daily',
-        priority TEXT NOT NULL DEFAULT 'medium',
         color INTEGER NOT NULL,
         reminder_time TEXT,
         custom_day INTEGER,
@@ -74,10 +73,6 @@ class DatabaseHelper {
     // Create indexes for better query performance
     await db.execute('''
       CREATE INDEX idx_hobbies_created_at ON hobbies(created_at)
-    ''');
-
-    await db.execute('''
-      CREATE INDEX idx_hobbies_priority ON hobbies(priority)
     ''');
 
     await db.execute('''
@@ -213,6 +208,47 @@ class DatabaseHelper {
           'updated_at': DateTime.now().millisecondsSinceEpoch,
         });
       }
+    }
+    
+    if (oldVersion < 5) {
+      // Remove priority column from hobbies table (v5)
+      print('🔄 Migrating: Removing priority column...');
+      
+      // SQLite doesn't support DROP COLUMN directly, so we need to:
+      // 1. Create new table without priority
+      // 2. Copy data
+      // 3. Drop old table
+      // 4. Rename new table
+      
+      await db.execute('''
+        CREATE TABLE hobbies_new (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          notes TEXT,
+          repeat_mode TEXT NOT NULL DEFAULT 'daily',
+          color INTEGER NOT NULL,
+          reminder_time TEXT,
+          custom_day INTEGER,
+          best_streak INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        )
+      ''');
+      
+      await db.execute('''
+        INSERT INTO hobbies_new (id, name, notes, repeat_mode, color, reminder_time, custom_day, best_streak, created_at, updated_at)
+        SELECT id, name, notes, repeat_mode, color, reminder_time, custom_day, best_streak, created_at, updated_at
+        FROM hobbies
+      ''');
+      
+      await db.execute('DROP TABLE hobbies');
+      await db.execute('ALTER TABLE hobbies_new RENAME TO hobbies');
+      
+      // Recreate index without priority
+      await db.execute('DROP INDEX IF EXISTS idx_hobbies_priority');
+      await db.execute('CREATE INDEX idx_hobbies_created_at ON hobbies(created_at)');
+      
+      print('✅ Migration complete: Priority column removed');
     }
   }
 

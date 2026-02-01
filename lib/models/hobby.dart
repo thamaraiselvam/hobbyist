@@ -3,7 +3,6 @@ class Hobby {
   final String name;
   final String notes;
   final String repeatMode; // daily, weekly, custom
-  final String priority; // low, medium, high
   final int color;
   final Map<String, HobbyCompletion> completions; // date -> completion info
   final DateTime? createdAt;
@@ -16,7 +15,6 @@ class Hobby {
     required this.name,
     this.notes = '',
     this.repeatMode = 'daily',
-    this.priority = 'medium',
     required this.color,
     Map<String, HobbyCompletion>? completions,
     this.createdAt,
@@ -110,7 +108,6 @@ class Hobby {
         'name': name,
         'notes': notes,
         'repeatMode': repeatMode,
-        'priority': priority,
         'color': color,
         'completions': completions.map((k, v) => MapEntry(k, v.toJson())),
         'createdAt': createdAt?.toIso8601String(),
@@ -123,7 +120,6 @@ class Hobby {
         name: json['name'],
         notes: json['notes'] ?? '',
         repeatMode: json['repeatMode'] ?? 'daily',
-        priority: json['priority'] ?? 'medium',
         color: json['color'],
         completions: (json['completions'] as Map<String, dynamic>?)?.map(
               (k, v) => MapEntry(k, HobbyCompletion.fromJson(v)),
@@ -140,7 +136,6 @@ class Hobby {
     String? name,
     String? notes,
     String? repeatMode,
-    String? priority,
     int? color,
     Map<String, HobbyCompletion>? completions,
     DateTime? createdAt,
@@ -153,7 +148,6 @@ class Hobby {
         name: name ?? this.name,
         notes: notes ?? this.notes,
         repeatMode: repeatMode ?? this.repeatMode,
-        priority: priority ?? this.priority,
         color: color ?? this.color,
         completions: completions ?? this.completions,
         createdAt: createdAt ?? this.createdAt,

@@ -20,8 +20,10 @@ CREATE TABLE hobbies (
   name TEXT NOT NULL,
   notes TEXT,
   repeat_mode TEXT NOT NULL DEFAULT 'daily',
-  priority TEXT NOT NULL DEFAULT 'medium',
   color INTEGER NOT NULL,
+  reminder_time TEXT,
+  custom_day INTEGER,
+  best_streak INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 )
@@ -34,14 +36,15 @@ CREATE TABLE hobbies (
 | `name` | TEXT | NOT NULL | Task/hobby name |
 | `notes` | TEXT | - | Optional description |
 | `repeat_mode` | TEXT | NOT NULL, DEFAULT 'daily' | Frequency (daily/weekly/custom) |
-| `priority` | TEXT | NOT NULL, DEFAULT 'medium' | Priority level (low/medium/high) |
 | `color` | INTEGER | NOT NULL | Color code for UI |
+| `reminder_time` | TEXT | - | Reminder time in HH:mm format |
+| `custom_day` | INTEGER | - | Weekly: 0-6, Monthly: 1-31 |
+| `best_streak` | INTEGER | NOT NULL, DEFAULT 0 | Max historical streak |
 | `created_at` | INTEGER | NOT NULL | Unix timestamp (milliseconds) |
 | `updated_at` | INTEGER | NOT NULL | Unix timestamp (milliseconds) |
 
 **Indexes:**
 - `idx_hobbies_created_at` on `created_at`
-- `idx_hobbies_priority` on `priority`
 
 ---
 
@@ -125,11 +128,10 @@ hobbies (1) ──< completions (many)
 
 ### **Indexed Columns:**
 1. **hobbies.created_at** - Fast sorting by creation date
-2. **hobbies.priority** - Quick filtering by priority
-3. **completions.hobby_id** - Fast lookup of hobby's completions
-4. **completions.date** - Quick date-based queries
-5. **completions.completed** - Efficient filtering by completion status
-6. **completions.(hobby_id, date)** - Composite index for common queries
+2. **completions.hobby_id** - Fast lookup of hobby's completions
+3. **completions.date** - Quick date-based queries
+4. **completions.completed** - Efficient filtering by completion status
+5. **completions.(hobby_id, date)** - Composite index for common queries
 
 ### **Foreign Key Optimization:**
 - Cascade deletes reduce need for manual cleanup
@@ -165,7 +167,7 @@ ORDER BY created_at DESC
 SELECT h.*, c.completed 
 FROM hobbies h
 LEFT JOIN completions c ON h.id = c.hobby_id AND c.date = '2026-01-27'
-ORDER BY h.priority, h.name
+ORDER BY h.name
 ```
 
 ### Get completion rate for a date range:

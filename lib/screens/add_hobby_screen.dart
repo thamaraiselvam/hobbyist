@@ -21,9 +21,23 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   final NotificationService _notificationService = NotificationService();
 
   String _repeatMode = 'daily';
-  String _priority = 'medium';
+  int _selectedColor = 0xFF590df2; // Default to first color
   TimeOfDay _notificationTime = const TimeOfDay(hour: 8, minute: 0);
   bool _notifyEnabled = false; // Default OFF
+  
+  // Color palette - 10 bright colors matching theme
+  final List<int> _colorPalette = const [
+    0xFF590df2, // Purple (theme primary)
+    0xFFF700C5, // Bright magenta
+    0xFFFF8056, // Coral
+    0xFFFFC347, // Orange/gold
+    0xFF00C2A7, // Teal/cyan
+    0xFF00D9FF, // Bright cyan
+    0xFF6B5AED, // Light purple
+    0xFFFF6B9D, // Pink
+    0xFF00E676, // Bright green
+    0xFFFFAB40, // Amber
+  ];
   
   final List<String> _weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   int _selectedWeekDay = 0; // Single day for weekly (0=Monday)
@@ -39,7 +53,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
       _nameController.text = widget.hobby!.name;
       _notesController.text = widget.hobby!.notes;
       _repeatMode = widget.hobby!.repeatMode;
-      _priority = widget.hobby!.priority;
+      _selectedColor = widget.hobby!.color;
 
       // Load custom day if exists
       if (widget.hobby!.customDay != null) {
@@ -93,7 +107,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
           name: _nameController.text,
           notes: _notesController.text,
           repeatMode: _repeatMode,
-          priority: _priority,
+          color: _selectedColor,
           reminderTime: notificationTimeString,
           customDay: customDay,
         );
@@ -105,8 +119,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
           name: _nameController.text,
           notes: _notesController.text,
           repeatMode: _repeatMode,
-          priority: _priority,
-          color: const Color(0xFF590df2).value,
+          color: _selectedColor,
           reminderTime: notificationTimeString,
           customDay: customDay,
         );
@@ -623,14 +636,14 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                               ),
                             ),
                             const SizedBox(height: 24),
-                            // Priority section
+                            // Color Palette section
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.only(left: 4),
                                   child: Text(
-                                    'TASK PRIORITY',
+                                    'COLOR PALETTE',
                                     style: TextStyle(
                                       color: const Color(0xFFa490cb),
                                       fontSize: 10,
@@ -640,16 +653,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    _buildPriorityButton('none', 'None', const Color(0xFFFF8056)),
-                                    const SizedBox(width: 8),
-                                    _buildPriorityButton('low', 'Low', const Color(0xFFFFC347)),
-                                    const SizedBox(width: 8),
-                                    _buildPriorityButton('medium', 'Med', const Color(0xFF00C2A7)),
-                                    const SizedBox(width: 8),
-                                    _buildPriorityButton('high', 'High', const Color(0xFFF700C5)),
-                                  ],
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  children: _colorPalette.map((color) {
+                                    return _buildColorButton(color);
+                                  }).toList(),
                                 ),
                               ],
                             ),
@@ -735,48 +744,33 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
     );
   }
 
-  Widget _buildPriorityButton(String value, String label, Color? dotColor) {
-    final isSelected = _priority == value;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _priority = value;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF590df2).withOpacity(0.1) : const Color(0xFF221834),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? const Color(0xFF590df2).withOpacity(0.4) : Colors.transparent,
-            ),
+  Widget _buildColorButton(int colorValue) {
+    final isSelected = _selectedColor == colorValue;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedColor = colorValue;
+        });
+      },
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(colorValue),
+          border: Border.all(
+            color: isSelected ? Colors.white : Colors.transparent,
+            width: 2,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (dotColor != null) ...[
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: dotColor,
-                    shape: BoxShape.circle,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Color(colorValue).withOpacity(0.4),
+                    blurRadius: 6,
+                    spreadRadius: 1,
                   ),
-                ),
-                const SizedBox(height: 4),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
+                ]
+              : [],
         ),
       ),
     );

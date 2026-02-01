@@ -21,8 +21,7 @@
   - Task name input
   - Notes/description field
   - Repeat mode selection (Daily/Weekly/Monthly)
-  - Priority selection (High/Medium/Low)
-  - Color picker (10 colors)
+  - Color palette selector (10 colors)
   - Reminder time picker (optional)
   - Form validation
   - Auto-schedule notifications
@@ -39,7 +38,6 @@
   - Show name, notes, color
   - Display today's completion status
   - Show repeat mode icon
-  - Priority indicator
 
 ### 3. Daily Task Tracking
 - **Main Dashboard (Daily Tasks Screen)**
@@ -136,7 +134,7 @@
 
 ### 8. Data Persistence
 - **SQLite Database**
-  - Hobbies table (id, name, notes, repeat_mode, priority, color, created_at, updated_at)
+  - Hobbies table (id, name, notes, repeat_mode, color, reminder_time, custom_day, best_streak, created_at, updated_at)
   - Completions table (id, hobby_id, date, completed, completed_at)
   - Settings table (key, value, updated_at)
   - Indexes for performance

@@ -51,7 +51,6 @@ class HobbyService {
         name: hobbyData['name'],
         notes: hobbyData['notes'] ?? '',
         repeatMode: hobbyData['repeat_mode'] ?? 'daily',
-        priority: hobbyData['priority'] ?? 'medium',
         color: hobbyData['color'],
         completions: completions,
         createdAt: hobbyData['created_at'] != null
@@ -105,7 +104,6 @@ class HobbyService {
         'name': hobby.name,
         'notes': hobby.notes,
         'repeat_mode': hobby.repeatMode,
-        'priority': hobby.priority,
         'color': hobby.color,
         'reminder_time': hobby.reminderTime,
         'custom_day': hobby.customDay,
@@ -133,7 +131,6 @@ class HobbyService {
     // Track hobby creation in analytics
     await _analytics.logHobbyCreated(
       hobbyId: hobby.id,
-      priority: hobby.priority,
       repeatMode: hobby.repeatMode,
       color: hobby.color,
     );
@@ -165,7 +162,6 @@ class HobbyService {
         'name': hobby.name,
         'notes': hobby.notes,
         'repeat_mode': hobby.repeatMode,
-        'priority': hobby.priority,
         'color': hobby.color,
         'reminder_time': hobby.reminderTime,
         'custom_day': hobby.customDay,
@@ -200,7 +196,6 @@ class HobbyService {
     // Track hobby update in analytics
     await _analytics.logHobbyUpdated(
       hobbyId: hobby.id,
-      priority: hobby.priority,
       repeatMode: hobby.repeatMode,
     );
 

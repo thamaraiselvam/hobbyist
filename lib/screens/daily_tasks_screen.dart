@@ -837,13 +837,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         opacity: isFutureDate ? 0.4 : 1.0, // Dim future tasks
         child: Row(
           children: [
-            // Checkbox with priority color
+            // Checkbox with hobby color
             Builder(
               builder: (context) => AnimatedCheckbox(
                 isChecked: isCompleted,
                 onTap: isFutureDate ? null : () => _toggleToday(hobby), // Disable tap for future dates
                 size: 24,
-                color: _getPriorityColor(hobby.priority),
+                color: Color(hobby.color),
               ),
             ),
             const SizedBox(width: 10),
@@ -953,7 +953,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 16),
           PopupMenuButton(
             padding: EdgeInsets.zero,
             icon: const Icon(Icons.more_vert, color: Colors.white38, size: 22),
@@ -1210,19 +1210,5 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     final today = DateTime(now.year, now.month, now.day);
     final selected = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
     return selected.isAfter(today);
-  }
-
-  Color _getPriorityColor(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return const Color(0xFFF700C5); // Bright magenta
-      case 'medium':
-        return const Color(0xFF00C2A7); // Teal/cyan
-      case 'low':
-        return const Color(0xFFFFC347); // Orange/gold
-      case 'none':
-      default:
-        return const Color(0xFFFF8056); // Coral
-    }
   }
 }

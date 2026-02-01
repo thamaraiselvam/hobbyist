@@ -88,7 +88,6 @@ class AnalyticsService {
   /// Track hobby creation
   Future<void> logHobbyCreated({
     required String hobbyId,
-    required String priority,
     required String repeatMode,
     int? color,
   }) async {
@@ -97,7 +96,6 @@ class AnalyticsService {
       name: 'hobby_created',
       parameters: {
         'hobby_id': hobbyId,
-        'priority': priority,
         'repeat_mode': repeatMode,
         'color': color ?? 0,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
@@ -108,7 +106,6 @@ class AnalyticsService {
   /// Track hobby update
   Future<void> logHobbyUpdated({
     required String hobbyId,
-    String? priority,
     String? repeatMode,
   }) async {
     if (!await _isTelemetryEnabled()) return;
@@ -117,7 +114,6 @@ class AnalyticsService {
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
 
-    if (priority != null) params['priority'] = priority;
     if (repeatMode != null) params['repeat_mode'] = repeatMode;
 
     await _analytics?.logEvent(

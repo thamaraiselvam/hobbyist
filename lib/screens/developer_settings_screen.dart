@@ -147,7 +147,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
             name: taskName,
             notes: 'Daily habit',
             repeatMode: 'daily',
-            priority: 'high',
             color: _colors[taskIndex % _colors.length],
             completions: {},
           );
@@ -163,7 +162,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
             name: taskName,
             notes: 'Weekly routine',
             repeatMode: 'weekly',
-            priority: 'medium',
             color: _colors[taskIndex % _colors.length],
             completions: {},
           );
@@ -179,7 +177,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
             name: taskName,
             notes: 'Monthly task',
             repeatMode: 'monthly',
-            priority: 'low',
             color: _colors[taskIndex % _colors.length],
             completions: {},
           );
@@ -304,8 +301,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         id: 'test_100day_${DateTime.now().millisecondsSinceEpoch}',
         name: 'create app',
         repeatMode: 'Daily',
-        priority: 'High',
-        color: 0xFFFF6B6B, // Red color for high priority
+        color: 0xFFFF6B6B, // Red color
         bestStreak: 100,
         createdAt: createdAt,
         completions: {},
