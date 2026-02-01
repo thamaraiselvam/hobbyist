@@ -19,16 +19,19 @@ class FeatureFlagsService {
   /// Load developer settings from Remote Config
   void loadDeveloperSettings() {
     try {
-      final configJson = _remoteConfig.getString('developer_settings');
+      final configJson = _remoteConfig.getString('allow_developer_settings');
+      print('🔍 Raw allow_developer_settings: $configJson');
+      
       if (configJson.isNotEmpty) {
         _developerSettings = jsonDecode(configJson) as Map<String, dynamic>;
         print('✅ Developer settings loaded: ${_developerSettings?.keys.join(', ')}');
+        print('📧 Available emails: ${(_developerSettings!['feature_access_by_email'] as Map<String, dynamic>?)?.keys.join(', ')}');
       } else {
         _developerSettings = null;
-        print('⚠️ No developer_settings found in Remote Config');
+        print('⚠️ No allow_developer_settings found in Remote Config');
       }
     } catch (e) {
-      print('❌ Error parsing developer_settings: $e');
+      print('❌ Error parsing allow_developer_settings: $e');
       _developerSettings = null;
     }
   }
@@ -37,8 +40,11 @@ class FeatureFlagsService {
   bool isFeatureEnabled(String featureKey) {
     // Only enable features for logged-in users (not offline)
     if (!_authService.isLoggedIn || _authService.userEmail == null) {
+      print('⚠️ Feature check failed: User not logged in');
       return false;
     }
+
+    print('🔍 Checking feature "$featureKey" for ${_authService.userEmail}');
 
     // Reload settings if not loaded
     if (_developerSettings == null) {
@@ -47,23 +53,31 @@ class FeatureFlagsService {
 
     // If still null, no settings available
     if (_developerSettings == null) {
+      print('⚠️ No developer settings available after reload');
       return false;
     }
 
     try {
       final featureAccessByEmail = _developerSettings!['feature_access_by_email'] as Map<String, dynamic>?;
       if (featureAccessByEmail == null) {
+        print('⚠️ No feature_access_by_email found in settings');
         return false;
       }
 
       final userEmail = _authService.userEmail!;
+      print('📧 Looking for email: $userEmail');
+      
       final userFeatures = featureAccessByEmail[userEmail] as Map<String, dynamic>?;
       
       if (userFeatures == null) {
+        print('⚠️ No features found for email: $userEmail');
+        print('📋 Available emails: ${featureAccessByEmail.keys.join(', ')}');
         return false;
       }
 
-      return userFeatures[featureKey] == true;
+      final enabled = userFeatures[featureKey] == true;
+      print('${enabled ? '✅' : '❌'} Feature "$featureKey" = $enabled');
+      return enabled;
     } catch (e) {
       print('❌ Error checking feature "$featureKey": $e');
       return false;

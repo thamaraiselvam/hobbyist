@@ -40,19 +40,26 @@ class RemoteConfigService {
       'onboarding_flow_version': 'v1',
       'completion_animation_style': 'default',
       
-      // Developer settings - email-based feature flags
-      'developer_settings': '{"feature_access_by_email":{}}',
+      // Developer settings - email-based feature flags (using different name)
+      'allow_developer_settings': '{"feature_access_by_email":{}}',
     });
 
     // Configure fetch and cache settings
     await _remoteConfig!.setConfigSettings(RemoteConfigSettings(
       fetchTimeout: const Duration(seconds: 60),
-      minimumFetchInterval: const Duration(hours: 12),
+      minimumFetchInterval: Duration.zero, // Fetch on every app launch (development mode)
     ));
 
     // Fetch and activate new values
     try {
-      await _remoteConfig!.fetchAndActivate();
+      final activated = await _remoteConfig!.fetchAndActivate();
+      print('🔧 Remote Config fetch status: ${_remoteConfig!.lastFetchStatus}');
+      print('🔧 Remote Config activated: $activated');
+      
+      // Debug: Print actual value of allow_developer_settings
+      final devSettings = _remoteConfig!.getString('allow_developer_settings');
+      print('🔧 allow_developer_settings value: ${devSettings.isEmpty ? "(empty)" : devSettings.substring(0, devSettings.length > 100 ? 100 : devSettings.length)}...');
+      
       print('🔧 Remote Config initialized and activated');
     } catch (e) {
       print('⚠️ Remote Config fetch failed: $e (using defaults)');

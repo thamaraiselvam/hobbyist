@@ -28,7 +28,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _pushNotificationsEnabled = true;
   bool _completionSoundEnabled = true;
-  bool _telemetryEnabled = true; // Default ON - analytics and crash reports enabled by default (no PII collected)
   final HobbyService _service = HobbyService();
   final NotificationService _notificationService = NotificationService();
   final AuthService _authService = AuthService();
@@ -42,6 +41,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadUserName();
     _loadSettings();
     _checkAuthStatus();
+    // Ensure analytics are always enabled
+    _ensureAnalyticsEnabled();
   }
 
   Future<void> _checkAuthStatus() async {
@@ -68,15 +69,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     final completionSound = await _service.getSetting('completion_sound');
     final pushNotifications = await _service.getSetting('push_notifications');
-    final telemetry = await _service.getSetting('telemetry_enabled');
     
     if (mounted) {
       setState(() {
         _completionSoundEnabled = completionSound != 'false';
         _pushNotificationsEnabled = pushNotifications != 'false';
-        _telemetryEnabled = telemetry != 'false'; // Default ON - only false if explicitly disabled
       });
     }
+  }
+
+  Future<void> _ensureAnalyticsEnabled() async {
+    await _service.setSetting('telemetry_enabled', 'true');
+    await PerformanceService().updateCollectionEnabled();
+    await CrashlyticsService().updateCollectionEnabled();
   }
 
   Future<void> _showEditNameDialog() async {
@@ -286,6 +291,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildAboutCard(),
+                    // Debug: Remote Config refresh button (always show if signed in)
+                    if (_isGoogleSignedIn) ...[
+                      const SizedBox(height: 32),
+                      _buildRefreshConfigCard(),
+                    ],
                     // Developer Options - only show if enabled for this email
                     if (FeatureFlagsService().isDeveloperOptionsEnabled) ...[
                       const SizedBox(height: 32),
@@ -533,62 +543,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _service.setSetting('completion_sound', value.toString());
             },
           ),
-          const Divider(color: Color(0xFF3D3449), height: 1),
-          // FR-022 & FR-023: Telemetry opt-in - only show if enabled via feature flag
-          if (FeatureFlagsService().isAnalyticsAndCrashReportsEnabled) ...[
-            Container(
-              color: Colors.transparent,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.analytics_outlined, color: Color(0xFFEF4444), size: 22),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Text(
-                      'Analytics & Crash Reports',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Switch(
-                    value: _telemetryEnabled,
-                    onChanged: (value) async {
-                      setState(() => _telemetryEnabled = value);
-                      await _service.setSetting('telemetry_enabled', value.toString());
-                      // Update Firebase services immediately
-                      await PerformanceService().updateCollectionEnabled();
-                      await CrashlyticsService().updateCollectionEnabled();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(value 
-                              ? 'Analytics enabled. Thank you for helping improve the app!' 
-                              : 'Analytics disabled. Your data stays private.'),
-                            backgroundColor: value ? const Color(0xFF10B981) : const Color(0xFF6C3FFF),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    },
-                    activeColor: const Color(0xFF10B981),
-                    activeTrackColor: const Color(0xFF10B981).withOpacity(0.5),
-                    inactiveThumbColor: Colors.white,
-                    inactiveTrackColor: const Color(0xFF3D3449),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -926,6 +880,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Icon(Icons.chevron_right, color: Colors.red),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRefreshConfigCard() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF221834),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: InkWell(
+        onTap: () async {
+          // Show loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Refreshing feature flags from Firebase...'),
+              backgroundColor: Color(0xFF6C3FFF),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          
+          // Refresh Remote Config and feature flags
+          await FeatureFlagsService().refresh();
+          
+          // Reload page to show updated features
+          setState(() {});
+          
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Feature flags refreshed! Email: ${_authService.userEmail}'),
+                backgroundColor: const Color(0xFF10B981),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C3FFF).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.refresh, color: Color(0xFF6C3FFF), size: 22),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Refresh Feature Flags',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Force fetch from Firebase Remote Config',
+                      style: TextStyle(
+                        color: Color(0xFF94A3B8),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Colors.white54),
             ],
           ),
         ),

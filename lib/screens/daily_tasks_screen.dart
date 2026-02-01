@@ -383,8 +383,48 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 4),
+                            // Empty state: No hobbies at all
+                            if (_hobbies.isEmpty) ...[
+                              const SizedBox(height: 80),
+                              Center(
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.task_alt,
+                                        size: 80, color: Colors.white24),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'Welcome to Hobbyist! 👋',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      'No hobbies yet',
+                                      style: TextStyle(
+                                        color: Colors.white54,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Tap the + button below to create your first hobby\nand start building your habit streak!',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white38,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 120),
+                            ]
                             // Check if there are tasks for this day
-                            if (totalTasksForSelectedDate == 0 && _hobbies.isNotEmpty) ...[
+                            else if (totalTasksForSelectedDate == 0) ...[
                               // No tasks for this day - show centered message
                               const SizedBox(height: 120),
                               Center(
@@ -467,34 +507,6 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                 const SizedBox(height: 12),
                               ],
                             ],
-                            if (_hobbies.isEmpty) ...[
-                              const SizedBox(height: 80),
-                              Center(
-                                child: Column(
-                                  children: [
-                                    Icon(Icons.task_alt,
-                                        size: 80, color: Colors.white24),
-                                    const SizedBox(height: 16),
-                                    const Text(
-                                      'No hobbies yet',
-                                      style: TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    const Text(
-                                      'Tap the + button to add your first hobby',
-                                      style: TextStyle(
-                                        color: Colors.white38,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
                             // Quote at the bottom (always)
                             _buildQuoteSection(),
                             const SizedBox(height: 16),
@@ -509,8 +521,48 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const SizedBox(height: 4),
+                                // Empty state: No hobbies at all
+                                if (_hobbies.isEmpty) ...[
+                                  const SizedBox(height: 80),
+                                  Center(
+                                    child: Column(
+                                      children: [
+                                        Icon(Icons.task_alt,
+                                            size: 80, color: Colors.white24),
+                                        const SizedBox(height: 16),
+                                        const Text(
+                                          'Welcome to Hobbyist! 👋',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        const Text(
+                                          'No hobbies yet',
+                                          style: TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        const Text(
+                                          'Tap the + button below to create your first hobby\nand start building your habit streak!',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.white38,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 120),
+                                ]
                                 // Check if there are tasks for this day
-                                if (totalTasksForSelectedDate == 0 && _hobbies.isNotEmpty) ...[
+                                else if (totalTasksForSelectedDate == 0) ...[
                                   // No tasks for this day - show centered message
                                   const SizedBox(height: 120),
                                   Center(
@@ -1237,8 +1289,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               direction: AxisDirection.up,
             ),
           );
-          _loadHobbies();
-          // Re-scroll to current selected date (keep state, just reset scroll position)
+          // Reload hobbies and wait for widget rebuild
+          await _loadHobbies();
+          // Wait for build to complete
+          await Future.delayed(const Duration(milliseconds: 100));
+          // Now scroll to the selected date
           _animateToSelectedDate();
         },
         child: Container(
