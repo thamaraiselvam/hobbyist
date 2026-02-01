@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
+import '../services/feature_flags_service.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 
@@ -134,19 +135,28 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                         ],
                       ),
                     )
-                  : RefreshIndicator(
-                      onRefresh: _loadHobbies,
-                      color: const Color(0xFF6C3FFF),
-                      backgroundColor: const Color(0xFF2A2139),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: filteredHobbies.length,
-                        itemBuilder: (context, index) {
-                          final hobby = filteredHobbies[index];
-                          return _buildTaskCard(hobby);
-                        },
-                      ),
-                    ),
+                  : FeatureFlagsService().isPullToRefreshEnabled
+                      ? RefreshIndicator(
+                          onRefresh: _loadHobbies,
+                          color: const Color(0xFF6C3FFF),
+                          backgroundColor: const Color(0xFF2A2139),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: filteredHobbies.length,
+                            itemBuilder: (context, index) {
+                              final hobby = filteredHobbies[index];
+                              return _buildTaskCard(hobby);
+                            },
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: filteredHobbies.length,
+                          itemBuilder: (context, index) {
+                            final hobby = filteredHobbies[index];
+                            return _buildTaskCard(hobby);
+                          },
+                        ),
             ),
           ],
         ),
@@ -583,39 +593,42 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
   }
 
   Widget _buildCreateButton() {
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          SlidePageRoute(
-            page: const AddHobbyScreen(),
-            direction: AxisDirection.up,
-          ),
-        );
-        _loadHobbies();
-      },
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6C3FFF).withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+    return Transform.translate(
+      offset: const Offset(0, -20), // Lift the button up by 20 pixels
+      child: GestureDetector(
+        onTap: () async {
+          await Navigator.push(
+            context,
+            SlidePageRoute(
+              page: const AddHobbyScreen(),
+              direction: AxisDirection.up,
             ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 28,
+          );
+          _loadHobbies();
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C3FFF).withOpacity(0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 30,
+          ),
         ),
       ),
     );

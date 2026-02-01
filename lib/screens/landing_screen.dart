@@ -117,7 +117,7 @@ class _LandingScreenState extends State<LandingScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'A minimalist space to track what moves you, built with privacy and focus at its core.',
+            'Track your hobbies with clarity — designed for focus, privacy, and simplicity.',
             style: TextStyle(
               color: Color(0xFFa490cb),
               fontSize: 18,
@@ -142,7 +142,7 @@ class _LandingScreenState extends State<LandingScreen> {
           _buildFeatureItem(
             icon: Icons.payments,
             title: 'Completely Free',
-            subtitle: 'No subscriptions, trackers, or hidden fees.',
+            subtitle: 'No subscriptions or hidden fees.',
           ),
           _buildFeatureItem(
             icon: Icons.leaderboard,
@@ -153,11 +153,6 @@ class _LandingScreenState extends State<LandingScreen> {
             icon: Icons.grid_view,
             title: 'Minimalist UI',
             subtitle: 'Designed for deep focus and zero distraction.',
-          ),
-          _buildFeatureItem(
-            icon: Icons.sync,
-            title: 'Optional Cloud Sync',
-            subtitle: 'Sync between devices only when you choose.',
           ),
         ],
       ),

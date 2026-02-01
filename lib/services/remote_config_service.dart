@@ -39,6 +39,9 @@ class RemoteConfigService {
       // A/B Testing
       'onboarding_flow_version': 'v1',
       'completion_animation_style': 'default',
+      
+      // Developer settings - email-based feature flags
+      'developer_settings': '{"feature_access_by_email":{}}',
     });
 
     // Configure fetch and cache settings

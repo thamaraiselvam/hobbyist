@@ -430,7 +430,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Developer Settings'),
+        title: const Text('Developer Options'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

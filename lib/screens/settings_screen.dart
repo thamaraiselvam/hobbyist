@@ -4,6 +4,7 @@ import '../services/notification_service.dart';
 import '../services/auth_service.dart';
 import '../services/performance_service.dart';
 import '../services/crashlytics_service.dart';
+import '../services/feature_flags_service.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'developer_settings_screen.dart';
@@ -285,8 +286,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildAboutCard(),
-                    const SizedBox(height: 32),
-                    _buildDeveloperSettingsCard(),
+                    // Developer Options - only show if enabled for this email
+                    if (FeatureFlagsService().isDeveloperOptionsEnabled) ...[
+                      const SizedBox(height: 32),
+                      _buildDeveloperSettingsCard(),
+                    ],
                     // Logout button at the end (only show if signed in with Google)
                     if (_isGoogleSignedIn) ...[
                       const SizedBox(height: 32),
@@ -363,38 +367,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildCreateButton() {
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          SlidePageRoute(
-            page: const AddHobbyScreen(),
-            direction: AxisDirection.up,
-          ),
-        );
-      },
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6C3FFF).withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+    return Transform.translate(
+      offset: const Offset(0, -20), // Lift the button up by 20 pixels
+      child: GestureDetector(
+        onTap: () async {
+          await Navigator.push(
+            context,
+            SlidePageRoute(
+              page: const AddHobbyScreen(),
+              direction: AxisDirection.up,
             ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 28,
+          );
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C3FFF).withOpacity(0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 30,
+          ),
         ),
       ),
     );
@@ -527,10 +534,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const Divider(color: Color(0xFF3D3449), height: 1),
-          // FR-022 & FR-023: Telemetry opt-in with disclosure
-          GestureDetector(
-            onTap: () => _showTelemetryDisclosure(),
-            child: Container(
+          // FR-022 & FR-023: Telemetry opt-in - only show if enabled via feature flag
+          if (FeatureFlagsService().isAnalyticsAndCrashReportsEnabled) ...[
+            Container(
               color: Colors.transparent,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -554,61 +560,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          backgroundColor: const Color(0xFF221834),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          title: const Text(
-                            'Privacy Information',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          content: const Text(
-                            'We collect anonymous usage data to improve the app.\n\n'
-                            '✅ What we collect:\n'
-                            '• Screen views and feature usage\n'
-                            '• Crash reports and errors\n'
-                            '• App performance metrics\n\n'
-                            '❌ What we DON\'T collect:\n'
-                            '• Your hobby names or notes\n'
-                            '• Completion history or dates\n'
-                            '• Email or personal information\n\n'
-                            'All your hobby data stays on your device.',
-                            style: TextStyle(
-                              color: Color(0xFF94A3B8),
-                              fontSize: 14,
-                              height: 1.5,
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text(
-                                'Got it',
-                                style: TextStyle(
-                                  color: Color(0xFF6C3FFF),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    child: const Icon(
-                      Icons.info_outline,
-                      size: 18,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
                   Switch(
                     value: _telemetryEnabled,
                     onChanged: (value) async {
@@ -637,7 +588,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -929,7 +880,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: _buildNavTile(
         icon: Icons.code,
         iconColor: const Color(0xFFFF6B35),
-        title: 'Developer Settings',
+        title: 'Developer Options',
         onTap: () {
           Navigator.push(
             context,
@@ -979,102 +930,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  /// FR-023: Telemetry disclosure dialog
-  void _showTelemetryDisclosure() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1625),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.privacy_tip_outlined, color: Color(0xFF6C3FFF)),
-            SizedBox(width: 12),
-            Text(
-              'Privacy & Data Collection',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDisclosureSection(
-                'What We Collect (if enabled)',
-                [
-                  '✓ App usage patterns (screens visited, feature usage)',
-                  '✓ Performance metrics (load times, crashes)',
-                  '✓ Anonymous hobby statistics (count, completion rates)',
-                  '✓ Device info (OS version, app version)',
-                ],
-                Colors.white,
-              ),
-              const SizedBox(height: 16),
-              _buildDisclosureSection(
-                'What We NEVER Collect',
-                [
-                  '✗ Hobby names, notes, or descriptions',
-                  '✗ Your email address or personal info',
-                  '✗ Location data',
-                  '✗ Contacts or photos',
-                ],
-                const Color(0xFFEF4444),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'All your hobby data stays on your device. Enabling telemetry helps us fix bugs and improve the app.',
-                style: TextStyle(
-                  color: Color(0xFF94A3B8),
-                  fontSize: 13,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Got it',
-              style: TextStyle(color: Color(0xFF6C3FFF), fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDisclosureSection(String title, List<String> items, Color textColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 6, left: 8),
-              child: Text(
-                item,
-                style: TextStyle(
-                  color: textColor.withOpacity(0.9),
-                  fontSize: 13,
-                  height: 1.3,
-                ),
-              ),
-            )),
-      ],
     );
   }
 }

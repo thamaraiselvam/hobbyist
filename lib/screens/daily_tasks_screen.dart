@@ -4,6 +4,7 @@ import '../models/hobby.dart';
 import '../services/hobby_service.dart';
 import '../services/sound_service.dart';
 import '../services/quote_service.dart';
+import '../services/feature_flags_service.dart';
 import '../widgets/animated_checkbox.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
@@ -92,6 +93,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     if (!mounted || !_dayScrollController.hasClients) return;
     
     try {
+      await Future.delayed(const Duration(milliseconds: 50));
+      
       // Calculate how many days from the base (30 days ago)
       final now = DateTime.now();
       final baseDate = now.subtract(const Duration(days: 30));
@@ -368,15 +371,16 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                   _buildHeader(),
                   _buildDaySelector(),
                   Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: _refreshToToday,
-                      color: const Color(0xFF6C3FFF),
-                      backgroundColor: const Color(0xFF2A2139),
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    child: FeatureFlagsService().isPullToRefreshEnabled
+                        ? RefreshIndicator(
+                            onRefresh: _refreshToToday,
+                            color: const Color(0xFF6C3FFF),
+                            backgroundColor: const Color(0xFF2A2139),
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 4),
                             // Check if there are tasks for this day
@@ -497,7 +501,136 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           ],
                         ),
                       ),
-                    ),
+                    )
+                        : SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                // Check if there are tasks for this day
+                                if (totalTasksForSelectedDate == 0 && _hobbies.isNotEmpty) ...[
+                                  // No tasks for this day - show centered message
+                                  const SizedBox(height: 120),
+                                  Center(
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.event_available,
+                                          size: 80,
+                                          color: Colors.white24,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          _isToday() 
+                                              ? 'No tasks for today' 
+                                              : 'No tasks for this day',
+                                          style: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          _isToday()
+                                              ? 'Enjoy your free day!'
+                                              : 'No hobbies scheduled for this day',
+                                          style: const TextStyle(
+                                            color: Colors.white38,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 120),
+                                ] else ...[
+                                  // Has tasks - show normal layout
+                                  if (inProgressTasks.isNotEmpty) ...[
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          _isFutureDate() 
+                                              ? 'Upcoming Tasks' 
+                                              : (_isToday() ? 'In Progress' : 'Not Completed'),
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${inProgressTasks.length} Pending',
+                                          style: const TextStyle(
+                                            color: Color(0xFF8B5CF6),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...inProgressTasks
+                                        .map((hobby) => _buildTaskCard(hobby, false)),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  if (completedTasks.isNotEmpty && !_isFutureDate()) ...[
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Completed',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF10B981)
+                                                .withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.check_circle,
+                                                color: Color(0xFF10B981),
+                                                size: 14,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '${completedTasks.length}',
+                                                style: const TextStyle(
+                                                  color: Color(0xFF10B981),
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...completedTasks.map((hobby) =>
+                                        _buildTaskCard(hobby, true)),
+                                  ],
+                                ],
+                                // Quote at the bottom (always)
+                                _buildQuoteSection(),
+                                const SizedBox(height: 16),
+                              ],
+                            ),
+                          ),
                   ),
                 ],
               ),
@@ -1093,39 +1226,44 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   }
 
   Widget _buildCreateButton() {
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          SlidePageRoute(
-            page: const AddHobbyScreen(),
-            direction: AxisDirection.up,
-          ),
-        );
-        _loadHobbies();
-      },
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6C3FFF).withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+    return Transform.translate(
+      offset: const Offset(0, -20), // Lift the button up by 20 pixels
+      child: GestureDetector(
+        onTap: () async {
+          await Navigator.push(
+            context,
+            SlidePageRoute(
+              page: const AddHobbyScreen(),
+              direction: AxisDirection.up,
             ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 28,
+          );
+          _loadHobbies();
+          // Re-scroll to current selected date (keep state, just reset scroll position)
+          _animateToSelectedDate();
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C3FFF).withOpacity(0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 30,
+          ),
         ),
       ),
     );

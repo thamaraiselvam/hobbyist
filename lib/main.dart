@@ -11,6 +11,7 @@ import 'services/analytics_service.dart';
 import 'services/crashlytics_service.dart';
 import 'services/performance_service.dart';
 import 'services/remote_config_service.dart';
+import 'services/feature_flags_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +44,9 @@ void main() async {
     
     // Initialize Remote Config
     await RemoteConfigService.initialize();
+    
+    // Initialize Feature Flags (depends on Remote Config)
+    FeatureFlagsService().loadDeveloperSettings();
     
     print('✅ All Firebase services initialized');
   } catch (e) {

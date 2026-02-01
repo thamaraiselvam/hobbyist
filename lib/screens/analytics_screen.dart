@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/hobby.dart';
 import '../services/analytics_service.dart';
 import '../services/hobby_service.dart';
+import '../services/feature_flags_service.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 
@@ -476,28 +477,46 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           children: [
             _buildHeader(),
             Expanded(
-              child: RefreshIndicator(
-                onRefresh: widget.onRefresh,
-                color: const Color(0xFF590df2),
-                backgroundColor: const Color(0xFF161616),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 24),
-                      _buildStatsCards(),
-                      const SizedBox(height: 24),
-                      _buildBarChart(),
-                      const SizedBox(height: 32),
-                      _buildActivityMap(),
-                      const SizedBox(height: 32),
-                      _buildAllTasks(),
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                ),
-              ),
+              child: FeatureFlagsService().isPullToRefreshEnabled
+                  ? RefreshIndicator(
+                      onRefresh: widget.onRefresh,
+                      color: const Color(0xFF590df2),
+                      backgroundColor: const Color(0xFF161616),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 24),
+                            _buildStatsCards(),
+                            const SizedBox(height: 24),
+                            _buildBarChart(),
+                            const SizedBox(height: 32),
+                            _buildActivityMap(),
+                            const SizedBox(height: 32),
+                            _buildAllTasks(),
+                            const SizedBox(height: 100),
+                          ],
+                        ),
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 24),
+                          _buildStatsCards(),
+                          const SizedBox(height: 24),
+                          _buildBarChart(),
+                          const SizedBox(height: 32),
+                          _buildActivityMap(),
+                          const SizedBox(height: 32),
+                          _buildAllTasks(),
+                          const SizedBox(height: 100),
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),
@@ -1634,39 +1653,42 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildCreateButton() {
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          SlidePageRoute(
-            page: const AddHobbyScreen(),
-            direction: AxisDirection.up,
-          ),
-        );
-        await widget.onRefresh();
-      },
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6C3FFF).withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+    return Transform.translate(
+      offset: const Offset(0, -20), // Lift the button up by 20 pixels
+      child: GestureDetector(
+        onTap: () async {
+          await Navigator.push(
+            context,
+            SlidePageRoute(
+              page: const AddHobbyScreen(),
+              direction: AxisDirection.up,
             ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 28,
+          );
+          await widget.onRefresh();
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C3FFF).withOpacity(0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 30,
+          ),
         ),
       ),
     );
