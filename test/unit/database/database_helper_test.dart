@@ -1,117 +1,123 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hobbyist/database/database_helper.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:path/path.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+
+    const MethodChannel('plugins.flutter.io/path_provider')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
+      return '.';
+    });
+  });
+
+  setUp(() async {
+    DatabaseHelper.reset();
+    final dbFolder = await databaseFactory.getDatabasesPath();
+    final dbFile = File(join(dbFolder, 'hobbyist.db'));
+    if (dbFile.existsSync()) dbFile.deleteSync();
+    final upgradeFile = File(join(dbFolder, 'hobbyist_upgrade.db'));
+    if (upgradeFile.existsSync()) upgradeFile.deleteSync();
+  });
+
+  tearDown(() async {
+    await DatabaseHelper.instance.close();
   });
 
   group('DatabaseHelper Tests', () {
-    late DatabaseHelper dbHelper;
-
-    setUp(() {
-      dbHelper = DatabaseHelper.instance;
-    });
-
-    test('should create database instance', () {
-      expect(dbHelper, isNotNull);
-    });
-
-    test('should get database', () async {
-      final db = await dbHelper.database;
+    test('database getter initializes DB', () async {
+      final db = await DatabaseHelper.instance.database;
       expect(db, isNotNull);
-      expect(db.isOpen, true);
-    });
+      expect(db.path, contains('hobbyist.db'));
 
-    test('should have hobbies table', () async {
-      final db = await dbHelper.database;
-      final tables = await db.query('sqlite_master', where: 'type = ?', whereArgs: ['table']);
+      final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
       final tableNames = tables.map((t) => t['name'] as String).toList();
-      expect(tableNames, contains('hobbies'));
-    });
-
-    test('should have completions table', () async {
-      final db = await dbHelper.database;
-      final tables = await db.query('sqlite_master', where: 'type = ?', whereArgs: ['table']);
-      final tableNames = tables.map((t) => t['name'] as String).toList();
-      expect(tableNames, contains('completions'));
-    });
-
-    test('should have settings table', () async {
-      final db = await dbHelper.database;
-      final tables = await db.query('sqlite_master', where: 'type = ?', whereArgs: ['table']);
-      final tableNames = tables.map((t) => t['name'] as String).toList();
-      expect(tableNames, contains('settings'));
-    });
-
-    test('should insert data into hobbies table', () async {
-      final db = await dbHelper.database;
-      final id = await db.insert('hobbies', {
-        'id': 'test-hobby-${DateTime.now().millisecondsSinceEpoch}',
-        'name': 'Test Hobby',
-        'notes': '',
-        'repeat_mode': 'daily',
-        'priority': 'medium',
-        'color': 0xFF6C3FFF,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      });
-      expect(id, greaterThan(0));
-    });
-
-    test('should query hobbies table', () async {
-      final db = await dbHelper.database;
-      final hobbyId = 'test-hobby-${DateTime.now().millisecondsSinceEpoch}';
       
-      await db.insert('hobbies', {
-        'id': hobbyId,
-        'name': 'Test Hobby',
-        'notes': '',
-        'repeat_mode': 'daily',
-        'priority': 'medium',
-        'color': 0xFF6C3FFF,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      });
-
-      final hobbies = await db.query('hobbies', where: 'id = ?', whereArgs: [hobbyId]);
-      expect(hobbies.length, 1);
-      expect(hobbies[0]['name'], 'Test Hobby');
+      expect(tableNames, containsAll(['hobbies', 'completions', 'settings']));
     });
 
-    test('should clear all data', () async {
-      final db = await dbHelper.database;
+    test('clearAllData', () async {
+      final db = await DatabaseHelper.instance.database;
       
+      // Ensure landing setting exists (it should from _createDB)
+      final existingNames = await db.query('settings', where: 'key = ?', whereArgs: ['has_seen_landing']);
+      if (existingNames.isEmpty) {
+        await db.insert('settings', {'key': 'has_seen_landing', 'value': 'true', 'updated_at': 0});
+      }
+
+      // Insert some data
       await db.insert('hobbies', {
-        'id': 'test-${DateTime.now().millisecondsSinceEpoch}',
-        'name': 'Test',
-        'notes': '',
-        'repeat_mode': 'daily',
-        'priority': 'medium',
-        'color': 0xFF6C3FFF,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
+        'id': '1',
+        'name': 'Hobby 1',
+        'color': 0,
+        'created_at': 0,
+        'updated_at': 0,
       });
-
-      await dbHelper.clearAllData();
-
+      
+      await DatabaseHelper.instance.clearAllData();
+      
       final hobbies = await db.query('hobbies');
-      final completions = await db.query('completions');
-      final settings = await db.query('settings');
-
       expect(hobbies, isEmpty);
-      expect(completions, isEmpty);
-      expect(settings, isEmpty);
+      
+      final setting = await db.query('settings', where: 'key = ?', whereArgs: ['has_seen_landing']);
+      expect(setting, isNotEmpty);
+      expect(setting.first['value'], 'false');
     });
 
-    test('should delete database', () async {
-      await dbHelper.database;
-      await dbHelper.deleteDatabase();
-      final newDb = await dbHelper.database;
-      expect(newDb, isNotNull);
-      expect(newDb.isOpen, true);
+    test('getDatabasePath', () async {
+      final path = await DatabaseHelper.instance.getDatabasePath();
+      expect(path, isNotNull);
+    });
+
+    test('close', () async {
+      await DatabaseHelper.instance.database;
+      await DatabaseHelper.instance.close();
+      // Should not throw
+    });
+
+    test('Database upgrade logic (v1 to v5)', () async {
+      final dbFolder = await databaseFactory.getDatabasesPath();
+      final dbPath = join(dbFolder, 'hobbyist.db');
+      final upgradePath = join(dbFolder, 'hobbyist_upgrade.db');
+
+      // Create version 1 database manually
+      final dbV1 = await openDatabase(upgradePath, version: 1, onCreate: (db, version) async {
+        await db.execute('CREATE TABLE hobbies (id TEXT PRIMARY KEY, name TEXT NOT NULL, notes TEXT, repeat_mode TEXT NOT NULL DEFAULT "daily", priority INTEGER NOT NULL DEFAULT 0, color INTEGER NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)');
+        await db.execute('CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL)');
+      });
+      await dbV1.close();
+
+      print('DEBUG: dbPath=$dbPath');
+      print('DEBUG: upgradePath=$upgradePath');
+
+      if (File(dbPath).existsSync()) File(dbPath).deleteSync();
+      File(upgradePath).copySync(dbPath);
+      print('DEBUG: File copied: ${File(dbPath).existsSync()}');
+
+      final db = await DatabaseHelper.instance.database;
+      
+      // Check if columns from upgrades exist
+      final columns = await db.rawQuery('PRAGMA table_info(hobbies)');
+      final columnNames = columns.map((c) => c['name'] as String).toList();
+      
+      expect(columnNames, contains('reminder_time')); // v2
+      expect(columnNames, contains('custom_day'));    // v3
+      expect(columnNames, contains('best_streak'));   // v4
+      
+      // Check if telemetry_enabled setting was added
+      final telemetry = await db.query('settings', where: 'key = ?', whereArgs: ['telemetry_enabled']);
+      expect(telemetry, isNotEmpty);
+      
+      await DatabaseHelper.instance.close();
+      if (File(upgradePath).existsSync()) File(upgradePath).deleteSync();
+      if (File(dbPath).existsSync()) File(dbPath).deleteSync();
     });
   });
 }

@@ -4,20 +4,20 @@ import 'package:hobbyist/widgets/animated_checkbox.dart';
 
 void main() {
   group('AnimatedCheckbox Widget Tests', () {
-    testWidgets('should display unchecked checkbox', (WidgetTester tester) async {
+    testWidgets('should display unchecked checkbox',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: AnimatedCheckbox(
-              value: false,
-              onChanged: (_) {},
+              isChecked: false,
+              onTap: () {},
             ),
           ),
         ),
       );
 
       expect(find.byType(AnimatedCheckbox), findsOneWidget);
-      expect(find.byType(Checkbox), findsOneWidget);
     });
 
     testWidgets('should display checked checkbox', (WidgetTester tester) async {
@@ -25,55 +25,41 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: AnimatedCheckbox(
-              value: true,
-              onChanged: (_) {},
+              isChecked: true,
+              onTap: () {},
             ),
           ),
         ),
       );
 
-      final checkbox = tester.widget<Checkbox>(find.byType(Checkbox));
-      expect(checkbox.value, true);
+      expect(find.byType(AnimatedCheckbox), findsOneWidget);
+      // Since it's a CustomPaint, we can't easily assert pixel details without golden tests,
+      // but we verify the widget exists.
     });
 
-    testWidgets('should call onChanged when tapped', (WidgetTester tester) async {
-      bool? changedValue;
+    testWidgets('should call onTap when tapped', (WidgetTester tester) async {
+      bool tapped = false;
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: AnimatedCheckbox(
-              value: false,
-              onChanged: (value) {
-                changedValue = value;
+              isChecked: false,
+              onTap: () {
+                tapped = true;
               },
             ),
           ),
         ),
       );
 
-      await tester.tap(find.byType(Checkbox));
-      expect(changedValue, true);
+      await tester.tap(find.byType(AnimatedCheckbox));
+      expect(tapped, true);
     });
 
-    testWidgets('should have scale animation', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AnimatedCheckbox(
-              value: false,
-              onChanged: (_) {},
-            ),
-          ),
-        ),
-      );
-
-      // Check for AnimatedBuilder or Transform widget that handles scaling
-      expect(find.byType(AnimatedCheckbox), findsOneWidget);
-    });
-
-    testWidgets('should animate when value changes', (WidgetTester tester) async {
-      bool value = false;
+    testWidgets('should animate when value changes',
+        (WidgetTester tester) async {
+      bool isChecked = false;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -81,10 +67,10 @@ void main() {
             body: StatefulBuilder(
               builder: (context, setState) {
                 return AnimatedCheckbox(
-                  value: value,
-                  onChanged: (newValue) {
+                  isChecked: isChecked,
+                  onTap: () {
                     setState(() {
-                      value = newValue!;
+                      isChecked = !isChecked;
                     });
                   },
                 );
@@ -94,12 +80,11 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(Checkbox));
+      await tester.tap(find.byType(AnimatedCheckbox));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      final checkbox = tester.widget<Checkbox>(find.byType(Checkbox));
-      expect(checkbox.value, true);
+      expect(isChecked, true);
     });
   });
 }

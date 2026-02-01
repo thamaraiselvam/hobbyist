@@ -1,7 +1,8 @@
+// ignore_for_file: avoid_print
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 
 /// RemoteConfigService - Manages feature flags and remote configuration
-/// 
+///
 /// This service integrates Firebase Remote Config to enable/disable features
 /// remotely without app updates, and perform A/B testing.
 class RemoteConfigService {
@@ -12,8 +13,14 @@ class RemoteConfigService {
 
   RemoteConfigService._internal();
 
+  static FirebaseRemoteConfig? mockRemoteConfig;
+
   /// Initialize Remote Config with default values
   static Future<void> initialize() async {
+    if (mockRemoteConfig != null) {
+      _remoteConfig = mockRemoteConfig;
+      return;
+    }
     _remoteConfig = FirebaseRemoteConfig.instance;
 
     // Set default values
@@ -23,23 +30,23 @@ class RemoteConfigService {
       'enable_notifications': true,
       'enable_sound_feedback': true,
       'enable_streak_milestones': true,
-      
+
       // UI Configuration
       'show_motivational_quotes': true,
       'max_hobbies_limit': 50,
       'default_theme_mode': 'dark',
-      
+
       // Performance settings
       'cache_duration_hours': 12,
       'fetch_timeout_seconds': 60,
-      
+
       // Feature limits (removed max_streak_days - streaks are unbounded per spec FR-014)
       'enable_premium_features': false,
-      
+
       // A/B Testing
       'onboarding_flow_version': 'v1',
       'completion_animation_style': 'default',
-      
+
       // Developer settings - email-based feature flags (using different name)
       'allow_developer_settings': '{"feature_access_by_email":{}}',
     });
@@ -47,7 +54,8 @@ class RemoteConfigService {
     // Configure fetch and cache settings
     await _remoteConfig!.setConfigSettings(RemoteConfigSettings(
       fetchTimeout: const Duration(seconds: 60),
-      minimumFetchInterval: Duration.zero, // Fetch on every app launch (development mode)
+      minimumFetchInterval:
+          Duration.zero, // Fetch on every app launch (development mode)
     ));
 
     // Fetch and activate new values
@@ -55,11 +63,12 @@ class RemoteConfigService {
       final activated = await _remoteConfig!.fetchAndActivate();
       print('🔧 Remote Config fetch status: ${_remoteConfig!.lastFetchStatus}');
       print('🔧 Remote Config activated: $activated');
-      
+
       // Debug: Print actual value of allow_developer_settings
       final devSettings = _remoteConfig!.getString('allow_developer_settings');
-      print('🔧 allow_developer_settings value: ${devSettings.isEmpty ? "(empty)" : devSettings.substring(0, devSettings.length > 100 ? 100 : devSettings.length)}...');
-      
+      print(
+          '🔧 allow_developer_settings value: ${devSettings.isEmpty ? "(empty)" : devSettings.substring(0, devSettings.length > 100 ? 100 : devSettings.length)}...');
+
       print('🔧 Remote Config initialized and activated');
     } catch (e) {
       print('⚠️ Remote Config fetch failed: $e (using defaults)');

@@ -2,47 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Curves.easeIn,
       ),
     );
-    
+
     _controller.forward();
-    
+
     _checkOnboardingStatus();
   }
 
   Future<void> _checkOnboardingStatus() async {
     await Future.delayed(const Duration(milliseconds: 2500));
-    
+
     if (!mounted) return;
-    
+
     final prefs = await SharedPreferences.getInstance();
-    final hasCompletedOnboarding = prefs.getBool('hasCompletedOnboarding') ?? false;
-    
+    final hasCompletedOnboarding =
+        prefs.getBool('hasCompletedOnboarding') ?? false;
+
     if (!mounted) return;
-    
+
     if (hasCompletedOnboarding) {
       Navigator.of(context).pushReplacementNamed('/dashboard');
     } else {

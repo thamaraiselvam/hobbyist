@@ -1,18 +1,30 @@
+// ignore_for_file: avoid_print
 import 'dart:convert';
 import 'remote_config_service.dart';
 import 'auth_service.dart';
+import 'package:meta/meta.dart';
 
 /// FeatureFlagsService - Manages user-specific feature flags from Firebase Remote Config
-/// 
+///
 /// This service reads the 'developer_settings' config from Firebase Remote Config
 /// and checks if specific features are enabled for the logged-in user's email.
 class FeatureFlagsService {
-  static final FeatureFlagsService _instance = FeatureFlagsService._internal();
+  static FeatureFlagsService _instance = FeatureFlagsService._internal();
   factory FeatureFlagsService() => _instance;
-  FeatureFlagsService._internal();
 
-  final RemoteConfigService _remoteConfig = RemoteConfigService();
-  final AuthService _authService = AuthService();
+  @visibleForTesting
+  static set instance(FeatureFlagsService value) => _instance = value;
+
+  final RemoteConfigService _remoteConfig;
+  final AuthService _authService;
+
+  FeatureFlagsService.test({RemoteConfigService? remoteConfig, AuthService? authService})
+      : _remoteConfig = remoteConfig ?? RemoteConfigService(),
+        _authService = authService ?? AuthService();
+
+  FeatureFlagsService._internal()
+      : _remoteConfig = RemoteConfigService(),
+        _authService = AuthService();
 
   Map<String, dynamic>? _developerSettings;
 
@@ -21,11 +33,13 @@ class FeatureFlagsService {
     try {
       final configJson = _remoteConfig.getString('allow_developer_settings');
       print('🔍 Raw allow_developer_settings: $configJson');
-      
+
       if (configJson.isNotEmpty) {
         _developerSettings = jsonDecode(configJson) as Map<String, dynamic>;
-        print('✅ Developer settings loaded: ${_developerSettings?.keys.join(', ')}');
-        print('📧 Available emails: ${(_developerSettings!['feature_access_by_email'] as Map<String, dynamic>?)?.keys.join(', ')}');
+        print(
+            '✅ Developer settings loaded: ${_developerSettings?.keys.join(', ')}');
+        print(
+            '📧 Available emails: ${(_developerSettings!['feature_access_by_email'] as Map<String, dynamic>?)?.keys.join(', ')}');
       } else {
         _developerSettings = null;
         print('⚠️ No allow_developer_settings found in Remote Config');
@@ -58,7 +72,9 @@ class FeatureFlagsService {
     }
 
     try {
-      final featureAccessByEmail = _developerSettings!['feature_access_by_email'] as Map<String, dynamic>?;
+      final featureAccessByEmail =
+          _developerSettings!['feature_access_by_email']
+              as Map<String, dynamic>?;
       if (featureAccessByEmail == null) {
         print('⚠️ No feature_access_by_email found in settings');
         return false;
@@ -66,9 +82,10 @@ class FeatureFlagsService {
 
       final userEmail = _authService.userEmail!;
       print('📧 Looking for email: $userEmail');
-      
-      final userFeatures = featureAccessByEmail[userEmail] as Map<String, dynamic>?;
-      
+
+      final userFeatures =
+          featureAccessByEmail[userEmail] as Map<String, dynamic>?;
+
       if (userFeatures == null) {
         print('⚠️ No features found for email: $userEmail');
         print('📋 Available emails: ${featureAccessByEmail.keys.join(', ')}');
@@ -85,9 +102,17 @@ class FeatureFlagsService {
   }
 
   // Convenience getters for specific features
-  bool get isDeveloperOptionsEnabled => isFeatureEnabled('settings_developer_options');
-  bool get isPullToRefreshEnabled => isFeatureEnabled('pull_down_to_refresh');
-  bool get isAnalyticsAndCrashReportsEnabled => isFeatureEnabled('settings_analytics_and_crash_reports');
+  bool get isDeveloperOptionsEnabled =>
+      isFeatureEnabled('settings_developer_options');
+
+  // Pull to refresh is now a developer option stored in SharedPreferences
+  bool get isPullToRefreshEnabled {
+    // This will be checked via SharedPreferences in the screens
+    return false; // Deprecated - use SharedPreferences directly
+  }
+
+  bool get isAnalyticsAndCrashReportsEnabled =>
+      isFeatureEnabled('settings_analytics_and_crash_reports');
 
   /// Get all enabled features for current user
   List<String> getEnabledFeatures() {
@@ -104,21 +129,24 @@ class FeatureFlagsService {
     }
 
     try {
-      final featureAccessByEmail = _developerSettings!['feature_access_by_email'] as Map<String, dynamic>?;
+      final featureAccessByEmail =
+          _developerSettings!['feature_access_by_email']
+              as Map<String, dynamic>?;
       if (featureAccessByEmail == null) {
         return [];
       }
 
       final userEmail = _authService.userEmail!;
-      final userFeatures = featureAccessByEmail[userEmail] as Map<String, dynamic>?;
-      
+      final userFeatures =
+          featureAccessByEmail[userEmail] as Map<String, dynamic>?;
+
       if (userFeatures == null) {
         return [];
       }
 
       return userFeatures.entries
           .where((entry) => entry.value == true)
-          .map((entry) => entry.key as String)
+          .map((entry) => entry.key)
           .toList();
     } catch (e) {
       print('❌ Error getting enabled features: $e');

@@ -1,9 +1,10 @@
+// ignore_for_file: avoid_print
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import '../database/database_helper.dart';
 
 /// CrashlyticsService - Manages crash reporting and error tracking
-/// 
+///
 /// This service integrates Firebase Crashlytics to automatically capture
 /// crashes, non-fatal errors, and custom logs for debugging production issues.
 /// Crash reporting is enabled by default as no PII is collected.
@@ -26,15 +27,22 @@ class CrashlyticsService {
         whereArgs: ['telemetry_enabled'],
       );
       if (result.isEmpty) return true; // Default ON
-      return result.first['value'] != 'false'; // Only false if explicitly disabled
+      return result.first['value'] !=
+          'false'; // Only false if explicitly disabled
     } catch (e) {
       print('⚠️ Failed to check telemetry setting: $e');
       return true; // Default ON
     }
   }
 
+  static FirebaseCrashlytics? mockCrashlytics;
+
   /// Initialize Crashlytics
   static Future<void> initialize() async {
+    if (mockCrashlytics != null) {
+      _crashlytics = mockCrashlytics;
+      return;
+    }
     _crashlytics = FirebaseCrashlytics.instance;
 
     // Pass all uncaught errors from Flutter framework to Crashlytics
@@ -52,7 +60,7 @@ class CrashlyticsService {
 
     print('🔥 Crashlytics initialized (enabled by default)');
   }
-  
+
   /// Update Crashlytics collection based on telemetry setting
   Future<void> updateCollectionEnabled() async {
     final enabled = await _isTelemetryEnabled();

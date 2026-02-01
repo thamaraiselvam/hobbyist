@@ -1,4 +1,4 @@
-import 'dart:collection';
+// ignore_for_file: unused_element
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/hobby.dart';
@@ -11,12 +11,12 @@ class AnalyticsScreen extends StatefulWidget {
   final Future<void> Function() onRefresh;
 
   const AnalyticsScreen({
-    Key? key,
+    super.key,
     required this.hobbies,
     required this.onBack,
     required this.onNavigate,
     required this.onRefresh,
-  }) : super(key: key);
+  });
 
   @override
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -91,7 +91,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       }
     }
 
-    return widget.hobbies.length > 0
+    return widget.hobbies.isNotEmpty
         ? (completedToday / widget.hobbies.length * 100)
         : 0;
   }
@@ -146,7 +146,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Map<String, int> get yearlyActivity {
-    final months = LinkedHashMap<String, int>();
+    final months = <String, int>{};
     final monthNames = [
       'Jan',
       'Feb',
@@ -239,8 +239,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       };
     }
 
-    if (dayData.isEmpty || dayData.values.every((v) => v['count'] == 0))
+    if (dayData.isEmpty || dayData.values.every((v) => v['count'] == 0)) {
       return 'N/A';
+    }
 
     final maxEntry = dayData.entries.reduce((a, b) =>
         (a.value['count'] as int) > (b.value['count'] as int) ? a : b);
@@ -268,8 +269,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       dayData[dateKey] = count;
     }
 
-    if (dayData.isEmpty || dayData.values.every((v) => v == 0))
+    if (dayData.isEmpty || dayData.values.every((v) => v == 0)) {
       return 'No data yet';
+    }
 
     final maxEntry =
         dayData.entries.reduce((a, b) => a.value > b.value ? a : b);
@@ -332,8 +334,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   double get weeklyGrowth {
-    if (totalCompletedLastWeek == 0)
+    if (totalCompletedLastWeek == 0) {
       return totalCompletedThisWeek > 0 ? 100 : 0;
+    }
     return ((totalCompletedThisWeek - totalCompletedLastWeek) /
         totalCompletedLastWeek *
         100);

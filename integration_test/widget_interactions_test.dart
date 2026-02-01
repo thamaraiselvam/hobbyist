@@ -8,7 +8,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('HIGH PRIORITY - Widget Interactions', () {
-    testWidgets('Time picker - Select reminder time', (WidgetTester tester) async {
+    testWidgets('Time picker - Select reminder time',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -24,7 +25,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scroll to find time picker
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       // Look for time display or time picker button
@@ -50,7 +52,8 @@ void main() {
       }
     });
 
-    testWidgets('Color picker - Select different colors', (WidgetTester tester) async {
+    testWidgets('Color picker - Select different colors',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -64,7 +67,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scroll to color picker section
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -300));
       await tester.pumpAndSettle();
 
       // Find color picker - look for color container/buttons
@@ -78,7 +82,8 @@ void main() {
       }
 
       // Save and verify color was applied
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -101,7 +106,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scroll to repeat mode
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
 
       // Select Daily (should be default, but tap to confirm)
@@ -111,7 +117,8 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -119,7 +126,8 @@ void main() {
       expect(find.text('Daily Task'), findsOneWidget);
     });
 
-    testWidgets('Repeat mode - Select Weekly with day', (WidgetTester tester) async {
+    testWidgets('Repeat mode - Select Weekly with day',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -132,7 +140,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
 
       // Select Weekly
@@ -147,7 +156,8 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -155,7 +165,8 @@ void main() {
       expect(find.text('Weekly Review'), findsOneWidget);
     });
 
-    testWidgets('Repeat mode - Select Monthly with date', (WidgetTester tester) async {
+    testWidgets('Repeat mode - Select Monthly with date',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -168,7 +179,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
 
       // Select Monthly
@@ -183,7 +195,8 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -204,14 +217,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -250));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -250));
       await tester.pumpAndSettle();
 
       // Select High priority
       await tester.tap(find.text('High'));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -232,13 +247,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -250));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -250));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Low'));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -262,7 +279,8 @@ void main() {
         await tester.pumpAndSettle();
 
         // Scroll and select color
-        await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
+        await tester.drag(
+            find.byType(SingleChildScrollView), const Offset(0, -300));
         await tester.pumpAndSettle();
 
         final colorWidgets = find.byType(GestureDetector);
@@ -271,7 +289,8 @@ void main() {
           await tester.pumpAndSettle();
         }
 
-        await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+        await tester.drag(
+            find.byType(SingleChildScrollView), const Offset(0, -200));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Create Hobby'));
         await tester.pumpAndSettle(const Duration(seconds: 1));
@@ -283,7 +302,7 @@ void main() {
       }
     });
 
-    testWidgets('Toggle notification on/off when creating hobby', 
+    testWidgets('Toggle notification on/off when creating hobby',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -298,7 +317,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scroll to notification toggle
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       // Look for notification switch/toggle
@@ -313,7 +333,8 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -200));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();

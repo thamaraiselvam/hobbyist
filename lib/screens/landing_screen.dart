@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
@@ -7,9 +8,9 @@ class LandingScreen extends StatefulWidget {
   final VoidCallback onGetStarted;
 
   const LandingScreen({
-    Key? key,
+    super.key,
     required this.onGetStarted,
-  }) : super(key: key);
+  });
 
   @override
   State<LandingScreen> createState() => _LandingScreenState();
@@ -28,10 +29,10 @@ class _LandingScreenState extends State<LandingScreen> {
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final userCredential = await _authService.signInWithGoogle();
-      
+
       if (userCredential != null) {
         // Successfully signed in, navigate to dashboard
         if (mounted) {
@@ -46,7 +47,7 @@ class _LandingScreenState extends State<LandingScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Sign in cancelled'),
-              backgroundColor: Color(0xFF6C3FFF),
+              
               duration: Duration(seconds: 2),
             ),
           );
@@ -255,12 +256,13 @@ class _LandingScreenState extends State<LandingScreen> {
                       width: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF590df2)),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Color(0xFF590df2)),
                       ),
                     )
-                  : Row(
+                  : const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.login, size: 20, color: Colors.black87),
                         SizedBox(width: 10),
                         Text(
@@ -288,9 +290,9 @@ class _LandingScreenState extends State<LandingScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   Icon(Icons.cloud_off, size: 20),
                   SizedBox(width: 10),
                   Text(

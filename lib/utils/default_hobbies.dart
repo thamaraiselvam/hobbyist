@@ -18,7 +18,7 @@ class DefaultHobbies {
     HobbyData(emoji: '⚽', name: 'Football'),
     HobbyData(emoji: '🏀', name: 'Basketball'),
     HobbyData(emoji: '🎾', name: 'Tennis'),
-    
+
     // Creative Arts
     HobbyData(emoji: '🎨', name: 'Painting'),
     HobbyData(emoji: '✏️', name: 'Drawing'),
@@ -28,14 +28,14 @@ class DefaultHobbies {
     HobbyData(emoji: '🎭', name: 'Acting'),
     HobbyData(emoji: '🎪', name: 'Dance'),
     HobbyData(emoji: '🎤', name: 'Singing'),
-    
+
     // Music
     HobbyData(emoji: '🎸', name: 'Guitar'),
     HobbyData(emoji: '🎹', name: 'Piano'),
     HobbyData(emoji: '🥁', name: 'Drums'),
     HobbyData(emoji: '🎵', name: 'Music Practice'),
     HobbyData(emoji: '🎧', name: 'Listen to Music'),
-    
+
     // Learning & Reading
     HobbyData(emoji: '📚', name: 'Reading'),
     HobbyData(emoji: '📖', name: 'Study'),
@@ -44,7 +44,7 @@ class DefaultHobbies {
     HobbyData(emoji: '🎓', name: 'Online Course'),
     HobbyData(emoji: '📝', name: 'Journaling'),
     HobbyData(emoji: '🧮', name: 'Math Practice'),
-    
+
     // Mindfulness & Wellness
     HobbyData(emoji: '🧘‍♀️', name: 'Meditation'),
     HobbyData(emoji: '🙏', name: 'Prayer'),
@@ -52,7 +52,7 @@ class DefaultHobbies {
     HobbyData(emoji: '💧', name: 'Drink Water'),
     HobbyData(emoji: '🥗', name: 'Healthy Eating'),
     HobbyData(emoji: '💆', name: 'Self Care'),
-    
+
     // Hobbies & Crafts
     HobbyData(emoji: '🧶', name: 'Knitting'),
     HobbyData(emoji: '🪡', name: 'Sewing'),
@@ -62,13 +62,13 @@ class DefaultHobbies {
     HobbyData(emoji: '🎲', name: 'Board Games'),
     HobbyData(emoji: '🎣', name: 'Fishing'),
     HobbyData(emoji: '🌱', name: 'Gardening'),
-    
+
     // Social & Family
     HobbyData(emoji: '👨‍👩‍👧‍👦', name: 'Family Time'),
     HobbyData(emoji: '👥', name: 'Meet Friends'),
     HobbyData(emoji: '📞', name: 'Call Parents'),
     HobbyData(emoji: '💬', name: 'Social Media Break'),
-    
+
     // Cooking & Food
     HobbyData(emoji: '🍳', name: 'Cooking'),
     HobbyData(emoji: '🍰', name: 'Baking'),
@@ -79,7 +79,7 @@ class DefaultHobbies {
     if (query.isEmpty) {
       return hobbies;
     }
-    
+
     final lowerQuery = query.toLowerCase();
     return hobbies.where((hobby) {
       return hobby.name.toLowerCase().contains(lowerQuery);

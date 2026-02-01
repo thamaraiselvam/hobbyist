@@ -8,7 +8,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('MEDIUM PRIORITY - Form Validation', () {
-    testWidgets('Maximum field length handling - Name', (WidgetTester tester) async {
+    testWidgets('Maximum field length handling - Name',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -23,7 +24,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -31,7 +33,8 @@ void main() {
       // Should either accept or show validation error
     });
 
-    testWidgets('Maximum field length handling - Notes', (WidgetTester tester) async {
+    testWidgets('Maximum field length handling - Notes',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -42,7 +45,7 @@ void main() {
         find.widgetWithText(TextField, 'Hobby Name'),
         'Notes Length Test',
       );
-      
+
       // Enter 1000 character notes
       final longNotes = 'B' * 1000;
       await tester.enterText(
@@ -51,7 +54,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -59,7 +63,8 @@ void main() {
       expect(find.text('Notes Length Test'), findsOneWidget);
     });
 
-    testWidgets('Special characters in name - All types', (WidgetTester tester) async {
+    testWidgets('Special characters in name - All types',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -86,7 +91,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+        await tester.drag(
+            find.byType(SingleChildScrollView), const Offset(0, -400));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Create Hobby'));
         await tester.pumpAndSettle();
@@ -108,7 +114,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -116,7 +123,8 @@ void main() {
       expect(find.text('🏃‍♂️ Running 🏃‍♀️'), findsOneWidget);
     });
 
-    testWidgets('Whitespace handling - Leading/trailing', (WidgetTester tester) async {
+    testWidgets('Whitespace handling - Leading/trailing',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -129,7 +137,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -151,7 +160,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -176,7 +186,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -197,7 +208,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -218,7 +230,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -228,7 +241,7 @@ void main() {
   });
 
   group('MEDIUM PRIORITY - Database Operations', () {
-    testWidgets('Cascade delete - Deleting hobby removes completions', 
+    testWidgets('Cascade delete - Deleting hobby removes completions',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -241,7 +254,8 @@ void main() {
         'Cascade Test',
       );
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -277,7 +291,8 @@ void main() {
           'Rapid Create $i',
         );
         await tester.pump(const Duration(milliseconds: 100));
-        await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+        await tester.drag(
+            find.byType(SingleChildScrollView), const Offset(0, -400));
         await tester.pump(const Duration(milliseconds: 100));
         await tester.tap(find.text('Create Hobby'));
         await tester.pump(const Duration(milliseconds: 100));
@@ -312,7 +327,8 @@ void main() {
       }
     });
 
-    testWidgets('Edit hobby preserves completions', (WidgetTester tester) async {
+    testWidgets('Edit hobby preserves completions',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -324,7 +340,8 @@ void main() {
         'Edit Preservation',
       );
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -335,14 +352,15 @@ void main() {
       // Edit the hobby
       await tester.tap(find.byIcon(Icons.edit).first);
       await tester.pumpAndSettle();
-      
+
       await tester.enterText(
         find.widgetWithText(TextField, 'Hobby Name'),
         'Edited Name',
       );
       await tester.pumpAndSettle();
-      
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Update Hobby'));
       await tester.pumpAndSettle();
@@ -351,7 +369,8 @@ void main() {
       expect(find.text('Edited Name'), findsOneWidget);
     });
 
-    testWidgets('Large dataset handling - 50+ hobbies', (WidgetTester tester) async {
+    testWidgets('Large dataset handling - 50+ hobbies',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -385,7 +404,7 @@ void main() {
   });
 
   group('MEDIUM PRIORITY - Data Generation', () {
-    testWidgets('First generation creates 15 predefined tasks', 
+    testWidgets('First generation creates 15 predefined tasks',
         (WidgetTester tester) async {
       // Would need fresh database
       app.main();
@@ -405,7 +424,7 @@ void main() {
       expect(find.textContaining('15'), findsOneWidget);
     });
 
-    testWidgets('Subsequent generation adds random completions', 
+    testWidgets('Subsequent generation adds random completions',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -428,7 +447,8 @@ void main() {
       expect(find.textContaining('completions'), findsOneWidget);
     });
 
-    testWidgets('Generated data shows in analytics', (WidgetTester tester) async {
+    testWidgets('Generated data shows in analytics',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 

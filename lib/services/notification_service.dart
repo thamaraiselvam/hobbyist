@@ -1,61 +1,71 @@
+// ignore_for_file: avoid_print
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:meta/meta.dart';
 import 'dart:io';
 import '../models/hobby.dart';
 
 class NotificationService {
-  static final NotificationService _instance = NotificationService._internal();
+  static NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
-  NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications =
-      FlutterLocalNotificationsPlugin();
+  @visibleForTesting
+  static set instance(NotificationService value) => _instance = value;
+
+  NotificationService._internal()
+      : _notifications = FlutterLocalNotificationsPlugin();
+
+  // For testing
+  NotificationService.test({FlutterLocalNotificationsPlugin? notifications})
+      : _notifications = notifications ?? FlutterLocalNotificationsPlugin();
+
+  final FlutterLocalNotificationsPlugin _notifications;
 
   bool _initialized = false;
 
   /// Auto-detect timezone from device offset
   String _getTimezoneFromOffset(Duration offset) {
     final offsetMinutes = offset.inMinutes;
-    
+
     // Map offset to timezone (using common timezones)
     final Map<int, String> timezoneMap = {
-      -720: 'Pacific/Auckland',      // UTC-12
-      -660: 'Pacific/Midway',        // UTC-11
-      -600: 'Pacific/Honolulu',      // UTC-10
-      -540: 'America/Anchorage',     // UTC-9
-      -480: 'America/Los_Angeles',   // UTC-8
-      -420: 'America/Denver',        // UTC-7
-      -360: 'America/Chicago',       // UTC-6
-      -300: 'America/New_York',      // UTC-5
-      -240: 'America/Caracas',       // UTC-4
-      -180: 'America/Sao_Paulo',     // UTC-3
+      -720: 'Pacific/Auckland', // UTC-12
+      -660: 'Pacific/Midway', // UTC-11
+      -600: 'Pacific/Honolulu', // UTC-10
+      -540: 'America/Anchorage', // UTC-9
+      -480: 'America/Los_Angeles', // UTC-8
+      -420: 'America/Denver', // UTC-7
+      -360: 'America/Chicago', // UTC-6
+      -300: 'America/New_York', // UTC-5
+      -240: 'America/Caracas', // UTC-4
+      -180: 'America/Sao_Paulo', // UTC-3
       -120: 'Atlantic/South_Georgia', // UTC-2
-      -60: 'Atlantic/Azores',        // UTC-1
-      0: 'UTC',                      // UTC+0
-      60: 'Europe/London',           // UTC+1
-      120: 'Europe/Paris',           // UTC+2
-      180: 'Europe/Moscow',          // UTC+3
-      240: 'Asia/Dubai',             // UTC+4
-      270: 'Asia/Kabul',             // UTC+4:30
-      300: 'Asia/Karachi',           // UTC+5
-      330: 'Asia/Kolkata',           // UTC+5:30
-      345: 'Asia/Kathmandu',         // UTC+5:45
-      360: 'Asia/Dhaka',             // UTC+6
-      390: 'Asia/Rangoon',           // UTC+6:30
-      420: 'Asia/Bangkok',           // UTC+7
-      480: 'Asia/Singapore',         // UTC+8
-      540: 'Asia/Tokyo',             // UTC+9
-      570: 'Australia/Adelaide',     // UTC+9:30
-      600: 'Australia/Sydney',       // UTC+10
-      630: 'Australia/Lord_Howe',    // UTC+10:30
-      660: 'Pacific/Guadalcanal',    // UTC+11
-      720: 'Pacific/Fiji',           // UTC+12
+      -60: 'Atlantic/Azores', // UTC-1
+      0: 'UTC', // UTC+0
+      60: 'Europe/London', // UTC+1
+      120: 'Europe/Paris', // UTC+2
+      180: 'Europe/Moscow', // UTC+3
+      240: 'Asia/Dubai', // UTC+4
+      270: 'Asia/Kabul', // UTC+4:30
+      300: 'Asia/Karachi', // UTC+5
+      330: 'Asia/Kolkata', // UTC+5:30
+      345: 'Asia/Kathmandu', // UTC+5:45
+      360: 'Asia/Dhaka', // UTC+6
+      390: 'Asia/Rangoon', // UTC+6:30
+      420: 'Asia/Bangkok', // UTC+7
+      480: 'Asia/Singapore', // UTC+8
+      540: 'Asia/Tokyo', // UTC+9
+      570: 'Australia/Adelaide', // UTC+9:30
+      600: 'Australia/Sydney', // UTC+10
+      630: 'Australia/Lord_Howe', // UTC+10:30
+      660: 'Pacific/Guadalcanal', // UTC+11
+      720: 'Pacific/Fiji', // UTC+12
     };
-    
+
     return timezoneMap[offsetMinutes] ?? 'UTC';
   }
 
@@ -65,18 +75,18 @@ class NotificationService {
 
     // Initialize timezone database
     tz.initializeTimeZones();
-    
+
     // Auto-detect timezone from device offset
     try {
       final now = DateTime.now();
       final offset = now.timeZoneOffset;
       final detectedTimezone = _getTimezoneFromOffset(offset);
-      
+
       final location = tz.getLocation(detectedTimezone);
       tz.setLocalLocation(location);
-      
+
       final tzNow = tz.TZDateTime.now(tz.local);
-      
+
       print('🌍 Timezone auto-detected: $detectedTimezone');
       print('   Device offset: ${offset.inHours}h ${offset.inMinutes % 60}m');
       print('   Device time: $now');
@@ -134,8 +144,7 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidImplementation != null) {
-      final granted =
-          await androidImplementation.areNotificationsEnabled();
+      final granted = await androidImplementation.areNotificationsEnabled();
       return granted ?? false;
     }
 
@@ -207,14 +216,15 @@ class NotificationService {
   Future<bool> scheduleNotification(Hobby hobby) async {
     try {
       print('📅 Attempting to schedule notification for: ${hobby.name}');
-      
+
       // Check if push notifications are enabled in app settings
       final settingsEnabled = await _areNotificationsEnabledInSettings();
       if (!settingsEnabled) {
-        print('⚠️ Push notifications DISABLED in app settings. Skipping notification for ${hobby.name}');
+        print(
+            '⚠️ Push notifications DISABLED in app settings. Skipping notification for ${hobby.name}');
         return false; // Return false but don't throw error
       }
-      
+
       print('✅ Push notifications ENABLED in app settings. Proceeding...');
 
       if (!_initialized) {
@@ -303,7 +313,7 @@ class NotificationService {
 
     // Get selected weekday (0=Monday, 6=Sunday), default to Monday if not set
     final selectedWeekday = hobby.customDay ?? 0;
-    
+
     // Convert to DateTime weekday (1=Monday, 7=Sunday)
     final targetWeekday = selectedWeekday + 1;
 
@@ -320,12 +330,14 @@ class NotificationService {
     // Calculate days until target weekday
     int daysUntilTarget = (targetWeekday - scheduledDate.weekday) % 7;
     if (daysUntilTarget == 0 && scheduledDate.isBefore(now)) {
-      daysUntilTarget = 7; // If today is the day but time passed, schedule for next week
+      daysUntilTarget =
+          7; // If today is the day but time passed, schedule for next week
     }
 
     scheduledDate = scheduledDate.add(Duration(days: daysUntilTarget));
 
-    print('📅 Weekly notification scheduled for weekday $targetWeekday (${_getWeekdayName(targetWeekday)}) at $scheduledDate');
+    print(
+        '📅 Weekly notification scheduled for weekday $targetWeekday (${_getWeekdayName(targetWeekday)}) at $scheduledDate');
 
     await _scheduleNotification(
         hobby, scheduledDate, DateTimeComponents.dayOfWeekAndTime);
@@ -359,12 +371,13 @@ class NotificationService {
         scheduledDate =
             tz.TZDateTime(tz.local, now.year + 1, 1, selectedDay, hour, minute);
       } else {
-        scheduledDate =
-            tz.TZDateTime(tz.local, now.year, now.month + 1, selectedDay, hour, minute);
+        scheduledDate = tz.TZDateTime(
+            tz.local, now.year, now.month + 1, selectedDay, hour, minute);
       }
     }
 
-    print('📅 Monthly notification scheduled for day $selectedDay at $scheduledDate');
+    print(
+        '📅 Monthly notification scheduled for day $selectedDay at $scheduledDate');
 
     await _scheduleNotification(
         hobby, scheduledDate, DateTimeComponents.dayOfMonthAndTime);
@@ -419,7 +432,8 @@ class NotificationService {
         matchDateTimeComponents: matchComponents,
         payload: payload,
       );
-      print('✅ Notification scheduled for ${hobby.name} at $scheduledDate (Local: ${scheduledDate.toLocal()})');
+      print(
+          '✅ Notification scheduled for ${hobby.name} at $scheduledDate (Local: ${scheduledDate.toLocal()})');
       print('   Current time: ${tz.TZDateTime.now(tz.local)}');
       print('   Notification ID: ${hobby.id.hashCode}');
     } catch (e) {
@@ -488,12 +502,13 @@ class NotificationService {
         where: 'key = ?',
         whereArgs: ['push_notifications'],
       );
-      
+
       if (result.isEmpty) {
-        print('⚠️ push_notifications setting not found in database, defaulting to enabled');
+        print(
+            '⚠️ push_notifications setting not found in database, defaulting to enabled');
         return true; // Default to enabled
       }
-      
+
       final value = result[0]['value'];
       final isEnabled = value != 'false';
       print('🔔 Push notifications setting: $value (enabled: $isEnabled)');
@@ -507,7 +522,8 @@ class NotificationService {
   /// Get database instance
   Future<Database> _getDatabase() async {
     try {
-      final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
+      final Directory appDocumentsDir =
+          await getApplicationDocumentsDirectory();
       final String dbPath = join(appDocumentsDir.path, 'hobbyist.db');
       return await openDatabase(dbPath);
     } catch (e) {
@@ -518,7 +534,16 @@ class NotificationService {
 
   /// Helper function to get weekday name
   String _getWeekdayName(int weekday) {
-    const weekdays = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const weekdays = [
+      '',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
     return weekdays[weekday];
   }
 

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'daily_tasks_screen.dart';
-import '../services/hobby_service.dart';
 import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
 
@@ -34,9 +32,10 @@ class _NameInputScreenState extends State<NameInputScreen> {
     if (rawName.isEmpty) return;
 
     // Auto-capitalize each word (e.g., "john doe" -> "John Doe")
-    final name = rawName.split(' ')
-        .map((word) => word.isEmpty 
-            ? word 
+    final name = rawName
+        .split(' ')
+        .map((word) => word.isEmpty
+            ? word
             : word[0].toUpperCase() + word.substring(1).toLowerCase())
         .join(' ');
 
@@ -137,7 +136,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
                         child: ElevatedButton(
                           onPressed: _isButtonEnabled ? _saveName : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6C3FFF),
+                            
                             disabledBackgroundColor: const Color(0xFF3D3449),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),

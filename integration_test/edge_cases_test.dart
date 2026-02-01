@@ -8,7 +8,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Input Validation Tests', () {
-    testWidgets('Cannot create hobby with empty name', (WidgetTester tester) async {
+    testWidgets('Cannot create hobby with empty name',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -17,14 +18,16 @@ void main() {
       await tester.pumpAndSettle();
 
       // Leave name empty, scroll and try to save
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -500));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -500));
       await tester.pumpAndSettle();
 
       // Create button should be disabled or show error
       // (Depends on implementation)
     });
 
-    testWidgets('Name auto-capitalization works correctly', (WidgetTester tester) async {
+    testWidgets('Name auto-capitalization works correctly',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -51,7 +54,8 @@ void main() {
       expect(find.text('John Doe Smith'), findsOneWidget);
     });
 
-    testWidgets('Handles special characters in hobby name', (WidgetTester tester) async {
+    testWidgets('Handles special characters in hobby name',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -65,7 +69,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -300));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -76,7 +81,8 @@ void main() {
   });
 
   group('State Persistence Tests', () {
-    testWidgets('Completion state persists after app restart', (WidgetTester tester) async {
+    testWidgets('Completion state persists after app restart',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -88,7 +94,7 @@ void main() {
       // Restart app (simulate)
       await tester.pumpWidget(Container());
       await tester.pumpAndSettle();
-      
+
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -96,14 +102,15 @@ void main() {
       // (Visual check - checkbox should be checked)
     });
 
-    testWidgets('Settings persist after navigation', (WidgetTester tester) async {
+    testWidgets('Settings persist after navigation',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       // Go to settings and toggle
       await tester.tap(find.byIcon(Icons.settings));
       await tester.pumpAndSettle();
-      
+
       await tester.tap(find.widgetWithText(ListTile, 'Push Notifications'));
       await tester.pumpAndSettle();
 
@@ -137,7 +144,8 @@ void main() {
       // All should complete successfully
     });
 
-    testWidgets('Navigate while animation playing', (WidgetTester tester) async {
+    testWidgets('Navigate while animation playing',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -155,7 +163,8 @@ void main() {
   });
 
   group('Data Limits Tests', () {
-    testWidgets('Create maximum number of hobbies', (WidgetTester tester) async {
+    testWidgets('Create maximum number of hobbies',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -191,11 +200,15 @@ void main() {
       await tester.pumpAndSettle();
 
       // Enter very long name
-      final longName = 'This is a very long hobby name that should test the UI layout and text overflow handling' * 3;
-      await tester.enterText(find.widgetWithText(TextField, 'Hobby Name'), longName);
+      final longName =
+          'This is a very long hobby name that should test the UI layout and text overflow handling' *
+              3;
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Hobby Name'), longName);
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -300));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -210,12 +223,16 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.widgetWithText(TextField, 'Hobby Name'), 'Test');
-      final longNotes = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' * 20;
-      await tester.enterText(find.widgetWithText(TextField, 'Notes'), longNotes);
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Hobby Name'), 'Test');
+      final longNotes =
+          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' * 20;
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Notes'), longNotes);
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -300));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -225,7 +242,8 @@ void main() {
   });
 
   group('Empty State Tests', () {
-    testWidgets('Dashboard with no hobbies shows empty state', (WidgetTester tester) async {
+    testWidgets('Dashboard with no hobbies shows empty state',
+        (WidgetTester tester) async {
       // Would need to clear all hobbies first
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -253,7 +271,7 @@ void main() {
 
       // Get hobby name before delete
       final hobbyCard = find.byType(Card).first;
-      
+
       // Tap delete
       await tester.tap(find.byIcon(Icons.delete).first);
       await tester.pumpAndSettle();
@@ -286,7 +304,8 @@ void main() {
   });
 
   group('Notification Settings Integration', () {
-    testWidgets('Disable notifications and create hobby - no notification scheduled', 
+    testWidgets(
+        'Disable notifications and create hobby - no notification scheduled',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -303,9 +322,11 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.widgetWithText(TextField, 'Hobby Name'), 'Test Task');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Hobby Name'), 'Test Task');
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -300));
       await tester.pumpAndSettle();
 
       // Set reminder time
@@ -342,7 +363,8 @@ void main() {
   });
 
   group('Data Reset Tests', () {
-    testWidgets('Reset all data returns to onboarding', (WidgetTester tester) async {
+    testWidgets('Reset all data returns to onboarding',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 

@@ -6,28 +6,31 @@ class RatingService {
   static const String _keyCompletionCount = 'total_completion_count';
   static const String _keyHasRated = 'has_rated_app';
   static const String _keyFirstPromptShown = 'first_rating_prompt_shown';
-  
-  final InAppReview _inAppReview = InAppReview.instance;
+
+  final InAppReview _inAppReview;
+
+  RatingService({InAppReview? inAppReview})
+      : _inAppReview = inAppReview ?? InAppReview.instance;
 
   /// Check if we should show rating prompt and show it if conditions are met
   Future<void> checkAndShowRatingPrompt() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Don't show if user has already rated
     final hasRated = prefs.getBool(_keyHasRated) ?? false;
     final completionCount = prefs.getInt(_keyCompletionCount) ?? 0;
     final firstPromptShown = prefs.getBool(_keyFirstPromptShown) ?? false;
-    
+
     debugPrint('🌟 RatingService: Checking rating prompt...');
     debugPrint('   Completion count: $completionCount');
     debugPrint('   Has rated: $hasRated');
     debugPrint('   First prompt shown: $firstPromptShown');
-    
+
     if (hasRated) {
       debugPrint('   ❌ User already rated, skipping');
       return;
     }
-    
+
     // Show on 1st completion
     if (completionCount == 1 && !firstPromptShown) {
       debugPrint('   ✅ Triggering 1st completion prompt');
@@ -35,30 +38,31 @@ class RatingService {
       await prefs.setBool(_keyFirstPromptShown, true);
       return;
     }
-    
+
     // Show on 10th completion if first prompt was shown (meaning user skipped)
     if (completionCount == 10 && firstPromptShown) {
       debugPrint('   ✅ Triggering 10th completion prompt');
       await _showRatingPrompt(isFirstTime: false);
       return;
     }
-    
+
     debugPrint('   ⏸️ No prompt triggered (count: $completionCount)');
   }
 
   /// Show the native in-app rating prompt
   Future<void> _showRatingPrompt({required bool isFirstTime}) async {
-    debugPrint('🌟 RatingService: Attempting to show rating prompt (first time: $isFirstTime)');
-    
+    debugPrint(
+        '🌟 RatingService: Attempting to show rating prompt (first time: $isFirstTime)');
+
     // Check if in-app review is available
     final isAvailable = await _inAppReview.isAvailable();
     debugPrint('   In-App Review available: $isAvailable');
-    
+
     if (isAvailable) {
       debugPrint('   📱 Requesting review...');
       await _inAppReview.requestReview();
       debugPrint('   ✅ Review requested');
-      
+
       // Mark as rated (assumes user interacted with prompt)
       await _markAsRated();
     } else {
@@ -80,7 +84,8 @@ class RatingService {
     final currentCount = prefs.getInt(_keyCompletionCount) ?? 0;
     final newCount = currentCount + 1;
     await prefs.setInt(_keyCompletionCount, newCount);
-    debugPrint('🌟 RatingService: Completion count incremented: $currentCount → $newCount');
+    debugPrint(
+        '🌟 RatingService: Completion count incremented: $currentCount → $newCount');
   }
 
   /// Mark that user has rated the app

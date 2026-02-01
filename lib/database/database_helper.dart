@@ -1,6 +1,8 @@
+// ignore_for_file: avoid_print
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:meta/meta.dart';
 import 'dart:io';
 
 class DatabaseHelper {
@@ -13,6 +15,11 @@ class DatabaseHelper {
     if (_database != null) return _database!;
     _database = await _initDB('hobbyist.db');
     return _database!;
+  }
+
+  @visibleForTesting
+  static void reset() {
+    _database = null;
   }
 
   Future<Database> _initDB(String filePath) async {
@@ -115,7 +122,7 @@ class DatabaseHelper {
       'value': 'false',
       'updated_at': DateTime.now().millisecondsSinceEpoch,
     });
-    
+
     // Privacy-by-default: telemetry OFF by default (FR-022)
     await db.insert('settings', {
       'key': 'telemetry_enabled',
@@ -133,17 +140,18 @@ class DatabaseHelper {
       // Add custom_day column to hobbies table
       await db.execute('ALTER TABLE hobbies ADD COLUMN custom_day INTEGER');
     }
-    
+
     if (oldVersion < 4) {
       // Add best_streak column to hobbies table for tracking max streak (unbounded per FR-014)
-      await db.execute('ALTER TABLE hobbies ADD COLUMN best_streak INTEGER NOT NULL DEFAULT 0');
-      
+      await db.execute(
+          'ALTER TABLE hobbies ADD COLUMN best_streak INTEGER NOT NULL DEFAULT 0');
+
       // Calculate and set initial best_streak values for existing hobbies
       print('🔄 Migrating: Calculating best streaks for existing hobbies...');
       final hobbies = await db.query('hobbies');
       for (var hobby in hobbies) {
         final hobbyId = hobby['id'] as String;
-        
+
         // Load completions for this hobby
         final completionsData = await db.query(
           'completions',
@@ -151,12 +159,12 @@ class DatabaseHelper {
           whereArgs: [hobbyId],
           orderBy: 'date DESC',
         );
-        
+
         // Calculate best streak from completion history
         int maxStreak = 0;
         int currentStreak = 0;
         DateTime? lastDate;
-        
+
         for (var comp in completionsData.reversed) {
           final dateStr = comp['date'] as String;
           final dateParts = dateStr.split('-');
@@ -165,7 +173,7 @@ class DatabaseHelper {
             int.parse(dateParts[1]),
             int.parse(dateParts[2]),
           );
-          
+
           if (lastDate == null) {
             currentStreak = 1;
           } else {
@@ -177,12 +185,12 @@ class DatabaseHelper {
               currentStreak = 1;
             }
           }
-          
+
           lastDate = date;
         }
-        
+
         if (currentStreak > maxStreak) maxStreak = currentStreak;
-        
+
         // Update hobby with calculated best streak
         if (maxStreak > 0) {
           await db.update(
@@ -194,7 +202,7 @@ class DatabaseHelper {
           print('✅ Set best_streak=$maxStreak for hobby: ${hobby['name']}');
         }
       }
-      
+
       // Add telemetry_enabled setting (default OFF per FR-022 privacy-by-default)
       final telemetryExists = await db.query(
         'settings',
@@ -209,17 +217,17 @@ class DatabaseHelper {
         });
       }
     }
-    
+
     if (oldVersion < 5) {
       // Remove priority column from hobbies table (v5)
       print('🔄 Migrating: Removing priority column...');
-      
+
       // SQLite doesn't support DROP COLUMN directly, so we need to:
       // 1. Create new table without priority
       // 2. Copy data
       // 3. Drop old table
       // 4. Rename new table
-      
+
       await db.execute('''
         CREATE TABLE hobbies_new (
           id TEXT PRIMARY KEY,
@@ -234,20 +242,21 @@ class DatabaseHelper {
           updated_at INTEGER NOT NULL
         )
       ''');
-      
+
       await db.execute('''
         INSERT INTO hobbies_new (id, name, notes, repeat_mode, color, reminder_time, custom_day, best_streak, created_at, updated_at)
         SELECT id, name, notes, repeat_mode, color, reminder_time, custom_day, best_streak, created_at, updated_at
         FROM hobbies
       ''');
-      
+
       await db.execute('DROP TABLE hobbies');
       await db.execute('ALTER TABLE hobbies_new RENAME TO hobbies');
-      
+
       // Recreate index without priority
       await db.execute('DROP INDEX IF EXISTS idx_hobbies_priority');
-      await db.execute('CREATE INDEX idx_hobbies_created_at ON hobbies(created_at)');
-      
+      await db.execute(
+          'CREATE INDEX idx_hobbies_created_at ON hobbies(created_at)');
+
       print('✅ Migration complete: Priority column removed');
     }
   }

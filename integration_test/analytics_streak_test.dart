@@ -9,7 +9,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('HIGH PRIORITY - Streak & Analytics', () {
-    testWidgets('Streak increments on consecutive day completions', 
+    testWidgets('Streak increments on consecutive day completions',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -22,7 +22,8 @@ void main() {
         'Streak Test',
       );
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -40,7 +41,7 @@ void main() {
       expect(find.text('Analytics'), findsOneWidget);
     });
 
-    testWidgets('Contribution chart shows correct color intensity', 
+    testWidgets('Contribution chart shows correct color intensity',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -61,7 +62,7 @@ void main() {
       if (scrollView.evaluate().isNotEmpty) {
         await tester.drag(scrollView.first, const Offset(-300, 0));
         await tester.pumpAndSettle();
-        
+
         await tester.drag(scrollView.first, const Offset(300, 0));
         await tester.pumpAndSettle();
       }
@@ -83,7 +84,8 @@ void main() {
       expect(find.textContaining(currentMonth), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('Day labels (M, W, F) are visible', (WidgetTester tester) async {
+    testWidgets('Day labels (M, W, F) are visible',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -96,7 +98,8 @@ void main() {
       expect(find.text('F'), findsWidgets);
     });
 
-    testWidgets('Analytics shows total completions', (WidgetTester tester) async {
+    testWidgets('Analytics shows total completions',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -120,7 +123,8 @@ void main() {
       expect(find.text('Analytics'), findsOneWidget);
     });
 
-    testWidgets('Chart displays 12 weeks of history', (WidgetTester tester) async {
+    testWidgets('Chart displays 12 weeks of history',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -129,17 +133,17 @@ void main() {
 
       // Scroll to start of chart
       final scrollView = find.byType(SingleChildScrollView).first;
-      
+
       // Scroll all the way left
       await tester.drag(scrollView, const Offset(1000, 0));
       await tester.pumpAndSettle();
-      
+
       // Should be able to scroll right to see 12 weeks
       await tester.drag(scrollView, const Offset(-1500, 0));
       await tester.pumpAndSettle();
     });
 
-    testWidgets('Multiple completions same day show darker color', 
+    testWidgets('Multiple completions same day show darker color',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -153,7 +157,8 @@ void main() {
           'Multi Task $i',
         );
         await tester.pumpAndSettle();
-        await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+        await tester.drag(
+            find.byType(SingleChildScrollView), const Offset(0, -400));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Create Hobby'));
         await tester.pumpAndSettle();
@@ -179,7 +184,7 @@ void main() {
 
       // Look for streak display in hobby cards or analytics
       // This depends on where streaks are shown in the UI
-      
+
       await tester.tap(find.byIcon(Icons.bar_chart));
       await tester.pumpAndSettle();
 
@@ -188,7 +193,7 @@ void main() {
   });
 
   group('MEDIUM PRIORITY - Analytics Calculations', () {
-    testWidgets('Completion percentage calculates correctly', 
+    testWidgets('Completion percentage calculates correctly',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -201,7 +206,8 @@ void main() {
         'Percentage Test',
       );
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -237,7 +243,7 @@ void main() {
       // Look for weekly statistics
     });
 
-    testWidgets('Empty analytics shows appropriate message', 
+    testWidgets('Empty analytics shows appropriate message',
         (WidgetTester tester) async {
       // Would need to reset data first
       app.main();
@@ -285,7 +291,8 @@ void main() {
       // This is device/implementation specific
     });
 
-    testWidgets('Legend shows all 5 intensity levels', (WidgetTester tester) async {
+    testWidgets('Legend shows all 5 intensity levels',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -295,7 +302,7 @@ void main() {
       // Legend should show: Less [][][][][] More
       expect(find.text('Less'), findsOneWidget);
       expect(find.text('More'), findsOneWidget);
-      
+
       // Should see 5 color boxes (visual verification)
     });
   });

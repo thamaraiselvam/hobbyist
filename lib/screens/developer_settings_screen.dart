@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print, unused_field, unused_local_variable
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../services/hobby_service.dart';
@@ -5,19 +6,41 @@ import '../services/notification_service.dart';
 import '../models/hobby.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DeveloperSettingsScreen extends StatefulWidget {
-  const DeveloperSettingsScreen({Key? key}) : super(key: key);
+  const DeveloperSettingsScreen({super.key});
 
   @override
-  State<DeveloperSettingsScreen> createState() => _DeveloperSettingsScreenState();
+  State<DeveloperSettingsScreen> createState() =>
+      _DeveloperSettingsScreenState();
 }
 
 class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
   final HobbyService _service = HobbyService();
   final NotificationService _notificationService = NotificationService();
   bool _isGenerating = false;
+  bool _pullToRefreshEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _pullToRefreshEnabled = prefs.getBool('pull_to_refresh_enabled') ?? false;
+    });
+  }
+
+  Future<void> _togglePullToRefresh(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('pull_to_refresh_enabled', value);
+    setState(() {
+      _pullToRefreshEnabled = value;
+    });
+  }
 
   final List<String> _hobbyNames = [
     'Morning Yoga',
@@ -100,11 +123,11 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
     if (confirmed == true) {
       // Clear SQLite database
       await _service.resetDatabase();
-      
+
       // Clear SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      
+
       if (mounted) {
         // Navigate to splash screen to restart journey
         Navigator.of(context).pushNamedAndRemoveUntil(
@@ -117,11 +140,12 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
 
   Future<void> _generateRandomHobbies() async {
     if (!mounted) return;
-    
+
     // Check if predefined hobbies already exist
     final existingHobbies = await _service.loadHobbies();
-    final hasPredefinedHobbies = existingHobbies.any((h) => h.id.startsWith('predefined_'));
-    
+    final hasPredefinedHobbies =
+        existingHobbies.any((h) => h.id.startsWith('predefined_'));
+
     setState(() {
       _isGenerating = true;
     });
@@ -133,12 +157,30 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
 
       if (!hasPredefinedHobbies) {
         // First time: Create 5 daily, 5 weekly, 5 monthly tasks
-        final dailyTasks = ['Morning Meditation', 'Read 30 Minutes', 'Exercise', 'Practice Guitar', 'Write Journal'];
-        final weeklyTasks = ['Deep Clean House', 'Meal Prep Sunday', 'Review Weekly Goals', 'Family Video Call', 'Update Budget'];
-        final monthlyTasks = ['Pay Bills', 'Car Maintenance', 'Review Investments', 'Haircut Appointment', 'Organize Closet'];
-        
+        final dailyTasks = [
+          'Morning Meditation',
+          'Read 30 Minutes',
+          'Exercise',
+          'Practice Guitar',
+          'Write Journal'
+        ];
+        final weeklyTasks = [
+          'Deep Clean House',
+          'Meal Prep Sunday',
+          'Review Weekly Goals',
+          'Family Video Call',
+          'Update Budget'
+        ];
+        final monthlyTasks = [
+          'Pay Bills',
+          'Car Maintenance',
+          'Review Investments',
+          'Haircut Appointment',
+          'Organize Closet'
+        ];
+
         int taskIndex = 0;
-        
+
         // Add daily tasks
         for (var taskName in dailyTasks) {
           final hobbyId = 'predefined_daily_$taskIndex';
@@ -153,7 +195,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           await _service.addHobby(hobby);
           taskIndex++;
         }
-        
+
         // Add weekly tasks
         for (var taskName in weeklyTasks) {
           final hobbyId = 'predefined_weekly_$taskIndex';
@@ -168,7 +210,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           await _service.addHobby(hobby);
           taskIndex++;
         }
-        
+
         // Add monthly tasks
         for (var taskName in monthlyTasks) {
           final hobbyId = 'predefined_monthly_$taskIndex';
@@ -192,24 +234,27 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✅ Created 15 predefined tasks!'),
-              backgroundColor: Color(0xFF6C3FFF),
+              
               duration: Duration(seconds: 2),
             ),
           );
         }
       } else {
         // Subsequent times: Add random completions to existing predefined tasks
-        final predefinedHobbies = existingHobbies.where((h) => h.id.startsWith('predefined_')).toList();
-        
+        final predefinedHobbies = existingHobbies
+            .where((h) => h.id.startsWith('predefined_'))
+            .toList();
+
         for (var hobby in predefinedHobbies) {
           // Generate random completions in last 365 days
           final numCompletions = random.nextInt(50) + 30; // 30-80 completions
-          
+
           for (int i = 0; i < numCompletions; i++) {
             final randomDaysAgo = random.nextInt(365);
             final date = now.subtract(Duration(days: randomDaysAgo));
-            final dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-            
+            final dateKey =
+                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
             hobby.completions[dateKey] = HobbyCompletion(
               completed: true,
               completedAt: DateTime(
@@ -221,7 +266,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
               ),
             );
           }
-          
+
           await _service.updateHobby(hobby);
         }
 
@@ -233,7 +278,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✅ Added random completions to existing tasks!'),
-              backgroundColor: Color(0xFF6C3FFF),
+              
               duration: Duration(seconds: 2),
             ),
           );
@@ -273,12 +318,13 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6C3FFF),
+              
             ),
             child: const Text('Create'),
           ),
@@ -295,7 +341,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
     try {
       final now = DateTime.now();
       final createdAt = now.subtract(const Duration(days: 100));
-      
+
       // Create the hobby
       final hobby = Hobby(
         id: 'test_100day_${DateTime.now().millisecondsSinceEpoch}',
@@ -306,21 +352,22 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         createdAt: createdAt,
         completions: {},
       );
-      
+
       // Add 100 consecutive days of completions
       for (int i = 99; i >= 0; i--) {
-        final date = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
+        final date =
+            DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
         final dateKey = DateFormat('yyyy-MM-dd').format(date);
-        
+
         hobby.completions[dateKey] = HobbyCompletion(
           completed: true,
           completedAt: date.add(const Duration(hours: 10)),
         );
       }
-      
+
       // Save to Firestore
       await _service.addHobby(hobby);
-      
+
       if (mounted) {
         setState(() {
           _isGenerating = false;
@@ -329,7 +376,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Created "create app" with 100 days streak!'),
-            backgroundColor: Color(0xFF6C3FFF),
+            
             duration: Duration(seconds: 3),
           ),
         );
@@ -360,7 +407,8 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Push notifications are disabled in Settings'),
-            backgroundColor: Colors.orange,
+            backgroundColor: const Color(0xFFE88D39), // Readable orange
+              
           ),
         );
       }
@@ -375,7 +423,8 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Please enable notifications in System Settings'),
-              backgroundColor: Colors.orange,
+              backgroundColor: const Color(0xFFE88D39), // Readable orange
+              
             ),
           );
         }
@@ -391,7 +440,8 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Please enable exact alarms in System Settings'),
-              backgroundColor: Colors.orange,
+              backgroundColor: const Color(0xFFE88D39), // Readable orange
+              
             ),
           );
         }
@@ -400,12 +450,12 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
 
       // Show test notification
       await _notificationService.showTestNotification();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Test notification sent!'),
-            backgroundColor: Color(0xFF6C3FFF),
+            
           ),
         );
       }
@@ -437,6 +487,55 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              'FEATURE FLAGS',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF2A2238),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4ECDC4).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.refresh,
+                    color: Color(0xFF4ECDC4),
+                    size: 20,
+                  ),
+                ),
+                title: const Text(
+                  'Pull to Refresh',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Enable pull-to-refresh to jump to today',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 13,
+                  ),
+                ),
+                value: _pullToRefreshEnabled,
+                activeColor: const Color(0xFF6C3FFF),
+                onChanged: _togglePullToRefresh,
+              ),
+            ),
+            const SizedBox(height: 32),
             const Text(
               'TESTING TOOLS',
               style: TextStyle(

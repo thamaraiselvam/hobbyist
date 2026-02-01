@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -35,19 +36,19 @@ void main() async {
   try {
     // Initialize Crashlytics (must be first for error catching)
     await CrashlyticsService.initialize();
-    
+
     // Initialize Analytics
     AnalyticsService.initialize();
-    
+
     // Initialize Performance Monitoring
     await PerformanceService.initialize();
-    
+
     // Initialize Remote Config
     await RemoteConfigService.initialize();
-    
+
     // Initialize Feature Flags (depends on Remote Config)
     FeatureFlagsService().loadDeveloperSettings();
-    
+
     print('✅ All Firebase services initialized');
   } catch (e) {
     print('❌ Error initializing Firebase services: $e');
@@ -56,7 +57,8 @@ void main() async {
   // Initialize notification service (but don't request permission yet)
   try {
     await NotificationService().initialize();
-    print('🔔 Notification service initialized (permissions will be requested on first use)');
+    print(
+        '🔔 Notification service initialized (permissions will be requested on first use)');
   } catch (e) {
     print('❌ Error initializing notifications: $e');
   }
@@ -65,7 +67,7 @@ void main() async {
 }
 
 class HobbyTrackerApp extends StatelessWidget {
-  const HobbyTrackerApp({Key? key}) : super(key: key);
+  const HobbyTrackerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +94,18 @@ class HobbyTrackerApp extends StatelessWidget {
           color: const Color(0xFF2A2238),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: Color(0xFF3D3560), // Darker purple-grey for background
+          contentTextStyle: TextStyle(
+            color: Color(0xFFE8E5F0), // Light purple-white for text
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
         ),
         appBarTheme: const AppBarTheme(

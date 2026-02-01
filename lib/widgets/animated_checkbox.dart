@@ -7,12 +7,12 @@ class AnimatedCheckbox extends StatefulWidget {
   final double size;
 
   const AnimatedCheckbox({
-    Key? key,
+    super.key,
     required this.isChecked,
     required this.onTap,
     this.color = const Color(0xFF6C3FFF),
     this.size = 28.0,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedCheckbox> createState() => _AnimatedCheckboxState();
@@ -64,7 +64,7 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
   @override
   Widget build(BuildContext context) {
     final isEnabled = widget.onTap != null;
-    
+
     return GestureDetector(
       onTap: isEnabled ? widget.onTap : null,
       child: AnimatedBuilder(
@@ -81,7 +81,9 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
               border: Border.all(
                 color: widget.isChecked
                     ? widget.color.withOpacity(isEnabled ? 1.0 : 0.3)
-                    : (isEnabled ? const Color(0xFF4A4458) : const Color(0xFF2A2738)),
+                    : (isEnabled
+                        ? const Color(0xFF4A4458)
+                        : const Color(0xFF2A2738)),
                 width: 2,
               ),
             ),

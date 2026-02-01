@@ -7,16 +7,16 @@ class ContributionChart extends StatelessWidget {
   final int weeks;
 
   const ContributionChart({
-    Key? key,
+    super.key,
     required this.hobbies,
     this.weeks = 12,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final startDate = now.subtract(Duration(days: weeks * 7));
-    
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Padding(
@@ -38,7 +38,7 @@ class ContributionChart extends StatelessWidget {
   Widget _buildMonthLabels(DateTime start, DateTime end) {
     final months = <Widget>[];
     DateTime current = DateTime(start.year, start.month, 1);
-    
+
     while (current.isBefore(end) || current.month == end.month) {
       months.add(
         SizedBox(
@@ -51,19 +51,20 @@ class ContributionChart extends StatelessWidget {
       );
       current = DateTime(current.year, current.month + 1, 1);
     }
-    
+
     return Row(children: months);
   }
 
   Widget _buildChart(DateTime start, DateTime end) {
     final weeks = <Widget>[];
-    DateTime currentWeekStart = start.subtract(Duration(days: start.weekday % 7));
-    
+    DateTime currentWeekStart =
+        start.subtract(Duration(days: start.weekday % 7));
+
     while (currentWeekStart.isBefore(end)) {
       weeks.add(_buildWeekColumn(currentWeekStart));
       currentWeekStart = currentWeekStart.add(const Duration(days: 7));
     }
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -77,7 +78,7 @@ class ContributionChart extends StatelessWidget {
   Widget _buildDayLabels() {
     const days = ['M', 'W', 'F'];
     const indices = [0, 2, 4];
-    
+
     return Column(
       children: List.generate(7, (index) {
         final dayIndex = indices.indexOf(index);
@@ -98,12 +99,12 @@ class ContributionChart extends StatelessWidget {
 
   Widget _buildWeekColumn(DateTime weekStart) {
     final days = <Widget>[];
-    
+
     for (int i = 0; i < 7; i++) {
       final date = weekStart.add(Duration(days: i));
       final dateStr = DateFormat('yyyy-MM-dd').format(date);
       final completionCount = _getCompletionCount(dateStr);
-      
+
       days.add(
         Container(
           width: 12,
@@ -116,14 +117,14 @@ class ContributionChart extends StatelessWidget {
         ),
       );
     }
-    
+
     return Column(children: days);
   }
 
   int _getCompletionCount(String date) {
     int count = 0;
     for (final hobby in hobbies) {
-      if (hobby.completions[date] == true) count++;
+      if (hobby.completions[date]?.completed == true) count++;
     }
     return count;
   }

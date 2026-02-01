@@ -2,8 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 class FeedbackService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+  final FirebaseFirestore _firestore;
+
+  FeedbackService({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
+
   /// Submit user feedback to Firestore
   /// Returns true if successful, false otherwise
   Future<bool> submitFeedback({
@@ -12,18 +15,18 @@ class FeedbackService {
   }) async {
     try {
       debugPrint('📝 FeedbackService: Submitting feedback...');
-      
+
       // Validate feedback text
       if (feedbackText.trim().isEmpty) {
         debugPrint('   ❌ Feedback text is empty');
         return false;
       }
-      
+
       if (feedbackText.length > 500) {
         debugPrint('   ❌ Feedback exceeds 500 characters');
         return false;
       }
-      
+
       // Prepare feedback data
       final feedbackData = {
         'feedback': feedbackText.trim(),
@@ -32,16 +35,15 @@ class FeedbackService {
         'app_version': '1.0.0', // Could be dynamic
         'platform': defaultTargetPlatform.toString(),
       };
-      
+
       debugPrint('   Feedback length: ${feedbackText.length} chars');
       debugPrint('   Email provided: ${email != null && email.isNotEmpty}');
-      
+
       // Write to Firestore
       await _firestore.collection('feedback').add(feedbackData);
-      
+
       debugPrint('   ✅ Feedback submitted successfully');
       return true;
-      
     } catch (e, stackTrace) {
       debugPrint('   ❌ Failed to submit feedback: $e');
       debugPrint('   Stack trace: $stackTrace');

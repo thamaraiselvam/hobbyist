@@ -8,7 +8,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('MEDIUM PRIORITY - Settings Persistence', () {
-    testWidgets('Settings survive app restart simulation', 
+    testWidgets('Settings survive app restart simulation',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -22,7 +22,7 @@ void main() {
       // Simulate restart
       await tester.pumpWidget(Container());
       await tester.pumpAndSettle();
-      
+
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -69,7 +69,8 @@ void main() {
   });
 
   group('MEDIUM PRIORITY - Empty States', () {
-    testWidgets('Dashboard empty state shows message', (WidgetTester tester) async {
+    testWidgets('Dashboard empty state shows message',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -128,7 +129,7 @@ void main() {
   });
 
   group('MEDIUM PRIORITY - Edit vs Create Mode', () {
-    testWidgets('Create mode shows "Create Hobby" button', 
+    testWidgets('Create mode shows "Create Hobby" button',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -136,14 +137,15 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       expect(find.text('Create Hobby'), findsOneWidget);
       expect(find.text('Update Hobby'), findsNothing);
     });
 
-    testWidgets('Edit mode shows "Update Hobby" button', 
+    testWidgets('Edit mode shows "Update Hobby" button',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -152,7 +154,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.edit).first);
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       expect(find.text('Update Hobby'), findsOneWidget);
@@ -175,7 +178,8 @@ void main() {
         'Test notes',
       );
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle();
@@ -189,7 +193,7 @@ void main() {
       expect(find.text('Test notes'), findsOneWidget);
     });
 
-    testWidgets('Screen title changes between Create/Edit', 
+    testWidgets('Screen title changes between Create/Edit',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -197,7 +201,7 @@ void main() {
       // Create mode
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
-      
+
       // Look for title
       expect(find.text('Add Hobby'), findsOneWidget);
 
@@ -213,7 +217,8 @@ void main() {
   });
 
   group('LOW PRIORITY - Navigation', () {
-    testWidgets('Back button from add hobby screen', (WidgetTester tester) async {
+    testWidgets('Back button from add hobby screen',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -236,7 +241,8 @@ void main() {
       expect(find.text('Unsaved'), findsNothing);
     });
 
-    testWidgets('Back button from edit hobby screen', (WidgetTester tester) async {
+    testWidgets('Back button from edit hobby screen',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -271,7 +277,8 @@ void main() {
       expect(find.text('Today'), findsOneWidget);
     });
 
-    testWidgets('Back button from developer settings', (WidgetTester tester) async {
+    testWidgets('Back button from developer settings',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -288,7 +295,8 @@ void main() {
       expect(find.text('Settings'), findsOneWidget);
     });
 
-    testWidgets('Navigation preserves screen state', (WidgetTester tester) async {
+    testWidgets('Navigation preserves screen state',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -414,7 +422,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Don't enter name, try to save
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       // Button might be disabled or show error

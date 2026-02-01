@@ -1,31 +1,49 @@
+// ignore_for_file: avoid_print
 import 'package:firebase_analytics/firebase_analytics.dart';
-import '../models/hobby.dart';
+import 'package:meta/meta.dart';
 import '../database/database_helper.dart';
 
 /// AnalyticsService - Centralized analytics tracking service
-/// 
+///
 /// This service manages all Firebase Analytics events throughout the app.
 /// It follows the singleton pattern to ensure consistent tracking across the app.
 /// Analytics collection is enabled by default as no PII is collected.
 class AnalyticsService {
-  static final AnalyticsService _instance = AnalyticsService._internal();
+  static AnalyticsService _instance = AnalyticsService._internal();
+  factory AnalyticsService() => _instance;
+
+  @visibleForTesting
+  static set instance(AnalyticsService value) => _instance = value;
+
+  AnalyticsService._internal();
+
+  AnalyticsService.test({FirebaseAnalytics? analytics}) {
+    if (analytics != null) {
+      _analytics = analytics;
+      _observer = FirebaseAnalyticsObserver(analytics: _analytics!);
+    }
+  }
+
   static FirebaseAnalytics? _analytics;
   static FirebaseAnalyticsObserver? _observer;
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-  factory AnalyticsService() => _instance;
-
-  AnalyticsService._internal();
+  static FirebaseAnalytics? mockAnalytics;
 
   /// Initialize Firebase Analytics
   static void initialize() {
+    if (mockAnalytics != null) {
+      _analytics = mockAnalytics;
+      _observer = FirebaseAnalyticsObserver(analytics: _analytics!);
+      return;
+    }
     _analytics = FirebaseAnalytics.instance;
     _observer = FirebaseAnalyticsObserver(analytics: _analytics!);
   }
 
   /// Get the analytics observer for route tracking
   static FirebaseAnalyticsObserver? get observer => _observer;
-  
+
   /// Check if telemetry is enabled (default ON, can be disabled by user)
   Future<bool> _isTelemetryEnabled() async {
     try {
@@ -36,7 +54,8 @@ class AnalyticsService {
         whereArgs: ['telemetry_enabled'],
       );
       if (result.isEmpty) return true; // Default ON
-      return result.first['value'] != 'false'; // Only false if explicitly disabled
+      return result.first['value'] !=
+          'false'; // Only false if explicitly disabled
     } catch (e) {
       print('⚠️ Failed to check telemetry setting: $e');
       return true; // Default ON

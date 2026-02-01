@@ -49,7 +49,7 @@ void main() {
 
       // Should navigate to daily tasks screen with capitalized name
       expect(find.text('Today'), findsOneWidget);
-      
+
       // Verify name was capitalized
       final namePrefs = await SharedPreferences.getInstance();
       await namePrefs.reload();
@@ -59,7 +59,8 @@ void main() {
   });
 
   group('Hobby Creation and Management', () {
-    testWidgets('Create daily hobby with all fields', (WidgetTester tester) async {
+    testWidgets('Create daily hobby with all fields',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -87,7 +88,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scroll to see more options
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -300));
       await tester.pumpAndSettle();
 
       // Select repeat mode (Daily is default)
@@ -163,7 +165,7 @@ void main() {
 
       // Find first hobby card
       final hobbyCard = find.byType(Card).first;
-      
+
       // Tap to complete
       await tester.tap(hobbyCard);
       await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -178,7 +180,8 @@ void main() {
   });
 
   group('Navigation Flow', () {
-    testWidgets('Navigate through all main screens', (WidgetTester tester) async {
+    testWidgets('Navigate through all main screens',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -212,7 +215,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find and toggle push notifications switch
-      final notificationSwitch = find.widgetWithText(ListTile, 'Push Notifications');
+      final notificationSwitch =
+          find.widgetWithText(ListTile, 'Push Notifications');
       await tester.tap(notificationSwitch);
       await tester.pumpAndSettle();
 
@@ -339,13 +343,14 @@ void main() {
 
       // Should see chart components
       expect(find.text('Analytics'), findsOneWidget);
-      
+
       // Should see legend
       expect(find.text('Less'), findsOneWidget);
       expect(find.text('More'), findsOneWidget);
     });
 
-    testWidgets('Scroll through contribution history', (WidgetTester tester) async {
+    testWidgets('Scroll through contribution history',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -354,13 +359,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scroll horizontally on chart
-      await tester.drag(find.byType(SingleChildScrollView).first, const Offset(-200, 0));
+      await tester.drag(
+          find.byType(SingleChildScrollView).first, const Offset(-200, 0));
       await tester.pumpAndSettle();
     });
   });
 
   group('Complete User Journey', () {
-    testWidgets('Full flow: Onboard -> Create -> Complete -> View Analytics', 
+    testWidgets('Full flow: Onboard -> Create -> Complete -> View Analytics',
         (WidgetTester tester) async {
       // Clear data
       SharedPreferences.setMockInitialValues({});
@@ -382,10 +388,13 @@ void main() {
       // Create a hobby
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
-      await tester.enterText(find.widgetWithText(TextField, 'Hobby Name'), 'Reading');
-      await tester.enterText(find.widgetWithText(TextField, 'Notes'), '30 minutes daily');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Hobby Name'), 'Reading');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Notes'), '30 minutes daily');
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -300));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Hobby'));
       await tester.pumpAndSettle(const Duration(seconds: 2));

@@ -1,15 +1,15 @@
+// ignore_for_file: avoid_print, unused_local_variable
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:hobbyist/main.dart' as app;
-import 'dart:io';
 
 /// Audio, quotes, notifications, and completion timestamp tests
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('HIGH PRIORITY - Audio & Sound', () {
-    testWidgets('Sound plays on task completion when enabled', 
+    testWidgets('Sound plays on task completion when enabled',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -17,7 +17,7 @@ void main() {
       // Ensure sound is enabled
       await tester.tap(find.byIcon(Icons.settings));
       await tester.pumpAndSettle();
-      
+
       // Check if sound toggle is on, if not, turn it on
       final soundToggle = find.widgetWithText(ListTile, 'Sound and Vibration');
       // (Visual verification that switch is on)
@@ -93,7 +93,8 @@ void main() {
       // Look for quote-like text (long text that's motivational)
     });
 
-    testWidgets('Quote changes on dashboard reload', (WidgetTester tester) async {
+    testWidgets('Quote changes on dashboard reload',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -115,7 +116,7 @@ void main() {
 
       // Some quotes are longer than others
       // Should all display without overflow
-      
+
       // Navigate multiple times to get different quotes
       for (int i = 0; i < 10; i++) {
         await tester.tap(find.byIcon(Icons.bar_chart));
@@ -127,7 +128,8 @@ void main() {
       // No overflow errors should occur
     });
 
-    testWidgets('Quote service handles initialization', (WidgetTester tester) async {
+    testWidgets('Quote service handles initialization',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -137,7 +139,7 @@ void main() {
   });
 
   group('MEDIUM PRIORITY - Notification Content', () {
-    testWidgets('Notification content includes hobby name', 
+    testWidgets('Notification content includes hobby name',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -145,7 +147,7 @@ void main() {
       // Enable notifications
       await tester.tap(find.byIcon(Icons.settings));
       await tester.pumpAndSettle();
-      
+
       final notifToggle = find.widgetWithText(ListTile, 'Push Notifications');
       // Ensure it's on
 
@@ -161,7 +163,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       // Set reminder time
@@ -190,8 +193,9 @@ void main() {
       // Edit to trigger notification reschedule
       await tester.tap(find.byIcon(Icons.edit).first);
       await tester.pumpAndSettle();
-      
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Update Hobby'));
@@ -216,7 +220,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+        await tester.drag(
+            find.byType(SingleChildScrollView), const Offset(0, -400));
         await tester.pumpAndSettle();
 
         // All at 9:00 AM
@@ -238,7 +243,8 @@ void main() {
       // Check console logs
     });
 
-    testWidgets('Cancel notification on hobby delete', (WidgetTester tester) async {
+    testWidgets('Cancel notification on hobby delete',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -251,7 +257,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Create Hobby'));
@@ -276,7 +283,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Change time
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       final timeButton = find.textContaining('AM');
@@ -293,7 +301,7 @@ void main() {
       // Should cancel old and schedule new (check logs)
     });
 
-    testWidgets('Notification respects push notification toggle', 
+    testWidgets('Notification respects push notification toggle',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -316,7 +324,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+      await tester.drag(
+          find.byType(SingleChildScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Create Hobby'));
@@ -327,7 +336,8 @@ void main() {
   });
 
   group('HIGH PRIORITY - Completion Timestamps', () {
-    testWidgets('Timestamp recorded on completion', (WidgetTester tester) async {
+    testWidgets('Timestamp recorded on completion',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -343,14 +353,14 @@ void main() {
       // (Database verification needed)
     });
 
-    testWidgets('Multiple completions same day tracked separately', 
+    testWidgets('Multiple completions same day tracked separately',
         (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       // Complete and uncomplete same task
       final card = find.byType(Card).first;
-      
+
       await tester.tap(card);
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -374,7 +384,7 @@ void main() {
       // Simulate restart
       await tester.pumpWidget(Container());
       await tester.pumpAndSettle();
-      
+
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
@@ -388,12 +398,12 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       await tester.tap(find.byType(Card).first);
-      
+
       // Animation should play over ~300ms
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 100));
-      
+
       await tester.pumpAndSettle();
 
       // Animation completed
@@ -404,12 +414,12 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       await tester.tap(find.byType(Card).first);
-      
+
       // Celebration animation should appear
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pump(const Duration(milliseconds: 500));
-      
+
       await tester.pumpAndSettle();
 
       // Animation should complete without crash
@@ -417,10 +427,10 @@ void main() {
 
     testWidgets('Loading indicators display', (WidgetTester tester) async {
       app.main();
-      
+
       // Loading should appear briefly
       await tester.pump(const Duration(milliseconds: 100));
-      
+
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       // App should load successfully

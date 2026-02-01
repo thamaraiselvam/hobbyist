@@ -4,15 +4,28 @@ import 'package:hobbyist/screens/name_input_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import '../helpers/firebase_mocks.dart';
 
-  setUpAll(() {
+void main() async {
+  await setupFirebaseMocks();
+
+  setUpAll(() async {
+    // Mock path_provider
+    const MethodChannel('plugins.flutter.io/path_provider')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
+      return '.';
+    });
+
+    await Firebase.initializeApp();
+
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   });
 
   group('NameInputScreen Widget Tests', () {
+
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });

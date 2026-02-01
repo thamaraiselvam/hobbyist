@@ -1,12 +1,12 @@
+// ignore_for_file: avoid_print, unused_field, unused_element, unused_local_variable
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../models/hobby.dart';
 import '../services/analytics_service.dart';
 import '../services/hobby_service.dart';
-import '../services/feature_flags_service.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   final List<Hobby> hobbies;
@@ -15,12 +15,12 @@ class AnalyticsScreen extends StatefulWidget {
   final Future<void> Function() onRefresh;
 
   const AnalyticsScreen({
-    Key? key,
+    super.key,
     required this.hobbies,
     required this.onBack,
     required this.onNavigate,
     required this.onRefresh,
-  }) : super(key: key);
+  });
 
   @override
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -29,11 +29,23 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String _selectedPeriod = 'Weekly';
   final HobbyService _hobbyService = HobbyService();
+  bool _pullToRefreshEnabled = false;
 
   @override
   void initState() {
     super.initState();
     AnalyticsService().logAnalyticsViewed();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _pullToRefreshEnabled =
+            prefs.getBool('pull_to_refresh_enabled') ?? false;
+      });
+    }
   }
 
   @override
@@ -74,21 +86,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   int get bestStreak {
     if (widget.hobbies.isEmpty) return 0;
-    
+
     // Calculate the longest overall streak (any task completed per day)
     // This matches the logic of currentStreak but looks at ALL history
     int maxOverallStreak = 0;
     int currentOverallStreak = 0;
     final today = DateTime.now();
-    
+
     // Go back 365 days and find longest consecutive streak
     for (int startDay = 0; startDay < 365; startDay++) {
       currentOverallStreak = 0;
-      
+
       for (int i = startDay; i < 365; i++) {
         final date = today.subtract(Duration(days: i));
         final dateKey = DateFormat('yyyy-MM-dd').format(date);
-        
+
         bool anyTaskCompleted = false;
         for (var hobby in widget.hobbies) {
           if (hobby.completions[dateKey]?.completed == true) {
@@ -96,7 +108,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             break;
           }
         }
-        
+
         if (anyTaskCompleted) {
           currentOverallStreak++;
           if (currentOverallStreak > maxOverallStreak) {
@@ -107,8 +119,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         }
       }
     }
-    
-    print('📊 Analytics bestStreak: $maxOverallStreak (calculated from overall completion history)');
+
+    print(
+        '📊 Analytics bestStreak: $maxOverallStreak (calculated from overall completion history)');
     return maxOverallStreak;
   }
 
@@ -207,7 +220,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   double get currentGrowth {
     int currentPeriod;
     int previousPeriod;
-    
+
     switch (_selectedPeriod) {
       case 'Weekly':
         currentPeriod = totalCompletedThisWeek;
@@ -225,7 +238,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         currentPeriod = totalCompletedThisWeek;
         previousPeriod = totalCompletedLastWeek;
     }
-    
+
     if (previousPeriod == 0) {
       return currentPeriod > 0 ? 100 : 0;
     }
@@ -237,15 +250,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       return totalCompletedThisWeek > 0 ? 100 : 0;
     }
     return ((totalCompletedThisWeek - totalCompletedLastWeek) /
-            totalCompletedLastWeek *
-            100);
+        totalCompletedLastWeek *
+        100);
   }
 
   // Find the earliest date with any completion data
   List<double> get performanceData {
     List<double> data = [];
     final now = DateTime.now();
-    
+
     switch (_selectedPeriod) {
       case 'Weekly':
         // Always show 7 days
@@ -261,7 +274,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           data.add(count.toDouble());
         }
         break;
-        
+
       case 'Monthly':
         // Always show 30 days
         for (int i = 29; i >= 0; i--) {
@@ -276,13 +289,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           data.add(count.toDouble());
         }
         break;
-        
+
       case 'Yearly':
         // Show 52 weeks (grouped by week)
         for (int i = 51; i >= 0; i--) {
-          final startOfWeek = now.subtract(Duration(days: now.weekday - 1 + (i * 7)));
+          final startOfWeek =
+              now.subtract(Duration(days: now.weekday - 1 + (i * 7)));
           int weekCount = 0;
-          
+
           // Count all completions in this week (7 days)
           for (int d = 0; d < 7; d++) {
             final date = startOfWeek.add(Duration(days: d));
@@ -296,7 +310,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           data.add(weekCount.toDouble());
         }
         break;
-        
+
       default:
         // Default to weekly
         for (int i = 6; i >= 0; i--) {
@@ -311,7 +325,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           data.add(count.toDouble());
         }
     }
-    
+
     return data;
   }
 
@@ -354,7 +368,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   List<Map<String, dynamic>> get activityMapData {
     List<Map<String, dynamic>> data = [];
     final now = DateTime.now();
-    
+
     switch (_selectedPeriod) {
       case 'Weekly':
         // Show current week (7 days)
@@ -362,14 +376,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         for (int i = 0; i < 7; i++) {
           final date = monday.add(Duration(days: i));
           final dateKey = DateFormat('yyyy-MM-dd').format(date);
-          
+
           int count = 0;
           for (var hobby in widget.hobbies) {
             if (hobby.completions[dateKey]?.completed == true) {
               count++;
             }
           }
-          
+
           data.add({
             'date': date,
             'count': count,
@@ -377,20 +391,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           });
         }
         break;
-        
+
       case 'Monthly':
         // Show last 28 days (4 weeks)
         for (int i = 27; i >= 0; i--) {
           final date = now.subtract(Duration(days: i));
           final dateKey = DateFormat('yyyy-MM-dd').format(date);
-          
+
           int count = 0;
           for (var hobby in widget.hobbies) {
             if (hobby.completions[dateKey]?.completed == true) {
               count++;
             }
           }
-          
+
           data.add({
             'date': date,
             'count': count,
@@ -398,24 +412,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           });
         }
         break;
-        
+
       case 'Yearly':
         // Show last 52 weeks
         for (int week = 51; week >= 0; week--) {
           int weekCount = 0;
           final weekStart = now.subtract(Duration(days: week * 7));
-          
+
           for (int day = 0; day < 7; day++) {
             final date = weekStart.add(Duration(days: day));
             final dateKey = DateFormat('yyyy-MM-dd').format(date);
-            
+
             for (var hobby in widget.hobbies) {
               if (hobby.completions[dateKey]?.completed == true) {
                 weekCount++;
               }
             }
           }
-          
+
           data.add({
             'date': weekStart,
             'count': weekCount,
@@ -423,21 +437,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           });
         }
         break;
-        
+
       default:
         // Default to weekly
         final monday = now.subtract(Duration(days: now.weekday - 1));
         for (int i = 0; i < 7; i++) {
           final date = monday.add(Duration(days: i));
           final dateKey = DateFormat('yyyy-MM-dd').format(date);
-          
+
           int count = 0;
           for (var hobby in widget.hobbies) {
             if (hobby.completions[dateKey]?.completed == true) {
               count++;
             }
           }
-          
+
           data.add({
             'date': date,
             'count': count,
@@ -445,7 +459,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           });
         }
     }
-    
+
     return data;
   }
 
@@ -477,7 +491,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           children: [
             _buildHeader(),
             Expanded(
-              child: FeatureFlagsService().isPullToRefreshEnabled
+              child: _pullToRefreshEnabled
                   ? RefreshIndicator(
                       onRefresh: widget.onRefresh,
                       color: const Color(0xFF590df2),
@@ -547,10 +561,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final cardWidth = (constraints.maxWidth - 32) / 3; // 3 cards with spacing
-          final numberFontSize = cardWidth * 0.28;
+          final cardWidth =
+              (constraints.maxWidth - 32) / 3; // 3 cards with spacing
+          final numberFontSize = cardWidth * 0.32;
           final labelFontSize = cardWidth * 0.11;
-          
+
           return Row(
             children: [
               Expanded(
@@ -573,7 +588,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -583,7 +598,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF94A3B8),
+                                color: Color(0xFF94A3B8),
                                 letterSpacing: 1.0,
                                 height: 1.3,
                               ),
@@ -591,11 +606,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(
+                          SizedBox(width: 4),
+                          Icon(
                             Icons.local_fire_department,
                             color: Color(0xFFFF6B35),
-                            size: 18,
+                            size: 22,
                           ),
                         ],
                       ),
@@ -665,7 +680,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -675,7 +690,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF94A3B8),
+                                color: Color(0xFF94A3B8),
                                 letterSpacing: 1.0,
                                 height: 1.3,
                               ),
@@ -683,11 +698,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(
+                          SizedBox(width: 4),
+                          Icon(
                             Icons.star,
                             color: Color(0xFFFFD700),
-                            size: 18,
+                            size: 22,
                           ),
                         ],
                       ),
@@ -757,7 +772,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -767,7 +782,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF94A3B8),
+                                color: Color(0xFF94A3B8),
                                 letterSpacing: 1.0,
                                 height: 1.3,
                               ),
@@ -775,8 +790,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(
+                          SizedBox(width: 4),
+                          Icon(
                             Icons.emoji_events,
                             color: Color(0xFF590df2),
                             size: 18,
@@ -847,7 +862,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       }
     }
 
-    return widget.hobbies.length > 0
+    return widget.hobbies.isNotEmpty
         ? (completedToday / widget.hobbies.length * 100)
         : 0;
   }
@@ -907,7 +922,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildCompactPeriodButton(String label, bool isSelected, String period) {
+  Widget _buildCompactPeriodButton(
+      String label, bool isSelected, String period) {
     return GestureDetector(
       onTap: () {
         setState(() => _selectedPeriod = period);
@@ -933,25 +949,28 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget _buildBarChart() {
     final chartData = performanceData;
     final labels = performanceLabels;
-    
+
     // Safety check - ensure we have data
     if (chartData.isEmpty || labels.isEmpty) {
       return const SizedBox.shrink();
     }
-    
+
     // Ensure chartData and labels have same length
-    final dataLength = chartData.length < labels.length ? chartData.length : labels.length;
+    final dataLength =
+        chartData.length < labels.length ? chartData.length : labels.length;
     final safeChartData = chartData.take(dataLength).toList();
     final safeLabels = labels.take(dataLength).toList();
-    
+
     // Find max value for scaling
-    final maxValue = safeChartData.isEmpty ? 1.0 : safeChartData.reduce((a, b) => a > b ? a : b);
+    final maxValue = safeChartData.isEmpty
+        ? 1.0
+        : safeChartData.reduce((a, b) => a > b ? a : b);
     final scaledMax = maxValue == 0 ? 10.0 : maxValue * 1.2; // Add 20% padding
-    
+
     // Calculate Y-axis scale markers
-    final yAxisSteps = 5;
+    const yAxisSteps = 5;
     final yAxisStep = (scaledMax / yAxisSteps).ceil();
-    
+
     // Dynamic title based on period
     String chartTitle;
     switch (_selectedPeriod) {
@@ -967,7 +986,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       default:
         chartTitle = 'Daily Performance';
     }
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -996,9 +1015,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildCompactPeriodButton('W', _selectedPeriod == 'Weekly', 'Weekly'),
-                    _buildCompactPeriodButton('M', _selectedPeriod == 'Monthly', 'Monthly'),
-                    _buildCompactPeriodButton('Y', _selectedPeriod == 'Yearly', 'Yearly'),
+                    _buildCompactPeriodButton(
+                        'W', _selectedPeriod == 'Weekly', 'Weekly'),
+                    _buildCompactPeriodButton(
+                        'M', _selectedPeriod == 'Monthly', 'Monthly'),
+                    _buildCompactPeriodButton(
+                        'Y', _selectedPeriod == 'Yearly', 'Yearly'),
                   ],
                 ),
               ),
@@ -1047,10 +1069,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: List.generate(safeChartData.length, (index) {
+                          children:
+                              List.generate(safeChartData.length, (index) {
                             final value = safeChartData[index];
-                            final barHeight = scaledMax > 0 ? (value / scaledMax) * 160 : 0;
-                            
+                            final barHeight =
+                                scaledMax > 0 ? (value / scaledMax) * 160 : 0;
+
                             // Dark, muted colors for better visibility
                             final colors = [
                               const Color(0xFF6366F1), // Dark indigo
@@ -1061,26 +1085,36 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               const Color(0xFFDC2626), // Dark red
                               const Color(0xFF4338CA), // Deep indigo
                             ];
-                            
+
                             final colorIndex = index % colors.length;
                             final barColor = colors[colorIndex];
-                            
+
                             return Expanded(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: _selectedPeriod == 'Yearly' ? 0.3 : (_selectedPeriod == 'Monthly' ? 0.5 : 1),
+                                  horizontal: _selectedPeriod == 'Yearly'
+                                      ? 0.3
+                                      : (_selectedPeriod == 'Monthly'
+                                          ? 0.5
+                                          : 1),
                                 ),
                                 child: TweenAnimationBuilder<double>(
-                                  duration: Duration(milliseconds: 600 + (index * 80)),
+                                  duration: Duration(
+                                      milliseconds: 600 + (index * 80)),
                                   curve: Curves.easeOutCubic,
-                                  tween: Tween(begin: 0.0, end: barHeight.clamp(2.0, 160.0).toDouble()),
+                                  tween: Tween(
+                                      begin: 0.0,
+                                      end: barHeight
+                                          .clamp(2.0, 160.0)
+                                          .toDouble()),
                                   builder: (context, animatedHeight, child) {
                                     return Container(
                                       width: double.infinity,
                                       height: animatedHeight,
                                       decoration: BoxDecoration(
                                         color: barColor,
-                                        borderRadius: const BorderRadius.vertical(
+                                        borderRadius:
+                                            const BorderRadius.vertical(
                                           top: Radius.circular(3),
                                         ),
                                         boxShadow: [
@@ -1106,7 +1140,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 // X-axis labels - independent from bars
                 Row(
                   children: [
-                    const SizedBox(width: 38), // Align with bars (y-axis width + padding)
+                    const SizedBox(
+                        width: 38), // Align with bars (y-axis width + padding)
                     Expanded(
                       child: _buildXAxisLabels(safeLabels),
                     ),
@@ -1122,67 +1157,67 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _buildXAxisLabels(List<String> allLabels) {
     List<String> labelsToShow = [];
-    
+
     if (_selectedPeriod == 'Weekly') {
       // Show all 7 labels: MON, TUE, WED, THU, FRI, SAT, SUN
       labelsToShow = allLabels;
     } else if (_selectedPeriod == 'Monthly') {
       // Show D1, D6, D12, D18, D24, D30
       labelsToShow = [
-        allLabels[0],   // D1
-        allLabels[5],   // D6
-        allLabels[11],  // D12
-        allLabels[17],  // D18
-        allLabels[23],  // D24
-        allLabels[29],  // D30
+        allLabels[0], // D1
+        allLabels[5], // D6
+        allLabels[11], // D12
+        allLabels[17], // D18
+        allLabels[23], // D24
+        allLabels[29], // D30
       ];
     } else if (_selectedPeriod == 'Yearly') {
       // Show W1, W10, W20, W30, W40, W52
       labelsToShow = [
-        allLabels[0],   // W1
-        allLabels[9],   // W10
-        allLabels[19],  // W20
-        allLabels[29],  // W30
-        allLabels[39],  // W40
-        allLabels[51],  // W52
+        allLabels[0], // W1
+        allLabels[9], // W10
+        allLabels[19], // W20
+        allLabels[29], // W30
+        allLabels[39], // W40
+        allLabels[51], // W52
       ];
     }
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: labelsToShow.map((label) => 
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          style: const TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF71717A),
-            height: 1.0,
-          ),
-        )
-      ).toList(),
+      children: labelsToShow
+          .map((label) => Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: const TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF71717A),
+                  height: 1.0,
+                ),
+              ))
+          .toList(),
     );
   }
 
   Widget _buildActivityMap() {
     final now = DateTime.now();
     const int daysToShow = 365;
-    
+
     // Build 365 days of completion data
     List<Map<String, dynamic>> yearData = [];
     int contributionCount = 0;
-    
+
     for (int i = daysToShow - 1; i >= 0; i--) {
       final date = now.subtract(Duration(days: i));
       final dateKey = DateFormat('yyyy-MM-dd').format(date);
-      
+
       // Check if ANY task was completed on this day and track highest priority
       bool anyCompleted = false;
       String? highestPriority;
       int dayTaskCount = 0; // Count tasks completed on this day
-      
+
       for (var hobby in widget.hobbies) {
         if (hobby.completions[dateKey]?.completed == true) {
           anyCompleted = true;
@@ -1190,7 +1225,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           contributionCount++; // Add to total count
         }
       }
-      
+
       yearData.add({
         'date': date,
         'dateKey': dateKey,
@@ -1240,7 +1275,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 Wrap(
                   spacing: 2,
                   runSpacing: 2,
-                  children: yearData.map((data) => _buildActivityCell(data)).toList(),
+                  children:
+                      yearData.map((data) => _buildActivityCell(data)).toList(),
                 ),
                 const SizedBox(height: 16),
                 // Legend - GitHub-style intensity
@@ -1327,10 +1363,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final int count = data['count'] ?? 0;
     final date = data['date'] as DateTime;
     final today = DateTime.now();
-    final isToday = date.year == today.year && 
-                    date.month == today.month && 
-                    date.day == today.day;
-    
+    final isToday = date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
+
     // GitHub-style green colors based on activity intensity
     Color cellColor;
     if (!isCompleted || count == 0) {
@@ -1344,7 +1380,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     } else {
       cellColor = const Color(0xFF39D353); // Brightest green (4+)
     }
-    
+
     return Container(
       width: 10,
       height: 10,
@@ -1391,9 +1427,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           const SizedBox(height: 16),
           // Show calendar for each hobby
           ...widget.hobbies.map((hobby) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: _buildHobbyCompletionRow(hobby),
-          )),
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildHobbyCompletionRow(hobby),
+              )),
         ],
       ),
     );
@@ -1401,21 +1437,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _buildHobbyCompletionRow(Hobby hobby) {
     // Show last 90 days (more granular than 12 weeks)
-    final int daysToShow = 90;
+    const int daysToShow = 90;
     final today = DateTime.now();
-    final startDate = today.subtract(Duration(days: daysToShow - 1));
-    
+    final startDate = today.subtract(const Duration(days: daysToShow - 1));
+
     // Build completion data for this hobby
     List<Map<String, dynamic>> dayData = [];
     for (int i = 0; i < daysToShow; i++) {
       final date = startDate.add(Duration(days: i));
       final dateKey = DateFormat('yyyy-MM-dd').format(date);
-      
+
       // For daily tasks, always show completion status
       // For weekly/monthly, check if scheduled
       bool isScheduled = _isHobbyAvailableForDate(hobby, date);
       bool isCompleted = hobby.completions[dateKey]?.completed == true;
-      
+
       dayData.add({
         'date': date,
         'dateKey': dateKey,
@@ -1423,7 +1459,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         'isCompleted': isCompleted,
       });
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1467,7 +1503,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   // Current Streak
                   if (hobby.currentStreak > 0)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFF6B35).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -1478,7 +1515,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           Text(
                             '${hobby.currentStreak}',
                             style: const TextStyle(
-                              fontSize: 10,
+                              fontSize: 12,
                               fontWeight: FontWeight.w900,
                               color: Color(0xFFFF6B35),
                             ),
@@ -1487,7 +1524,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           const Icon(
                             Icons.local_fire_department,
                             color: Color(0xFFFF6B35),
-                            size: 10,
+                            size: 13,
                           ),
                         ],
                       ),
@@ -1496,7 +1533,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   if (hobby.bestStreak > 0) ...[
                     if (hobby.currentStreak > 0) const SizedBox(width: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFD700).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -1507,13 +1545,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           const Icon(
                             Icons.emoji_events,
                             color: Color(0xFFFFD700),
-                            size: 10,
+                            size: 13,
                           ),
                           const SizedBox(width: 2),
                           Text(
                             '${hobby.bestStreak}',
                             style: const TextStyle(
-                              fontSize: 10,
+                              fontSize: 12,
                               fontWeight: FontWeight.w900,
                               color: Color(0xFFFFD700),
                             ),
@@ -1528,9 +1566,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
           const SizedBox(height: 4),
           // Show period
-          Text(
+          const Text(
             'Last 90 days',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               color: Color(0xFF71717A),
             ),
@@ -1540,7 +1578,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Wrap(
             spacing: 2,
             runSpacing: 2,
-            children: dayData.map((data) => _buildCompactDayCell(data, hobby)).toList(),
+            children: dayData
+                .map((data) => _buildCompactDayCell(data, hobby))
+                .toList(),
           ),
         ],
       ),
@@ -1550,7 +1590,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget _buildCompactDayCell(Map<String, dynamic> data, Hobby hobby) {
     final bool isScheduled = data['isScheduled'];
     final bool isCompleted = data['isCompleted'];
-    
+
     // Always show all 90 days with different visual states
     Color cellColor;
     if (!isScheduled) {
@@ -1563,13 +1603,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       // Scheduled but not completed - medium gray
       cellColor = const Color(0xFF2A2738);
     }
-    
+
     final today = DateTime.now();
     final cellDate = data['date'] as DateTime;
-    final isToday = cellDate.year == today.year && 
-                    cellDate.month == today.month && 
-                    cellDate.day == today.day;
-    
+    final isToday = cellDate.year == today.year &&
+        cellDate.month == today.month &&
+        cellDate.day == today.day;
+
     return Container(
       width: 10,
       height: 10,
@@ -1588,7 +1628,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   bool _isHobbyAvailableForDate(Hobby hobby, DateTime date) {
     final weekday = date.weekday; // 1 = Monday, 7 = Sunday
-    
+
     switch (hobby.repeatMode.toLowerCase()) {
       case 'daily':
         return true;
@@ -1637,6 +1677,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         child: Container(
           height: 70,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          clipBehavior: Clip.none,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -1653,42 +1694,40 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildCreateButton() {
-    return Transform.translate(
-      offset: const Offset(0, -20), // Lift the button up by 20 pixels
-      child: GestureDetector(
-        onTap: () async {
-          await Navigator.push(
-            context,
-            SlidePageRoute(
-              page: const AddHobbyScreen(),
-              direction: AxisDirection.up,
-            ),
-          );
-          await widget.onRefresh();
-        },
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6C3FFF).withOpacity(0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        await Navigator.push(
+          context,
+          SlidePageRoute(
+            page: const AddHobbyScreen(),
+            direction: AxisDirection.up,
           ),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 30,
+        );
+        await widget.onRefresh();
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6C3FFF).withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 30,
         ),
       ),
     );

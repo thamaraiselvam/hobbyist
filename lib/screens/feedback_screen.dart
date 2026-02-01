@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/feedback_service.dart';
 
 class FeedbackScreen extends StatefulWidget {
-  const FeedbackScreen({Key? key}) : super(key: key);
+  const FeedbackScreen({super.key});
 
   @override
   State<FeedbackScreen> createState() => _FeedbackScreenState();
@@ -12,7 +12,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   final TextEditingController _feedbackController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final FeedbackService _feedbackService = FeedbackService();
-  
+
   int _remainingChars = 500;
   bool _isSubmitting = false;
 
@@ -25,12 +25,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   Future<void> _submitFeedback() async {
     final feedback = _feedbackController.text.trim();
-    
+
     if (feedback.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter your feedback'),
-          backgroundColor: Color(0xFFFF6B6B),
+          backgroundColor: Color(0xFFD84A4A), // Readable red
+          
         ),
       );
       return;
@@ -43,8 +44,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     try {
       final success = await _feedbackService.submitFeedback(
         feedbackText: feedback,
-        email: _emailController.text.trim().isEmpty 
-            ? null 
+        email: _emailController.text.trim().isEmpty
+            ? null
             : _emailController.text.trim(),
       );
 
@@ -54,7 +55,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Thank you for your feedback!'),
-              backgroundColor: Color(0xFF10B981),
+              backgroundColor: const Color(0xFF4CAF78), // Readable green
+              
             ),
           );
           Navigator.pop(context);
@@ -62,7 +64,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Failed to submit feedback. Please try again.'),
-              backgroundColor: Color(0xFFFF6B6B),
+              backgroundColor: Color(0xFFD84A4A), // Readable red
+          
             ),
           );
         }
@@ -72,7 +75,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: const Color(0xFFFF6B6B),
+            backgroundColor: const Color(0xFFD84A4A), // Readable red
+            
           ),
         );
       }
@@ -140,7 +144,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     fontSize: 16,
                   ),
                   decoration: const InputDecoration(
-                    hintText: 'Share your feedback, suggestions, or report issues...',
+                    hintText:
+                        'Share your feedback, suggestions, or report issues...',
                     hintStyle: TextStyle(color: Colors.white38),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.all(16),
@@ -152,8 +157,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               Text(
                 '$_remainingChars characters remaining',
                 style: TextStyle(
-                  color: _remainingChars < 50 
-                      ? const Color(0xFFFF6B6B) 
+                  color: _remainingChars < 50
+                      ? const Color(0xFFFF6B6B)
                       : Colors.white38,
                   fontSize: 12,
                 ),
@@ -207,9 +212,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitFeedback,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6C3FFF),
+                  
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFF6C3FFF).withOpacity(0.5),
+                  disabledBackgroundColor:
+                      const Color(0xFF6C3FFF).withOpacity(0.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -222,7 +228,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : const Text(

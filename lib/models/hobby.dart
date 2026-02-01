@@ -54,36 +54,37 @@ class Hobby {
   /// Calculate the maximum historical streak from all completions
   int calculateBestStreakFromHistory() {
     if (completions.isEmpty) return 0;
-    
+
     // Get all completed dates sorted chronologically
     final completedDates = completions.entries
         .where((e) => e.value.completed)
         .map((e) => e.key)
-        .toList()..sort();
-    
+        .toList()
+      ..sort();
+
     if (completedDates.isEmpty) return 0;
-    
+
     int maxStreak = 1;
     int currentStreak = 1;
-    
+
     for (int i = 1; i < completedDates.length; i++) {
       final prevDateParts = completedDates[i - 1].split('-');
       final currDateParts = completedDates[i].split('-');
-      
+
       final prevDate = DateTime(
         int.parse(prevDateParts[0]),
         int.parse(prevDateParts[1]),
         int.parse(prevDateParts[2]),
       );
-      
+
       final currDate = DateTime(
         int.parse(currDateParts[0]),
         int.parse(currDateParts[1]),
         int.parse(currDateParts[2]),
       );
-      
+
       final daysDiff = currDate.difference(prevDate).inDays;
-      
+
       if (daysDiff == 1) {
         // Consecutive day
         currentStreak++;
@@ -95,7 +96,7 @@ class Hobby {
         currentStreak = 1;
       }
     }
-    
+
     return maxStreak;
   }
 

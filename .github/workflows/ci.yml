@@ -90,10 +90,10 @@ jobs:
         run: flutter pub get
 
       - name: Run unit tests
-        run: flutter test test/unit/ --coverage
+        run: flutter test test/unit/ --coverage --concurrency=1
 
       - name: Run widget tests
-        run: flutter test test/widget/ --coverage
+        run: flutter test test/widget/ --coverage --concurrency=1
 
       - name: Generate coverage report
         run: |

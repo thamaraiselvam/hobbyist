@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
-import '../services/feature_flags_service.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TasksListScreen extends StatefulWidget {
   final List<Hobby> hobbies;
@@ -12,22 +12,24 @@ class TasksListScreen extends StatefulWidget {
   final Future<void> Function() onRefresh;
 
   const TasksListScreen({
-    Key? key,
+    super.key,
     required this.hobbies,
     required this.onBack,
     required this.onNavigate,
     required this.onRefresh,
-  }) : super(key: key);
+  });
 
   @override
   State<TasksListScreen> createState() => _TasksListScreenState();
 }
 
-class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProviderStateMixin {
+class _TasksListScreenState extends State<TasksListScreen>
+    with SingleTickerProviderStateMixin {
   final HobbyService _service = HobbyService();
   List<Hobby> _hobbies = [];
   late TabController _tabController;
   int _selectedTab = 0;
+  bool _pullToRefreshEnabled = false;
 
   @override
   void initState() {
@@ -41,6 +43,17 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
         });
       }
     });
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _pullToRefreshEnabled =
+            prefs.getBool('pull_to_refresh_enabled') ?? false;
+      });
+    }
   }
 
   @override
@@ -95,7 +108,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final filteredHobbies = _getFilteredHobbies();
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFF1A1625),
       body: SafeArea(
@@ -110,7 +123,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.list_alt,
                             size: 80,
                             color: Colors.white24,
@@ -118,14 +131,14 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                           const SizedBox(height: 16),
                           Text(
                             'No ${_getTabName()} tasks yet',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white54,
                               fontSize: 18,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
+                          const Text(
                             'Create your first task',
                             style: TextStyle(
                               color: Colors.white38,
@@ -135,7 +148,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                         ],
                       ),
                     )
-                  : FeatureFlagsService().isPullToRefreshEnabled
+                  : _pullToRefreshEnabled
                       ? RefreshIndicator(
                           onRefresh: _loadHobbies,
                           color: const Color(0xFF6C3FFF),
@@ -251,8 +264,9 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
   }
 
   Widget _buildTaskCard(Hobby hobby) {
-    final totalCompletions = hobby.completions.values.where((c) => c.completed).length;
-    
+    final totalCompletions =
+        hobby.completions.values.where((c) => c.completed).length;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -319,7 +333,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                                 Text(
                                   '${hobby.currentStreak}',
                                   style: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w900,
                                     color: Color(0xFFFF6B35),
                                   ),
@@ -328,7 +342,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                                 const Icon(
                                   Icons.local_fire_department,
                                   color: Color(0xFFFF6B35),
-                                  size: 12,
+                                  size: 14,
                                 ),
                               ],
                             ),
@@ -352,7 +366,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                                 Text(
                                   '${hobby.bestStreak}',
                                   style: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w900,
                                     color: Color(0xFFFFD700),
                                   ),
@@ -361,7 +375,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                                 const Icon(
                                   Icons.emoji_events,
                                   color: Color(0xFFFFD700),
-                                  size: 12,
+                                  size: 14,
                                 ),
                               ],
                             ),
@@ -376,27 +390,35 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
               // Edit and delete buttons
               PopupMenuButton(
                 padding: EdgeInsets.zero,
-                icon: const Icon(Icons.more_vert, color: Colors.white38, size: 22),
+                icon: const Icon(Icons.more_vert,
+                    color: Colors.white38, size: 22),
                 color: const Color(0xFF2A2738),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 itemBuilder: (context) => [
-                  PopupMenuItem(
+                  const PopupMenuItem(
                     value: 'edit',
                     child: Row(
                       children: [
-                        Icon(Icons.edit_outlined, color: Colors.white70, size: 18),
+                        Icon(Icons.edit_outlined,
+                            color: Colors.white70, size: 18),
                         SizedBox(width: 10),
-                        Text('Edit', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                        Text('Edit',
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 14)),
                       ],
                     ),
                   ),
-                  PopupMenuItem(
+                  const PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                        Icon(Icons.delete_outline,
+                            color: Colors.redAccent, size: 18),
                         SizedBox(width: 10),
-                        Text('Delete', style: TextStyle(color: Colors.redAccent, fontSize: 14)),
+                        Text('Delete',
+                            style: TextStyle(
+                                color: Colors.redAccent, fontSize: 14)),
                       ],
                     ),
                   ),
@@ -460,7 +482,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                         );
                       },
                     );
-                    
+
                     if (confirmed == true) {
                       await _service.deleteHobby(hobby.id);
                       _loadHobbies();
@@ -493,7 +515,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
+                      const Text(
                         'Completed',
                         style: TextStyle(
                           color: Colors.white54,
@@ -518,7 +540,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
+                      const Text(
                         'Current',
                         style: TextStyle(
                           color: Colors.white54,
@@ -543,7 +565,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
+                      const Text(
                         'Best',
                         style: TextStyle(
                           color: Colors.white54,
@@ -577,6 +599,7 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
         child: Container(
           height: 70,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          clipBehavior: Clip.none,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -593,42 +616,40 @@ class _TasksListScreenState extends State<TasksListScreen> with SingleTickerProv
   }
 
   Widget _buildCreateButton() {
-    return Transform.translate(
-      offset: const Offset(0, -20), // Lift the button up by 20 pixels
-      child: GestureDetector(
-        onTap: () async {
-          await Navigator.push(
-            context,
-            SlidePageRoute(
-              page: const AddHobbyScreen(),
-              direction: AxisDirection.up,
-            ),
-          );
-          _loadHobbies();
-        },
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6C3FFF).withOpacity(0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        await Navigator.push(
+          context,
+          SlidePageRoute(
+            page: const AddHobbyScreen(),
+            direction: AxisDirection.up,
           ),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 30,
+        );
+        _loadHobbies();
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6C3FFF).withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 30,
         ),
       ),
     );

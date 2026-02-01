@@ -15,6 +15,8 @@ android/captures/
 android/app/debug
 android/app/profile
 android/app/release
+android/key.properties
+android/upload-keystore.jks
 
 # iOS
 ios/.symlinks/

@@ -14,7 +14,7 @@ void main() {
       expect(hobby.name, 'Test Hobby');
       expect(hobby.notes, '');
       expect(hobby.repeatMode, 'daily');
-      expect(hobby.priority, 'medium');
+      // expect(hobby.priority, 'medium');
       expect(hobby.color, 0xFF6C3FFF);
       expect(hobby.completions, isEmpty);
       expect(hobby.createdAt, isNull);
@@ -22,7 +22,8 @@ void main() {
 
     test('should create hobby with custom values', () {
       final completions = {
-        '2024-01-01': HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
+        '2024-01-01':
+            HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
       };
 
       final hobby = Hobby(
@@ -30,7 +31,6 @@ void main() {
         name: 'Test Hobby',
         notes: 'Test notes',
         repeatMode: 'weekly',
-        priority: 'high',
         color: 0xFF6C3FFF,
         completions: completions,
         createdAt: DateTime(2024, 1, 1),
@@ -38,7 +38,7 @@ void main() {
 
       expect(hobby.notes, 'Test notes');
       expect(hobby.repeatMode, 'weekly');
-      expect(hobby.priority, 'high');
+      // expect(hobby.priority, 'high');
       expect(hobby.completions.length, 1);
       expect(hobby.createdAt, DateTime(2024, 1, 1));
     });
@@ -48,20 +48,22 @@ void main() {
         id: 'test-id',
         name: 'Monthly Task',
         repeatMode: 'monthly',
-        priority: 'low',
         color: 0xFF6C3FFF,
       );
 
       expect(hobby.repeatMode, 'monthly');
-      expect(hobby.priority, 'low');
+      // expect(hobby.priority, 'low');
     });
 
     test('should calculate current streak correctly with consecutive days', () {
       final today = DateTime.now();
       final completions = {
-        _formatDate(today): HobbyCompletion(completed: true, completedAt: today),
-        _formatDate(today.subtract(const Duration(days: 1))): HobbyCompletion(completed: true),
-        _formatDate(today.subtract(const Duration(days: 2))): HobbyCompletion(completed: true),
+        _formatDate(today):
+            HobbyCompletion(completed: true, completedAt: today),
+        _formatDate(today.subtract(const Duration(days: 1))):
+            HobbyCompletion(completed: true),
+        _formatDate(today.subtract(const Duration(days: 2))):
+            HobbyCompletion(completed: true),
       };
 
       final hobby = Hobby(
@@ -77,10 +79,11 @@ void main() {
     test('should calculate longer streak correctly', () {
       final today = DateTime.now();
       final completions = <String, HobbyCompletion>{};
-      
+
       for (int i = 0; i < 10; i++) {
         final date = today.subtract(Duration(days: i));
-        completions[_formatDate(date)] = HobbyCompletion(completed: true, completedAt: date);
+        completions[_formatDate(date)] =
+            HobbyCompletion(completed: true, completedAt: date);
       }
 
       final hobby = Hobby(
@@ -106,7 +109,8 @@ void main() {
     test('should calculate streak as 1 when only today is completed', () {
       final today = DateTime.now();
       final completions = {
-        _formatDate(today): HobbyCompletion(completed: true, completedAt: today),
+        _formatDate(today):
+            HobbyCompletion(completed: true, completedAt: today),
       };
 
       final hobby = Hobby(
@@ -138,11 +142,15 @@ void main() {
     test('should stop streak at first gap', () {
       final today = DateTime.now();
       final completions = {
-        _formatDate(today): HobbyCompletion(completed: true, completedAt: today),
-        _formatDate(today.subtract(const Duration(days: 1))): HobbyCompletion(completed: true),
+        _formatDate(today):
+            HobbyCompletion(completed: true, completedAt: today),
+        _formatDate(today.subtract(const Duration(days: 1))):
+            HobbyCompletion(completed: true),
         // Gap on day 2
-        _formatDate(today.subtract(const Duration(days: 3))): HobbyCompletion(completed: true),
-        _formatDate(today.subtract(const Duration(days: 4))): HobbyCompletion(completed: true),
+        _formatDate(today.subtract(const Duration(days: 3))):
+            HobbyCompletion(completed: true),
+        _formatDate(today.subtract(const Duration(days: 4))):
+            HobbyCompletion(completed: true),
       };
 
       final hobby = Hobby(
@@ -158,8 +166,10 @@ void main() {
     test('should handle incomplete completions in streak', () {
       final today = DateTime.now();
       final completions = {
-        _formatDate(today): HobbyCompletion(completed: true, completedAt: today),
-        _formatDate(today.subtract(const Duration(days: 1))): HobbyCompletion(completed: false),
+        _formatDate(today):
+            HobbyCompletion(completed: true, completedAt: today),
+        _formatDate(today.subtract(const Duration(days: 1))):
+            HobbyCompletion(completed: false),
       };
 
       final hobby = Hobby(
@@ -178,7 +188,6 @@ void main() {
         name: 'Test Hobby',
         notes: 'Test notes',
         repeatMode: 'weekly',
-        priority: 'high',
         color: 0xFF6C3FFF,
         createdAt: DateTime(2024, 1, 1),
       );
@@ -189,7 +198,7 @@ void main() {
       expect(json['name'], 'Test Hobby');
       expect(json['notes'], 'Test notes');
       expect(json['repeatMode'], 'weekly');
-      expect(json['priority'], 'high');
+      // expect(json['priority'], 'high');
       expect(json['color'], 0xFF6C3FFF);
       expect(json['createdAt'], isNotNull);
       expect(json['completions'], isA<Map>());
@@ -197,7 +206,8 @@ void main() {
 
     test('should convert to JSON with completions', () {
       final completions = {
-        '2024-01-01': HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
+        '2024-01-01':
+            HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
       };
 
       final hobby = Hobby(
@@ -220,7 +230,7 @@ void main() {
         'repeatMode': 'weekly',
         'priority': 'high',
         'color': 0xFF6C3FFF,
-        'completions': {},
+        'completions': <String, dynamic>{},
         'createdAt': '2024-01-01T00:00:00.000',
       };
 
@@ -230,7 +240,7 @@ void main() {
       expect(hobby.name, 'Test Hobby');
       expect(hobby.notes, 'Test notes');
       expect(hobby.repeatMode, 'weekly');
-      expect(hobby.priority, 'high');
+      // expect(hobby.priority, 'high');
       expect(hobby.color, 0xFF6C3FFF);
     });
 
@@ -247,7 +257,7 @@ void main() {
       expect(hobby.name, 'Test Hobby');
       expect(hobby.notes, '');
       expect(hobby.repeatMode, 'daily');
-      expect(hobby.priority, 'medium');
+      // expect(hobby.priority, 'medium');
     });
 
     test('should create from JSON with completions', () {
@@ -278,12 +288,11 @@ void main() {
 
       final copied = hobby.copyWith(
         name: 'New Name',
-        priority: 'high',
       );
 
       expect(copied.id, 'test-id');
       expect(copied.name, 'New Name');
-      expect(copied.priority, 'high');
+      // expect(copied.priority, 'high');
       expect(copied.color, 0xFF6C3FFF);
     });
 
@@ -293,7 +302,6 @@ void main() {
         name: 'Original',
         notes: 'Original notes',
         repeatMode: 'daily',
-        priority: 'medium',
         color: 0xFF6C3FFF,
       );
 
@@ -301,14 +309,13 @@ void main() {
         name: 'New Name',
         notes: 'New notes',
         repeatMode: 'weekly',
-        priority: 'high',
         color: 0xFFFF6B35,
       );
 
       expect(copied.name, 'New Name');
       expect(copied.notes, 'New notes');
       expect(copied.repeatMode, 'weekly');
-      expect(copied.priority, 'high');
+      // expect(copied.priority, 'high');
       expect(copied.color, 0xFFFF6B35);
     });
 

@@ -2,23 +2,89 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hobbyist/services/hobby_service.dart';
 import 'package:hobbyist/models/hobby.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter/services.dart';
+import 'package:hobbyist/services/notification_service.dart';
+import 'package:hobbyist/services/analytics_service.dart';
+import 'package:hobbyist/services/performance_service.dart';
+import 'package:hobbyist/services/crashlytics_service.dart';
+import 'package:hobbyist/services/rating_service.dart';
+import 'package:hobbyist/database/database_helper.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
+import 'hobby_service_test.mocks.dart';
 
+@GenerateNiceMocks([
+  MockSpec<DatabaseHelper>(),
+  MockSpec<NotificationService>(),
+  MockSpec<AnalyticsService>(),
+  MockSpec<PerformanceService>(),
+  MockSpec<CrashlyticsService>(),
+  MockSpec<RatingService>(),
+])
 void main() {
   late HobbyService service;
+  late MockDatabaseHelper mockDatabase;
+  late MockNotificationService mockNotification;
+  late MockAnalyticsService mockAnalytics;
+  late MockPerformanceService mockPerformance;
+  late MockCrashlyticsService mockCrashlytics;
+  late MockRatingService mockRating;
 
   setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    
+    // Mock path_provider
+    const MethodChannel('plugins.flutter.io/path_provider')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
+      return '.';
+    });
+
+    // Mock local_notifications
+    const MethodChannel('dexterous.com/flutter/local_notifications')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
+      return null;
+    });
+
+    // Mock shared_preferences
+    const MethodChannel('plugins.flutter.io/shared_preferences')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
+      if (methodCall.method == 'getAll') {
+        return <String, Object>{}; // Return empty map
+      }
+      return true;
+    });
+
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   });
 
   setUp(() async {
-    service = HobbyService();
-    // Clean up before each test
-    try {
-      await service.resetDatabase();
-    } catch (e) {
-      // Ignore if database doesn't exist yet
-    }
+    mockNotification = MockNotificationService();
+    mockAnalytics = MockAnalyticsService();
+    mockPerformance = MockPerformanceService();
+    mockCrashlytics = MockCrashlyticsService();
+    mockRating = MockRatingService();
+
+    service = HobbyService.forTesting(
+      dbHelper: DatabaseHelper.instance,
+      notificationService: mockNotification,
+      analytics: mockAnalytics,
+      performance: mockPerformance,
+      crashlytics: mockCrashlytics,
+      ratingService: mockRating,
+    );
+
+    await DatabaseHelper.instance.clearAllData();
+
+    // Default stubs
+    when(mockPerformance.traceDatabaseQuery(any, any))
+        .thenAnswer((invocation) async {
+      final callback = invocation.positionalArguments[1] as Future<dynamic> Function();
+      return await callback();
+    });
+    
+    when(mockNotification.scheduleNotification(any)).thenAnswer((_) async => true);
+    when(mockNotification.getPendingNotifications()).thenAnswer((_) async => []);
   });
 
   group('HobbyService Tests', () {
@@ -45,7 +111,6 @@ void main() {
         name: 'Complete Hobby',
         notes: 'Test notes',
         repeatMode: 'weekly',
-        priority: 'high',
         color: 0xFF6C3FFF,
         createdAt: DateTime.now(),
       );
@@ -57,12 +122,12 @@ void main() {
       expect(loadedHobby.name, 'Complete Hobby');
       expect(loadedHobby.notes, 'Test notes');
       expect(loadedHobby.repeatMode, 'weekly');
-      expect(loadedHobby.priority, 'high');
     });
 
     test('should add hobby with completions', () async {
       final completions = {
-        '2024-01-01': HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
+        '2024-01-01':
+            HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
         '2024-01-02': HobbyCompletion(completed: false),
       };
 
@@ -116,7 +181,7 @@ void main() {
       );
 
       await service.addHobby(hobby);
-      
+
       final updatedHobby = hobby.copyWith(name: 'Updated Name');
       await service.updateHobby(updatedHobby);
 
@@ -131,26 +196,23 @@ void main() {
         name: 'Test Hobby',
         notes: 'Original notes',
         repeatMode: 'daily',
-        priority: 'medium',
         color: 0xFF6C3FFF,
         createdAt: DateTime.now(),
       );
 
       await service.addHobby(hobby);
-      
+
       final updatedHobby = hobby.copyWith(
         notes: 'Updated notes',
         repeatMode: 'weekly',
-        priority: 'high',
       );
       await service.updateHobby(updatedHobby);
 
       final hobbies = await service.loadHobbies();
       final loadedHobby = hobbies.firstWhere((h) => h.id == hobby.id);
-      
+
       expect(loadedHobby.notes, 'Updated notes');
       expect(loadedHobby.repeatMode, 'weekly');
-      expect(loadedHobby.priority, 'high');
     });
 
     test('should update hobby completions', () async {
@@ -162,10 +224,11 @@ void main() {
       );
 
       await service.addHobby(hobby);
-      
+
       final updatedHobby = hobby.copyWith(
         completions: {
-          '2024-01-01': HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
+          '2024-01-01': HobbyCompletion(
+              completed: true, completedAt: DateTime(2024, 1, 1)),
         },
       );
       await service.updateHobby(updatedHobby);
@@ -184,7 +247,7 @@ void main() {
       );
 
       await service.addHobby(hobby);
-      
+
       final hobbiesBefore = await service.loadHobbies();
       expect(hobbiesBefore.any((h) => h.id == hobby.id), true);
 
@@ -196,7 +259,8 @@ void main() {
 
     test('should delete hobby with completions', () async {
       final completions = {
-        '2024-01-01': HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
+        '2024-01-01':
+            HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
       };
 
       final hobby = Hobby(
@@ -223,8 +287,8 @@ void main() {
       );
 
       await service.addHobby(hobby);
-      
-      final date = '2024-01-01';
+
+      const date = '2024-01-01';
       await service.toggleCompletion(hobby.id, date);
 
       final hobbies = await service.loadHobbies();
@@ -242,8 +306,8 @@ void main() {
       );
 
       await service.addHobby(hobby);
-      
-      final date = '2024-01-01';
+
+      const date = '2024-01-01';
       await service.toggleCompletion(hobby.id, date);
       await service.toggleCompletion(hobby.id, date);
 
@@ -261,14 +325,14 @@ void main() {
       );
 
       await service.addHobby(hobby);
-      
+
       await service.toggleCompletion(hobby.id, '2024-01-01');
       await service.toggleCompletion(hobby.id, '2024-01-02');
       await service.toggleCompletion(hobby.id, '2024-01-03');
 
       final hobbies = await service.loadHobbies();
       final loadedHobby = hobbies.firstWhere((h) => h.id == hobby.id);
-      
+
       expect(loadedHobby.completions['2024-01-01']?.completed, true);
       expect(loadedHobby.completions['2024-01-02']?.completed, true);
       expect(loadedHobby.completions['2024-01-03']?.completed, true);
@@ -298,7 +362,8 @@ void main() {
     });
 
     test('should return null for non-existent setting', () async {
-      final value = await service.getSetting('nonExistentKey-${DateTime.now().millisecondsSinceEpoch}');
+      final value = await service.getSetting(
+          'nonExistentKey-${DateTime.now().millisecondsSinceEpoch}');
       expect(value, null);
     });
 
@@ -387,7 +452,8 @@ void main() {
       await service.addHobby(hobby2);
 
       final hobbies = await service.loadHobbies();
-      final filtered = hobbies.where((h) => h.id == 'test-1' || h.id == 'test-2').toList();
+      final filtered =
+          hobbies.where((h) => h.id == 'test-1' || h.id == 'test-2').toList();
 
       // Should be in descending order (newest first)
       expect(filtered.first.name, 'Second');

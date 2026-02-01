@@ -13,16 +13,23 @@ void main() {
 
     testWidgets('should display splash screen', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SplashScreen(),
+        MaterialApp(
+          home: const SplashScreen(),
+          routes: {
+            '/landing': (context) => const SizedBox(),
+            '/dashboard': (context) => const SizedBox(),
+          },
         ),
       );
 
       expect(find.byType(SplashScreen), findsOneWidget);
       expect(find.byType(FadeTransition), findsOneWidget);
+      
+      await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('should navigate to landing screen when not onboarded', (WidgetTester tester) async {
+    testWidgets('should navigate to landing screen when not onboarded',
+        (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({'hasCompletedOnboarding': false});
 
       await tester.pumpWidget(
@@ -41,7 +48,8 @@ void main() {
       expect(find.text('Landing'), findsOneWidget);
     });
 
-    testWidgets('should navigate to dashboard when onboarded', (WidgetTester tester) async {
+    testWidgets('should navigate to dashboard when onboarded',
+        (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({'hasCompletedOnboarding': true});
 
       await tester.pumpWidget(
@@ -62,8 +70,12 @@ void main() {
 
     testWidgets('should have fade animation', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: SplashScreen(),
+        MaterialApp(
+          home: const SplashScreen(),
+          routes: {
+            '/landing': (context) => const SizedBox(),
+            '/dashboard': (context) => const SizedBox(),
+          },
         ),
       );
 
@@ -72,6 +84,9 @@ void main() {
       );
 
       expect(fadeTransition.opacity, isNotNull);
+      
+      // Drain the timer
+      await tester.pump(const Duration(seconds: 3));
     });
   });
 }

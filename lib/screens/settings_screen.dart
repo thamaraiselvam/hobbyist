@@ -1,3 +1,4 @@
+// ignore_for_file: unused_field
 import 'package:flutter/material.dart';
 import '../services/hobby_service.dart';
 import '../services/notification_service.dart';
@@ -16,10 +17,10 @@ class SettingsScreen extends StatefulWidget {
   final Function(int) onNavigate;
 
   const SettingsScreen({
-    Key? key, 
+    super.key,
     required this.onBack,
     required this.onNavigate,
-  }) : super(key: key);
+  });
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -48,7 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _checkAuthStatus() async {
     final isGoogleSignedIn = await _authService.isGoogleSignedIn();
     final email = await _service.getSetting('userEmail');
-    
+
     if (mounted) {
       setState(() {
         _isGoogleSignedIn = isGoogleSignedIn;
@@ -69,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     final completionSound = await _service.getSetting('completion_sound');
     final pushNotifications = await _service.getSetting('push_notifications');
-    
+
     if (mounted) {
       setState(() {
         _completionSoundEnabled = completionSound != 'false';
@@ -90,14 +91,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Name is synced from your Google account'),
-          backgroundColor: Color(0xFF6C3FFF),
+          
         ),
       );
       return;
     }
-    
+
     final controller = TextEditingController(text: _userName);
-    
+
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -109,13 +110,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: TextField(
           controller: controller,
           style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'Enter your name',
-            hintStyle: const TextStyle(color: Colors.white38),
-            enabledBorder: const UnderlineInputBorder(
+            hintStyle: TextStyle(color: Colors.white38),
+            enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF6C3FFF)),
             ),
-            focusedBorder: const UnderlineInputBorder(
+            focusedBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF6C3FFF), width: 2),
             ),
           ),
@@ -186,7 +187,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirm == true && mounted) {
       await _authService.signOut();
-      
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
@@ -307,24 +308,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _buildLogoutCard(),
                     ],
                     const SizedBox(height: 24),
-                    Center(
+                    const Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
+                          Text(
                             '© 2026 Hobbyist. Made with ',
                             style: TextStyle(
                               color: Colors.white38,
                               fontSize: 14,
                             ),
                           ),
-                          const Icon(
+                          Icon(
                             Icons.favorite,
                             color: Colors.red,
                             size: 16,
                           ),
-                          const SizedBox(width: 4),
-                          const Text(
+                          SizedBox(width: 4),
+                          Text(
                             'for better hobbies',
                             style: TextStyle(
                               color: Colors.white38,
@@ -361,6 +362,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Container(
           height: 70,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          clipBehavior: Clip.none,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -377,41 +379,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildCreateButton() {
-    return Transform.translate(
-      offset: const Offset(0, -20), // Lift the button up by 20 pixels
-      child: GestureDetector(
-        onTap: () async {
-          await Navigator.push(
-            context,
-            SlidePageRoute(
-              page: const AddHobbyScreen(),
-              direction: AxisDirection.up,
-            ),
-          );
-        },
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6C3FFF).withOpacity(0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        await Navigator.push(
+          context,
+          SlidePageRoute(
+            page: const AddHobbyScreen(),
+            direction: AxisDirection.up,
           ),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 30,
+        );
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6C3FFF).withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 30,
         ),
       ),
     );
@@ -446,7 +446,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildAccountCard() {
     final initial = _userName.isNotEmpty ? _userName[0].toUpperCase() : 'T';
-    
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -464,9 +464,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: const Color(0xFF6C3FFF),
+                    
                     child: _isGoogleSignedIn && _userEmail != null
-                        ? const Icon(Icons.person, color: Colors.white, size: 28)
+                        ? const Icon(Icons.person,
+                            color: Colors.white, size: 28)
                         : Text(
                             initial,
                             style: const TextStyle(
@@ -491,8 +492,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _isGoogleSignedIn && _userEmail != null 
-                              ? _userEmail! 
+                          _isGoogleSignedIn && _userEmail != null
+                              ? _userEmail!
                               : 'Tap to edit name',
                           style: const TextStyle(
                             color: Colors.white54,
@@ -642,7 +643,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               Icon(
-                Icons.chevron_right, 
+                Icons.chevron_right,
                 color: isEnabled ? Colors.white54 : Colors.white24,
               ),
             ],
@@ -701,7 +702,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Opening app store...'),
-                  backgroundColor: Color(0xFF6C3FFF),
+                  
                 ),
               );
             },
@@ -731,7 +732,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Opening Terms of Service...'),
-                  backgroundColor: Color(0xFF6C3FFF),
+                  
                 ),
               );
             },
@@ -761,11 +762,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'About Hobbyist',
                 style: TextStyle(color: Colors.white),
               ),
-              content: Column(
+              content: const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Version 1.0.0',
                     style: TextStyle(
                       color: Colors.white70,
@@ -773,31 +774,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text(
                     'Track your hobbies, build streaks, and stay consistent with your goals.',
                     style: TextStyle(
                       color: Colors.white60,
                       fontSize: 14,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         'Made with ',
                         style: TextStyle(
                           color: Colors.white60,
                           fontSize: 14,
                         ),
                       ),
-                      const Icon(
+                      Icon(
                         Icons.favorite,
                         color: Colors.red,
                         size: 16,
                       ),
-                      const SizedBox(width: 4),
-                      const Text(
+                      SizedBox(width: 4),
+                      Text(
                         'for better hobbies',
                         style: TextStyle(
                           color: Colors.white60,
@@ -900,23 +901,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Refreshing feature flags from Firebase...'),
-              backgroundColor: Color(0xFF6C3FFF),
+              
               duration: Duration(seconds: 2),
             ),
           );
-          
+
           // Refresh Remote Config and feature flags
           await FeatureFlagsService().refresh();
-          
+
           // Reload page to show updated features
           setState(() {});
-          
+
           // Show success message
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Feature flags refreshed! Email: ${_authService.userEmail}'),
-                backgroundColor: const Color(0xFF10B981),
+                content: Text(
+                    'Feature flags refreshed! Email: ${_authService.userEmail}'),
+                backgroundColor: const Color(0xFF4CAF78), // Readable green
+                
                 duration: const Duration(seconds: 3),
               ),
             );
@@ -932,7 +935,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   color: const Color(0xFF6C3FFF).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.refresh, color: Color(0xFF6C3FFF), size: 22),
+                child: const Icon(Icons.refresh,
+                    color: Color(0xFF6C3FFF), size: 22),
               ),
               const SizedBox(width: 16),
               const Expanded(

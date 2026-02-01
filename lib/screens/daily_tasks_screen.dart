@@ -1,25 +1,26 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously, unused_element, body_might_complete_normally_catch_error
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
 import '../services/sound_service.dart';
 import '../services/quote_service.dart';
-import '../services/feature_flags_service.dart';
 import '../widgets/animated_checkbox.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'analytics_screen.dart';
 import 'settings_screen.dart';
 import 'tasks_list_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DailyTasksScreen extends StatefulWidget {
-  const DailyTasksScreen({Key? key}) : super(key: key);
+  const DailyTasksScreen({super.key});
 
   @override
   State<DailyTasksScreen> createState() => _DailyTasksScreenState();
 }
 
-class _DailyTasksScreenState extends State<DailyTasksScreen> 
+class _DailyTasksScreenState extends State<DailyTasksScreen>
     with AutomaticKeepAliveClientMixin {
   final HobbyService _service = HobbyService();
   final SoundService _soundService = SoundService();
@@ -31,12 +32,14 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   String _currentQuote = '';
   DateTime _selectedDate = DateTime.now();
   bool _hasAnimatedToToday = false; // Track if we've done initial animation
+  bool _pullToRefreshEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _loadQuote();
     _loadHobbies();
+    _loadSettings();
     // Animate from start to today after build (only once on first load)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -48,6 +51,16 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     });
   }
 
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _pullToRefreshEnabled =
+            prefs.getBool('pull_to_refresh_enabled') ?? false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _dayScrollController.dispose();
@@ -56,28 +69,30 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
   void _animateToToday() async {
     if (!mounted || !_dayScrollController.hasClients) return;
-    
+
     try {
       // Calculate centered position for today
       final screenWidth = MediaQuery.of(context).size.width;
-      final itemWidth = 56.0; // 48px pill + 8px margin
-      final pillWidth = 48.0; // Actual pill width
-      final todayIndex = 30; // Index 30 = today (30 days back + today + 30 days forward)
-      final listPadding = 16.0; // ListView horizontal padding
-      
+      const itemWidth = 56.0; // 48px pill + 8px margin
+      const pillWidth = 48.0; // Actual pill width
+      const todayIndex =
+          30; // Index 30 = today (30 days back + today + 30 days forward)
+      const listPadding = 16.0; // ListView horizontal padding
+
       // Position of today's item (from start of list)
-      final todayPosition = todayIndex * itemWidth;
-      
-      // Center calculation: 
+      const todayPosition = todayIndex * itemWidth;
+
+      // Center calculation:
       // We want the pill center at screen center
       // Scroll position to get left edge of pill to center: todayPosition - (screenWidth / 2)
       // Then move back by half the pill width: + (pillWidth / 2)
       // Account for the list padding: + listPadding
-      final centeredPosition = todayPosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
-      
+      final centeredPosition =
+          todayPosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
+
       final maxScroll = _dayScrollController.position.maxScrollExtent;
       final targetPosition = centeredPosition.clamp(0.0, maxScroll);
-      
+
       // Animate to today
       await _dayScrollController.animateTo(
         targetPosition,
@@ -91,27 +106,28 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
   void _animateToSelectedDate() async {
     if (!mounted || !_dayScrollController.hasClients) return;
-    
+
     try {
       await Future.delayed(const Duration(milliseconds: 50));
-      
+
       // Calculate how many days from the base (30 days ago)
       final now = DateTime.now();
       final baseDate = now.subtract(const Duration(days: 30));
       final daysDifference = _selectedDate.difference(baseDate).inDays;
-      
+
       // Calculate centered position
       final screenWidth = MediaQuery.of(context).size.width;
-      final itemWidth = 56.0; // 48px pill + 8px margin
-      final pillWidth = 48.0; // Actual pill width
-      final listPadding = 16.0; // ListView horizontal padding
-      
+      const itemWidth = 56.0; // 48px pill + 8px margin
+      const pillWidth = 48.0; // Actual pill width
+      const listPadding = 16.0; // ListView horizontal padding
+
       final datePosition = daysDifference * itemWidth;
-      final centeredPosition = datePosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
-      
+      final centeredPosition =
+          datePosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
+
       final maxScroll = _dayScrollController.position.maxScrollExtent;
       final targetPosition = centeredPosition.clamp(0.0, maxScroll);
-      
+
       // Animate to selected date
       await _dayScrollController.animateTo(
         targetPosition,
@@ -131,18 +147,19 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
   Future<void> _loadHobbies({bool preserveScrollPosition = true}) async {
     // Only preserve scroll position if we're on home screen (index 0) and requested
-    final shouldPreserveScroll = preserveScrollPosition && 
-                                  _selectedIndex == 0 && 
-                                  _dayScrollController.hasClients;
-    final currentScrollOffset = shouldPreserveScroll ? _dayScrollController.offset : null;
-    
+    final shouldPreserveScroll = preserveScrollPosition &&
+        _selectedIndex == 0 &&
+        _dayScrollController.hasClients;
+    final currentScrollOffset =
+        shouldPreserveScroll ? _dayScrollController.offset : null;
+
     setState(() => _loading = true);
     final hobbies = await _service.loadHobbies();
     setState(() {
       _hobbies = hobbies;
       _loading = false;
     });
-    
+
     // Restore scroll position after rebuild if it was saved
     if (currentScrollOffset != null && _dayScrollController.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -171,26 +188,27 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     setState(() {
       _selectedDate = DateTime.now();
     });
-    
+
     // Load hobbies without preserving scroll position
     await _loadHobbies(preserveScrollPosition: false);
-    
+
     // Animate to today after loading
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _dayScrollController.hasClients) {
         // Use the same logic as _animateToSelectedDate for consistency
         final screenWidth = MediaQuery.of(context).size.width;
-        final itemWidth = 56.0; // 48px pill + 8px margin
-        final pillWidth = 48.0; // Actual pill width
-        final listPadding = 16.0; // ListView horizontal padding
-        final todayIndex = 30; // Index 30 is always today
-        
-        final datePosition = todayIndex * itemWidth;
-        final centeredPosition = datePosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
-        
+        const itemWidth = 56.0; // 48px pill + 8px margin
+        const pillWidth = 48.0; // Actual pill width
+        const listPadding = 16.0; // ListView horizontal padding
+        const todayIndex = 30; // Index 30 is always today
+
+        const datePosition = todayIndex * itemWidth;
+        final centeredPosition =
+            datePosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
+
         final maxScroll = _dayScrollController.position.maxScrollExtent;
         final targetPosition = centeredPosition.clamp(0.0, maxScroll);
-        
+
         _dayScrollController.animateTo(
           targetPosition,
           duration: const Duration(milliseconds: 500),
@@ -204,20 +222,24 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     // Prevent completing tasks in the future
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    final selectedDateOnly = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
-    
+    final selectedDateOnly =
+        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+
     if (selectedDateOnly.isAfter(todayDate)) {
       // Show message that future tasks cannot be completed
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Cannot complete tasks for future dates'),
-          backgroundColor: Color(0xFFFF6B6B),
+          content: Text(
+            'Cannot complete tasks for future dates',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Color(0xFFD84A4A), // Readable red
           duration: Duration(seconds: 2),
         ),
       );
       return;
     }
-    
+
     final selectedDay = DateFormat('yyyy-MM-dd').format(_selectedDate);
     final isCompleted = hobby.completions[selectedDay]?.completed ?? false;
 
@@ -231,13 +253,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
     // Create updated hobby with new completions
     final updatedHobby = hobby.copyWith(completions: updatedCompletions);
-    
+
     // Recalculate best streak immediately with new data
     final calculatedBestStreak = updatedHobby.calculateBestStreakFromHistory();
-    final newBestStreak = calculatedBestStreak > updatedHobby.currentStreak 
-        ? calculatedBestStreak 
+    final newBestStreak = calculatedBestStreak > updatedHobby.currentStreak
+        ? calculatedBestStreak
         : updatedHobby.currentStreak;
-    
+
     // Update hobby with new best streak
     final finalHobby = updatedHobby.copyWith(bestStreak: newBestStreak);
 
@@ -261,8 +283,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       if (mounted && error.toString().contains('Database')) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Failed to sync completion'),
-            backgroundColor: Color(0xFFFF6B6B),
+            content: Text(
+              'Failed to sync completion',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Color(0xFFD84A4A), // Readable red
             duration: Duration(seconds: 1),
           ),
         );
@@ -275,7 +300,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     switch (hobby.repeatMode.toLowerCase()) {
       case 'daily':
         return true; // Daily tasks are always available
-      
+
       case 'weekly':
         // For weekly tasks, check if customDay matches the weekday
         // customDay: 0=Monday, 1=Tuesday, ..., 6=Sunday
@@ -284,12 +309,12 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         // Convert weekday to 0-indexed (0=Monday)
         final dayIndex = weekday == 7 ? 6 : weekday - 1;
         return hobby.customDay == dayIndex;
-      
+
       case 'monthly':
         // For monthly tasks, check if customDay matches the day of month
         if (hobby.customDay == null) return true; // Show if no specific day set
         return date.day == hobby.customDay;
-      
+
       default:
         return true; // Show by default for unknown repeat modes
     }
@@ -298,7 +323,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   int get completedToday {
     final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
-        .where((h) => _isHobbyAvailableForDate(h, _selectedDate) && h.completions[today]?.completed == true)
+        .where((h) =>
+            _isHobbyAvailableForDate(h, _selectedDate) &&
+            h.completions[today]?.completed == true)
         .length;
   }
 
@@ -318,14 +345,18 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   List<Hobby> get inProgressTasks {
     final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
-        .where((h) => _isHobbyAvailableForDate(h, _selectedDate) && h.completions[today]?.completed != true)
+        .where((h) =>
+            _isHobbyAvailableForDate(h, _selectedDate) &&
+            h.completions[today]?.completed != true)
         .toList();
   }
 
   List<Hobby> get completedTasks {
     final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
-        .where((h) => _isHobbyAvailableForDate(h, _selectedDate) && h.completions[today]?.completed == true)
+        .where((h) =>
+            _isHobbyAvailableForDate(h, _selectedDate) &&
+            h.completions[today]?.completed == true)
         .toList();
   }
 
@@ -371,149 +402,154 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                   _buildHeader(),
                   _buildDaySelector(),
                   Expanded(
-                    child: FeatureFlagsService().isPullToRefreshEnabled
+                    child: _pullToRefreshEnabled
                         ? RefreshIndicator(
                             onRefresh: _refreshToToday,
                             color: const Color(0xFF6C3FFF),
                             backgroundColor: const Color(0xFF2A2139),
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            // Empty state: No hobbies at all
-                            if (_hobbies.isEmpty) ...[
-                              const SizedBox(height: 80),
-                              Center(
-                                child: Column(
-                                  children: [
-                                    Icon(Icons.task_alt,
-                                        size: 80, color: Colors.white24),
-                                    const SizedBox(height: 16),
-                                    const Text(
-                                      'Welcome to Hobbyist! 👋',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  // Empty state: No hobbies at all
+                                  if (_hobbies.isEmpty) ...[
+                                    const SizedBox(height: 80),
+                                    const Center(
+                                      child: Column(
+                                        children: [
+                                          Icon(Icons.task_alt,
+                                              size: 80, color: Colors.white24),
+                                          SizedBox(height: 16),
+                                          Text(
+                                            'Welcome to Hobbyist! 👋',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          SizedBox(height: 12),
+                                          Text(
+                                            'No hobbies yet',
+                                            style: TextStyle(
+                                              color: Colors.white54,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            'Tap the + button below to create your first hobby\nand start building your habit streak!',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.white38,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
-                                    const Text(
-                                      'No hobbies yet',
-                                      style: TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
+                                    const SizedBox(height: 120),
+                                  ]
+                                  // Check if there are tasks for this day
+                                  else if (totalTasksForSelectedDate == 0) ...[
+                                    // No tasks for this day - show centered message
+                                    const SizedBox(height: 120),
+                                    Center(
+                                      child: Column(
+                                        children: [
+                                          const Icon(
+                                            Icons.event_available,
+                                            size: 80,
+                                            color: Colors.white24,
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            _isToday()
+                                                ? 'No tasks for today'
+                                                : 'No tasks for this day',
+                                            style: const TextStyle(
+                                              color: Colors.white54,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            _isToday()
+                                                ? 'Enjoy your free day!'
+                                                : 'No hobbies scheduled for this day',
+                                            style: const TextStyle(
+                                              color: Colors.white38,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    const Text(
-                                      'Tap the + button below to create your first hobby\nand start building your habit streak!',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.white38,
-                                        fontSize: 14,
+                                    const SizedBox(height: 120),
+                                  ] else ...[
+                                    // Has tasks - show normal layout
+                                    if (inProgressTasks.isNotEmpty) ...[
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            _isFutureDate()
+                                                ? 'Upcoming Tasks'
+                                                : (_isToday()
+                                                    ? 'In Progress'
+                                                    : 'Not Completed'),
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${inProgressTasks.length} Pending',
+                                            style: const TextStyle(
+                                              color: Color(0xFF8B5CF6),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
+                                      const SizedBox(height: 8),
+                                      ...inProgressTasks.map((hobby) =>
+                                          _buildTaskCard(hobby, false)),
+                                      const SizedBox(height: 12),
+                                    ],
+                                    if (completedTasks.isNotEmpty) ...[
+                                      Text(
+                                        _isToday()
+                                            ? 'Completed Today'
+                                            : 'Completed',
+                                        style: const TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      ...completedTasks.map((hobby) =>
+                                          _buildTaskCard(hobby, true)),
+                                      const SizedBox(height: 12),
+                                    ],
                                   ],
-                                ),
+                                  // Quote at the bottom (always)
+                                  _buildQuoteSection(),
+                                  const SizedBox(height: 16),
+                                ],
                               ),
-                              const SizedBox(height: 120),
-                            ]
-                            // Check if there are tasks for this day
-                            else if (totalTasksForSelectedDate == 0) ...[
-                              // No tasks for this day - show centered message
-                              const SizedBox(height: 120),
-                              Center(
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.event_available,
-                                      size: 80,
-                                      color: Colors.white24,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      _isToday() 
-                                          ? 'No tasks for today' 
-                                          : 'No tasks for this day',
-                                      style: const TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      _isToday()
-                                          ? 'Enjoy your free day!'
-                                          : 'No hobbies scheduled for this day',
-                                      style: const TextStyle(
-                                        color: Colors.white38,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 120),
-                            ] else ...[
-                              // Has tasks - show normal layout
-                              if (inProgressTasks.isNotEmpty) ...[
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      _isFutureDate() 
-                                          ? 'Upcoming Tasks' 
-                                          : (_isToday() ? 'In Progress' : 'Not Completed'),
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      '${inProgressTasks.length} Pending',
-                                      style: const TextStyle(
-                                        color: Color(0xFF8B5CF6),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                ...inProgressTasks
-                                    .map((hobby) => _buildTaskCard(hobby, false)),
-                                const SizedBox(height: 12),
-                              ],
-                              if (completedTasks.isNotEmpty) ...[
-                                Text(
-                                  _isToday() ? 'Completed Today' : 'Completed',
-                                  style: const TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                ...completedTasks
-                                    .map((hobby) => _buildTaskCard(hobby, true)),
-                                const SizedBox(height: 12),
-                              ],
-                            ],
-                            // Quote at the bottom (always)
-                            _buildQuoteSection(),
-                            const SizedBox(height: 16),
-                          ],
-                        ),
-                      ),
-                    )
+                            ),
+                          )
                         : SingleChildScrollView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -524,13 +560,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                 // Empty state: No hobbies at all
                                 if (_hobbies.isEmpty) ...[
                                   const SizedBox(height: 80),
-                                  Center(
+                                  const Center(
                                     child: Column(
                                       children: [
                                         Icon(Icons.task_alt,
                                             size: 80, color: Colors.white24),
-                                        const SizedBox(height: 16),
-                                        const Text(
+                                        SizedBox(height: 16),
+                                        Text(
                                           'Welcome to Hobbyist! 👋',
                                           style: TextStyle(
                                             color: Colors.white,
@@ -538,8 +574,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        const SizedBox(height: 12),
-                                        const Text(
+                                        SizedBox(height: 12),
+                                        Text(
                                           'No hobbies yet',
                                           style: TextStyle(
                                             color: Colors.white54,
@@ -547,8 +583,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        const SizedBox(height: 8),
-                                        const Text(
+                                        SizedBox(height: 8),
+                                        Text(
                                           'Tap the + button below to create your first hobby\nand start building your habit streak!',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
@@ -568,15 +604,15 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                   Center(
                                     child: Column(
                                       children: [
-                                        Icon(
+                                        const Icon(
                                           Icons.event_available,
                                           size: 80,
                                           color: Colors.white24,
                                         ),
                                         const SizedBox(height: 16),
                                         Text(
-                                          _isToday() 
-                                              ? 'No tasks for today' 
+                                          _isToday()
+                                              ? 'No tasks for today'
                                               : 'No tasks for this day',
                                           style: const TextStyle(
                                             color: Colors.white54,
@@ -606,9 +642,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          _isFutureDate() 
-                                              ? 'Upcoming Tasks' 
-                                              : (_isToday() ? 'In Progress' : 'Not Completed'),
+                                          _isFutureDate()
+                                              ? 'Upcoming Tasks'
+                                              : (_isToday()
+                                                  ? 'In Progress'
+                                                  : 'Not Completed'),
                                           style: const TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold,
@@ -626,11 +664,12 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                       ],
                                     ),
                                     const SizedBox(height: 8),
-                                    ...inProgressTasks
-                                        .map((hobby) => _buildTaskCard(hobby, false)),
+                                    ...inProgressTasks.map((hobby) =>
+                                        _buildTaskCard(hobby, false)),
                                     const SizedBox(height: 12),
                                   ],
-                                  if (completedTasks.isNotEmpty && !_isFutureDate()) ...[
+                                  if (completedTasks.isNotEmpty &&
+                                      !_isFutureDate()) ...[
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -649,7 +688,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF10B981)
                                                 .withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                           ),
                                           child: Row(
                                             children: [
@@ -673,8 +713,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                       ],
                                     ),
                                     const SizedBox(height: 8),
-                                    ...completedTasks.map((hobby) =>
-                                        _buildTaskCard(hobby, true)),
+                                    ...completedTasks.map(
+                                        (hobby) => _buildTaskCard(hobby, true)),
                                   ],
                                 ],
                                 // Quote at the bottom (always)
@@ -784,7 +824,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                     setState(() => _selectedIndex = 2); // Navigate to analytics
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2A2238),
                       borderRadius: BorderRadius.circular(12),
@@ -797,16 +838,16 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           color: todayCompleted
                               ? const Color(0xFFFF6B35)
                               : Colors.grey.withOpacity(0.5),
-                          size: 20,
+                          size: 28,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Text(
                           '$globalStreak',
                           style: TextStyle(
                             color: todayCompleted
                                 ? Colors.white
                                 : Colors.grey.withOpacity(0.5),
-                            fontSize: 18,
+                            fontSize: 26,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -847,7 +888,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   }
 
   Widget _buildDaySelector() {
-    return Container(
+    return SizedBox(
       height: 60,
       child: ListView.builder(
         controller: _dayScrollController,
@@ -862,10 +903,10 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           final dateStr = DateFormat('yyyy-MM-dd').format(date);
           final selectedStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
           final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-          
+
           final isSelected = dateStr == selectedStr;
           final isToday = dateStr == todayStr;
-          
+
           return GestureDetector(
             onTap: () {
               setState(() {
@@ -881,8 +922,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
               decoration: BoxDecoration(
-                color: isSelected 
-                    ? const Color(0xFF6C3FFF) 
+                color: isSelected
+                    ? const Color(0xFF6C3FFF)
                     : const Color(0xFF2A2238),
                 borderRadius: BorderRadius.circular(24),
                 border: isToday && !isSelected
@@ -924,13 +965,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     if (_hobbies.isEmpty) {
       return const SizedBox.shrink();
     }
-    
+
     // Determine the title based on selected date
     final isToday = _isToday();
-    final progressTitle = isToday 
-        ? 'Today\'s Progress' 
-        : '${DateFormat('EEEE, MMM dd').format(_selectedDate)}';
-    
+    final progressTitle = isToday
+        ? 'Today\'s Progress'
+        : DateFormat('EEEE, MMM dd').format(_selectedDate);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
@@ -1005,9 +1046,10 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     // Check if selected date is in the future
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    final selectedDateOnly = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final selectedDateOnly =
+        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
     final isFutureDate = selectedDateOnly.isAfter(todayDate);
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
@@ -1026,7 +1068,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
             Builder(
               builder: (context) => AnimatedCheckbox(
                 isChecked: isCompleted,
-                onTap: isFutureDate ? null : () => _toggleToday(hobby), // Disable tap for future dates
+                onTap: isFutureDate
+                    ? null
+                    : () => _toggleToday(hobby), // Disable tap for future dates
                 size: 24,
                 color: Color(hobby.color),
               ),
@@ -1043,206 +1087,221 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                       color: Colors.white,
                       fontSize: 14.5,
                       fontWeight: FontWeight.bold,
-                      decoration: isCompleted ? TextDecoration.lineThrough : null,
+                      decoration:
+                          isCompleted ? TextDecoration.lineThrough : null,
                       decorationColor: Colors.white38,
                       decorationThickness: 1.5,
                     ),
                   ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        hobby.notes.isNotEmpty ? hobby.notes : _getFrequencyText(hobby.repeatMode),
-                        style: TextStyle(
-                          color: const Color(0xFF71717A),
-                          fontSize: 12,
-                          decoration:
-                              isCompleted ? TextDecoration.lineThrough : null,
-                          decorationColor: Colors.white38,
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          hobby.notes.isNotEmpty
+                              ? hobby.notes
+                              : _getFrequencyText(hobby.repeatMode),
+                          style: TextStyle(
+                            color: const Color(0xFF71717A),
+                            fontSize: 12,
+                            decoration:
+                                isCompleted ? TextDecoration.lineThrough : null,
+                            decorationColor: Colors.white38,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    // Streak badges after subtitle
-                    if (hobby.currentStreak > 0 || hobby.bestStreak > 0) ...[
-                      const SizedBox(width: 8),
-                      // Current streak
-                      if (hobby.currentStreak > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF6B35).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${hobby.currentStreak}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
+                      // Streak badges after subtitle
+                      if (hobby.currentStreak > 0 || hobby.bestStreak > 0) ...[
+                        const SizedBox(width: 8),
+                        // Current streak
+                        if (hobby.currentStreak > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF6B35).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '${hobby.currentStreak}',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFFFF6B35),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.local_fire_department,
                                   color: Color(0xFFFF6B35),
+                                  size: 18,
                                 ),
-                              ),
-                              const SizedBox(width: 3),
-                              const Icon(
-                                Icons.local_fire_department,
-                                color: Color(0xFFFF6B35),
-                                size: 12,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      // Best streak
-                      if (hobby.bestStreak > 0) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFD700).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${hobby.bestStreak}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
+                        // Best streak
+                        if (hobby.bestStreak > 0) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFD700).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '${hobby.bestStreak}',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFFFFD700),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.emoji_events,
                                   color: Color(0xFFFFD700),
+                                  size: 18,
                                 ),
-                              ),
-                              const SizedBox(width: 3),
-                              const Icon(
-                                Icons.emoji_events,
-                                color: Color(0xFFFFD700),
-                                size: 12,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ],
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            PopupMenuButton(
+              padding: EdgeInsets.zero,
+              icon:
+                  const Icon(Icons.more_vert, color: Colors.white38, size: 22),
+              color: const Color(0xFF2A2738),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_outlined,
+                          color: Colors.white70, size: 18),
+                      SizedBox(width: 10),
+                      Text('Edit',
+                          style: TextStyle(color: Colors.white, fontSize: 14)),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline,
+                          color: Colors.redAccent, size: 18),
+                      SizedBox(width: 10),
+                      Text('Delete',
+                          style:
+                              TextStyle(color: Colors.redAccent, fontSize: 14)),
+                    ],
+                  ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          PopupMenuButton(
-            padding: EdgeInsets.zero,
-            icon: const Icon(Icons.more_vert, color: Colors.white38, size: 22),
-            color: const Color(0xFF2A2738),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit_outlined, color: Colors.white70, size: 18),
-                    SizedBox(width: 10),
-                    Text('Edit',
-                        style: TextStyle(color: Colors.white, fontSize: 14)),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline,
-                        color: Colors.redAccent, size: 18),
-                    SizedBox(width: 10),
-                    Text('Delete',
-                        style:
-                            TextStyle(color: Colors.redAccent, fontSize: 14)),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) async {
-              if (value == 'edit') {
-                await Navigator.push(
-                  context,
-                  SlidePageRoute(
-                    page: AddHobbyScreen(hobby: hobby),
-                    direction: AxisDirection.left,
-                  ),
-                );
-                _loadHobbies();
-              } else if (value == 'delete') {
-                // Show confirmation dialog
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      backgroundColor: const Color(0xFF2A2738),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      title: const Text(
-                        'Delete Hobby?',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  await Navigator.push(
+                    context,
+                    SlidePageRoute(
+                      page: AddHobbyScreen(hobby: hobby),
+                      direction: AxisDirection.left,
+                    ),
+                  );
+                  // Reload hobbies and wait for widget rebuild
+                  await _loadHobbies();
+                  // Wait for build to complete
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  // Now scroll to the selected date
+                  _animateToSelectedDate();
+                } else if (value == 'delete') {
+                  // Show confirmation dialog
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        backgroundColor: const Color(0xFF2A2738),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      ),
-                      content: Text(
-                        'Are you sure you want to delete "${hobby.name}"? This action cannot be undone and will remove all completion history.',
-                        style: const TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontSize: 14,
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text(
-                            'Cancel',
-                            style: TextStyle(
-                              color: Color(0xFF94A3B8),
-                              fontSize: 16,
-                            ),
+                        title: const Text(
+                          'Delete Hobby?',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text(
-                            'Delete',
-                            style: TextStyle(
-                              color: Colors.redAccent,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        content: Text(
+                          'Are you sure you want to delete "${hobby.name}"? This action cannot be undone and will remove all completion history.',
+                          style: const TextStyle(
+                            color: Color(0xFF94A3B8),
+                            fontSize: 14,
                           ),
                         ),
-                      ],
-                    );
-                  },
-                );
-                
-                // Only delete if confirmed
-                if (confirmed == true) {
-                  await _service.deleteHobby(hobby.id);
-                  _loadHobbies();
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Color(0xFF94A3B8),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  // Only delete if confirmed
+                  if (confirmed == true) {
+                    await _service.deleteHobby(hobby.id);
+                    // Reload hobbies and wait for widget rebuild
+                    await _loadHobbies();
+                    // Wait for build to complete
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    // Now scroll to the selected date
+                    _animateToSelectedDate();
+                  }
                 }
-              }
-            },
-          ),
-        ],
+              },
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -1262,6 +1321,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         child: Container(
           height: 70,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          clipBehavior: Clip.none,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -1278,47 +1338,45 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   }
 
   Widget _buildCreateButton() {
-    return Transform.translate(
-      offset: const Offset(0, -20), // Lift the button up by 20 pixels
-      child: GestureDetector(
-        onTap: () async {
-          await Navigator.push(
-            context,
-            SlidePageRoute(
-              page: const AddHobbyScreen(),
-              direction: AxisDirection.up,
-            ),
-          );
-          // Reload hobbies and wait for widget rebuild
-          await _loadHobbies();
-          // Wait for build to complete
-          await Future.delayed(const Duration(milliseconds: 100));
-          // Now scroll to the selected date
-          _animateToSelectedDate();
-        },
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6C3FFF).withOpacity(0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        await Navigator.push(
+          context,
+          SlidePageRoute(
+            page: const AddHobbyScreen(),
+            direction: AxisDirection.up,
           ),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 30,
+        );
+        // Reload hobbies and wait for widget rebuild
+        await _loadHobbies();
+        // Wait for build to complete
+        await Future.delayed(const Duration(milliseconds: 100));
+        // Now scroll to the selected date
+        _animateToSelectedDate();
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6C3FFF).withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 30,
         ),
       ),
     );
@@ -1363,13 +1421,19 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
   IconData _getIconForHobby(Hobby hobby) {
     final name = hobby.name.toLowerCase();
-    if (name.contains('paint') || name.contains('draw') || name.contains('art')) {
+    if (name.contains('paint') ||
+        name.contains('draw') ||
+        name.contains('art')) {
       return Icons.palette;
-    } else if (name.contains('piano') || name.contains('music') || name.contains('guitar')) {
+    } else if (name.contains('piano') ||
+        name.contains('music') ||
+        name.contains('guitar')) {
       return Icons.piano;
     } else if (name.contains('read') || name.contains('book')) {
       return Icons.menu_book;
-    } else if (name.contains('exercise') || name.contains('workout') || name.contains('yoga')) {
+    } else if (name.contains('exercise') ||
+        name.contains('workout') ||
+        name.contains('yoga')) {
       return Icons.fitness_center;
     } else if (name.contains('code') || name.contains('program')) {
       return Icons.code;
@@ -1401,7 +1465,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   bool _isFutureDate() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final selected = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final selected =
+        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
     return selected.isAfter(today);
   }
 }

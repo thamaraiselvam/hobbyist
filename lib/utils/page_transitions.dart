@@ -36,7 +36,7 @@ class SlidePageRoute extends PageRouteBuilder {
             );
 
             final offsetAnimation = tween.animate(curvedAnimation);
-            
+
             // Fade animation for smooth transition
             final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
               CurvedAnimation(
@@ -88,7 +88,8 @@ class ScalePageRoute extends PageRouteBuilder {
             );
 
             return ScaleTransition(
-              scale: Tween<double>(begin: 0.8, end: 1.0).animate(curvedAnimation),
+              scale:
+                  Tween<double>(begin: 0.8, end: 1.0).animate(curvedAnimation),
               child: FadeTransition(
                 opacity: curvedAnimation,
                 child: child,

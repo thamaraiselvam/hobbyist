@@ -1,6 +1,6 @@
+// ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hobbyist/main.dart';
 import 'package:hobbyist/services/notification_service.dart';
 import 'package:hobbyist/services/hobby_service.dart';
 import 'package:hobbyist/models/hobby.dart';
@@ -16,11 +16,11 @@ void main() {
     setUp(() async {
       notificationService = NotificationService();
       hobbyService = HobbyService();
-      
+
       // Initialize notification service
       await notificationService.initialize();
       await notificationService.requestPermissions();
-      
+
       // Clear all existing notifications and hobbies
       await notificationService.cancelAllNotifications();
       await hobbyService.resetDatabase();
@@ -32,7 +32,8 @@ void main() {
       await hobbyService.resetDatabase();
     });
 
-    testWidgets('Test 1: Create hobby with daily frequency and notification enabled',
+    testWidgets(
+        'Test 1: Create hobby with daily frequency and notification enabled',
         (WidgetTester tester) async {
       // Create hobby with daily frequency
       final hobby = Hobby(
@@ -40,7 +41,6 @@ void main() {
         name: 'Daily Reading',
         notes: 'Read for 30 minutes',
         repeatMode: 'daily',
-        priority: 'medium',
         color: const Color(0xFF590df2).value,
         reminderTime: '09:00', // 9 AM
       );
@@ -54,14 +54,16 @@ void main() {
       expect(hobbies.first.repeatMode, 'daily');
 
       // Verify notification was scheduled
-      final pendingNotifications = await notificationService.getPendingNotifications();
+      final pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 1);
       expect(pendingNotifications.first.title, 'Daily Reading');
 
       print('✅ Test 1 PASSED: Daily frequency with notification');
     });
 
-    testWidgets('Test 2: Create hobby with weekly frequency (single day) and notification',
+    testWidgets(
+        'Test 2: Create hobby with weekly frequency (single day) and notification',
         (WidgetTester tester) async {
       // Create hobby with weekly frequency - Monday
       final hobby = Hobby(
@@ -69,7 +71,6 @@ void main() {
         name: 'Weekly Gym',
         notes: 'Go to gym on Mondays',
         repeatMode: 'weekly',
-        priority: 'high',
         color: const Color(0xFF590df2).value,
         reminderTime: '08:00', // 8 AM
       );
@@ -83,13 +84,15 @@ void main() {
       expect(hobbies.first.repeatMode, 'weekly');
 
       // Verify notification was scheduled
-      final pendingNotifications = await notificationService.getPendingNotifications();
+      final pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 1);
 
       print('✅ Test 2 PASSED: Weekly frequency with notification');
     });
 
-    testWidgets('Test 3: Create hobby with monthly frequency (specific day) and notification',
+    testWidgets(
+        'Test 3: Create hobby with monthly frequency (specific day) and notification',
         (WidgetTester tester) async {
       // Create hobby with monthly frequency - 15th of each month
       final hobby = Hobby(
@@ -97,7 +100,6 @@ void main() {
         name: 'Monthly Review',
         notes: 'Review goals on 15th',
         repeatMode: 'monthly',
-        priority: 'low',
         color: const Color(0xFF590df2).value,
         reminderTime: '10:00', // 10 AM
       );
@@ -111,7 +113,8 @@ void main() {
       expect(hobbies.first.repeatMode, 'monthly');
 
       // Verify notification was scheduled
-      final pendingNotifications = await notificationService.getPendingNotifications();
+      final pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 1);
 
       print('✅ Test 3 PASSED: Monthly frequency with notification');
@@ -125,7 +128,6 @@ void main() {
         name: 'Flexible Task',
         notes: 'No specific time',
         repeatMode: 'daily',
-        priority: 'none',
         color: const Color(0xFF590df2).value,
         reminderTime: '', // Empty means no notification
       );
@@ -138,7 +140,8 @@ void main() {
       expect(hobbies.first.name, 'Flexible Task');
 
       // Verify NO notification was scheduled
-      final pendingNotifications = await notificationService.getPendingNotifications();
+      final pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 0);
 
       print('✅ Test 4 PASSED: Hobby without notification');
@@ -152,7 +155,6 @@ void main() {
         name: 'Meditation',
         notes: 'Daily meditation',
         repeatMode: 'daily',
-        priority: 'medium',
         color: const Color(0xFF590df2).value,
         reminderTime: '07:00',
       );
@@ -160,7 +162,8 @@ void main() {
       await hobbyService.addHobby(hobby);
 
       // Verify initial notification
-      var pendingNotifications = await notificationService.getPendingNotifications();
+      var pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 1);
 
       // Update notification time
@@ -168,7 +171,8 @@ void main() {
       await hobbyService.updateHobby(updatedHobby);
 
       // Verify notification was rescheduled
-      pendingNotifications = await notificationService.getPendingNotifications();
+      pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 1);
       expect(pendingNotifications.first.title, 'Meditation');
 
@@ -183,7 +187,6 @@ void main() {
         name: 'Temporary Task',
         notes: 'Will be deleted',
         repeatMode: 'daily',
-        priority: 'low',
         color: const Color(0xFF590df2).value,
         reminderTime: '12:00',
       );
@@ -191,7 +194,8 @@ void main() {
       await hobbyService.addHobby(hobby);
 
       // Verify notification exists
-      var pendingNotifications = await notificationService.getPendingNotifications();
+      var pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 1);
 
       // Delete hobby
@@ -202,7 +206,8 @@ void main() {
       expect(hobbies.length, 0);
 
       // Verify notification removed
-      pendingNotifications = await notificationService.getPendingNotifications();
+      pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 0);
 
       print('✅ Test 6 PASSED: Delete hobby removes notification');
@@ -215,7 +220,6 @@ void main() {
         id: '${DateTime.now().millisecondsSinceEpoch}_1',
         name: 'Daily Exercise',
         repeatMode: 'daily',
-        priority: 'high',
         color: const Color(0xFF590df2).value,
         reminderTime: '06:00',
       );
@@ -224,7 +228,6 @@ void main() {
         id: '${DateTime.now().millisecondsSinceEpoch}_2',
         name: 'Weekly Planning',
         repeatMode: 'weekly',
-        priority: 'medium',
         color: const Color(0xFF590df2).value,
         reminderTime: '09:00',
       );
@@ -233,7 +236,6 @@ void main() {
         id: '${DateTime.now().millisecondsSinceEpoch}_3',
         name: 'Monthly Budget',
         repeatMode: 'monthly',
-        priority: 'low',
         color: const Color(0xFF590df2).value,
         reminderTime: '10:00',
       );
@@ -247,7 +249,8 @@ void main() {
       expect(hobbies.length, 3);
 
       // Verify all notifications scheduled
-      final pendingNotifications = await notificationService.getPendingNotifications();
+      final pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 3);
 
       print('✅ Test 7 PASSED: Multiple hobbies with different frequencies');
@@ -261,16 +264,17 @@ void main() {
 
       // Set notification time to 2 minutes from now
       final futureMinute = (currentMinute + 2) % 60;
-      final futureHour = currentMinute + 2 >= 60 ? (currentHour + 1) % 24 : currentHour;
-      
-      final reminderTime = '${futureHour.toString().padLeft(2, '0')}:${futureMinute.toString().padLeft(2, '0')}';
+      final futureHour =
+          currentMinute + 2 >= 60 ? (currentHour + 1) % 24 : currentHour;
+
+      final reminderTime =
+          '${futureHour.toString().padLeft(2, '0')}:${futureMinute.toString().padLeft(2, '0')}';
 
       final hobby = Hobby(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Future Task',
         notes: 'Should notify in 2 minutes',
         repeatMode: 'daily',
-        priority: 'medium',
         color: const Color(0xFF590df2).value,
         reminderTime: reminderTime,
       );
@@ -278,11 +282,13 @@ void main() {
       await hobbyService.addHobby(hobby);
 
       // Verify notification scheduled
-      final pendingNotifications = await notificationService.getPendingNotifications();
+      final pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 1);
       expect(pendingNotifications.first.title, 'Future Task');
 
-      print('✅ Test 8 PASSED: Notification scheduled for future (2 minutes from now: $reminderTime)');
+      print(
+          '✅ Test 8 PASSED: Notification scheduled for future (2 minutes from now: $reminderTime)');
       print('   Current time: ${now.hour}:${now.minute}');
     });
 
@@ -293,22 +299,22 @@ void main() {
       expect(permissionsGranted, isTrue);
 
       // Check exact alarms capability
-      final canScheduleExact = await notificationService.canScheduleExactAlarms();
+      final canScheduleExact =
+          await notificationService.canScheduleExactAlarms();
       expect(canScheduleExact, isTrue);
 
       print('✅ Test 9 PASSED: Notification permissions granted');
     });
 
-    testWidgets('Test 10: All priority levels work correctly',
+    testWidgets('Test 10: Multiple hobbies can be created with different names',
         (WidgetTester tester) async {
-      final priorities = ['none', 'low', 'medium', 'high'];
+      final names = ['Task 1', 'Task 2', 'Task 3', 'Task 4'];
 
-      for (int i = 0; i < priorities.length; i++) {
+      for (int i = 0; i < names.length; i++) {
         final hobby = Hobby(
           id: '${DateTime.now().millisecondsSinceEpoch}_$i',
-          name: 'Task ${priorities[i]}',
+          name: names[i],
           repeatMode: 'daily',
-          priority: priorities[i],
           color: const Color(0xFF590df2).value,
           reminderTime: '${8 + i}:00',
         );
@@ -319,13 +325,13 @@ void main() {
       final hobbies = await hobbyService.loadHobbies();
       expect(hobbies.length, 4);
 
-      // Verify each priority
-      for (int i = 0; i < priorities.length; i++) {
-        final hobby = hobbies.firstWhere((h) => h.priority == priorities[i]);
-        expect(hobby.priority, priorities[i]);
+      // Verify each hobby was created
+      for (int i = 0; i < names.length; i++) {
+        final hobby = hobbies.firstWhere((h) => h.name == names[i]);
+        expect(hobby.name, names[i]);
       }
 
-      print('✅ Test 10 PASSED: All priority levels work correctly');
+      print('✅ Test 10 PASSED: Multiple hobbies with different names created');
     });
 
     testWidgets('Test 11: Edge case - Notification at midnight',
@@ -334,14 +340,14 @@ void main() {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Midnight Task',
         repeatMode: 'daily',
-        priority: 'medium',
         color: const Color(0xFF590df2).value,
         reminderTime: '00:00',
       );
 
       await hobbyService.addHobby(hobby);
 
-      final pendingNotifications = await notificationService.getPendingNotifications();
+      final pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 1);
 
       print('✅ Test 11 PASSED: Midnight notification scheduled');
@@ -353,14 +359,14 @@ void main() {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Late Night Task',
         repeatMode: 'daily',
-        priority: 'medium',
         color: const Color(0xFF590df2).value,
         reminderTime: '23:59',
       );
 
       await hobbyService.addHobby(hobby);
 
-      final pendingNotifications = await notificationService.getPendingNotifications();
+      final pendingNotifications =
+          await notificationService.getPendingNotifications();
       expect(pendingNotifications.length, 1);
 
       print('✅ Test 12 PASSED: Late night notification scheduled');
@@ -383,14 +389,13 @@ void main() {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Weekly Task',
         repeatMode: 'weekly',
-        priority: 'medium',
         color: const Color(0xFF590df2).value,
         reminderTime: '10:00',
       );
 
       await hobbyService.addHobby(hobby);
       final hobbies = await hobbyService.loadHobbies();
-      
+
       expect(hobbies.first.repeatMode, 'weekly');
       print('✅ Test 13 PASSED: Weekly frequency allows single day selection');
     });
@@ -403,7 +408,6 @@ void main() {
           id: '${DateTime.now().millisecondsSinceEpoch}_$day',
           name: 'Monthly Task Day $day',
           repeatMode: 'monthly',
-          priority: 'medium',
           color: const Color(0xFF590df2).value,
           reminderTime: '10:00',
         );
@@ -424,14 +428,13 @@ void main() {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Daily Task',
         repeatMode: 'daily',
-        priority: 'medium',
         color: const Color(0xFF590df2).value,
         reminderTime: '08:00',
       );
 
       await hobbyService.addHobby(hobby);
       final hobbies = await hobbyService.loadHobbies();
-      
+
       expect(hobbies.first.repeatMode, 'daily');
       print('✅ Test 15 PASSED: Daily frequency works correctly');
     });

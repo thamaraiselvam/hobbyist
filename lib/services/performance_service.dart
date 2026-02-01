@@ -1,8 +1,9 @@
+// ignore_for_file: avoid_print
 import 'package:firebase_performance/firebase_performance.dart';
 import '../database/database_helper.dart';
 
 /// PerformanceService - Manages performance monitoring and custom traces
-/// 
+///
 /// This service integrates Firebase Performance Monitoring to track
 /// app startup time, screen rendering, and custom performance metrics.
 /// Performance monitoring is enabled by default as it doesn't collect PII.
@@ -25,15 +26,22 @@ class PerformanceService {
         whereArgs: ['telemetry_enabled'],
       );
       if (result.isEmpty) return true; // Default ON
-      return result.first['value'] != 'false'; // Only false if explicitly disabled
+      return result.first['value'] !=
+          'false'; // Only false if explicitly disabled
     } catch (e) {
       print('⚠️ Failed to check telemetry setting: $e');
       return true; // Default ON
     }
   }
 
+  static FirebasePerformance? mockPerformance;
+
   /// Initialize Performance Monitoring
   static Future<void> initialize() async {
+    if (mockPerformance != null) {
+      _performance = mockPerformance;
+      return;
+    }
     _performance = FirebasePerformance.instance;
 
     // Default ON - analytics and performance enabled by default (no PII collected)
@@ -41,7 +49,7 @@ class PerformanceService {
 
     print('📊 Performance Monitoring initialized (enabled by default)');
   }
-  
+
   /// Update Performance collection based on telemetry setting
   Future<void> updateCollectionEnabled() async {
     final enabled = await _isTelemetryEnabled();
@@ -105,9 +113,9 @@ class PerformanceService {
       // If telemetry disabled, just run the operation without tracing
       return await operation();
     }
-    
+
     final trace = _performance?.newTrace(operationName);
-    
+
     // Add custom attributes
     if (attributes != null) {
       for (var entry in attributes.entries) {
@@ -116,17 +124,17 @@ class PerformanceService {
     }
 
     await trace?.start();
-    
+
     try {
       final result = await operation();
-      
+
       // Add custom metrics
       if (metrics != null) {
         for (var entry in metrics.entries) {
           trace?.setMetric(entry.key, entry.value);
         }
       }
-      
+
       await trace?.stop();
       return result;
     } catch (e) {

@@ -1,4 +1,6 @@
+// ignore_for_file: avoid_print
 import 'package:sqflite/sqflite.dart';
+import 'package:meta/meta.dart';
 import '../models/hobby.dart';
 import '../database/database_helper.dart';
 import 'notification_service.dart';
@@ -8,12 +10,41 @@ import 'crashlytics_service.dart';
 import 'rating_service.dart';
 
 class HobbyService {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  final NotificationService _notificationService = NotificationService();
-  final AnalyticsService _analytics = AnalyticsService();
-  final PerformanceService _performance = PerformanceService();
-  final CrashlyticsService _crashlytics = CrashlyticsService();
-  final RatingService _ratingService = RatingService();
+  static HobbyService _instance = HobbyService._internal();
+  factory HobbyService() => _instance;
+
+  @visibleForTesting
+  static set instance(HobbyService value) => _instance = value;
+
+  HobbyService._internal()
+      : _dbHelper = DatabaseHelper.instance,
+        _notificationService = NotificationService(),
+        _analytics = AnalyticsService(),
+        _performance = PerformanceService(),
+        _crashlytics = CrashlyticsService(),
+        _ratingService = RatingService();
+
+  @visibleForTesting
+  HobbyService.forTesting({
+    DatabaseHelper? dbHelper,
+    NotificationService? notificationService,
+    AnalyticsService? analytics,
+    PerformanceService? performance,
+    CrashlyticsService? crashlytics,
+    RatingService? ratingService,
+  })  : _dbHelper = dbHelper ?? DatabaseHelper.instance,
+        _notificationService = notificationService ?? NotificationService(),
+        _analytics = analytics ?? AnalyticsService(),
+        _performance = performance ?? PerformanceService(),
+        _crashlytics = crashlytics ?? CrashlyticsService(),
+        _ratingService = ratingService ?? RatingService();
+
+  final DatabaseHelper _dbHelper;
+  final NotificationService _notificationService;
+  final AnalyticsService _analytics;
+  final PerformanceService _performance;
+  final CrashlyticsService _crashlytics;
+  final RatingService _ratingService;
 
   Future<List<Hobby>> loadHobbies() async {
     return await _performance.traceDatabaseQuery('load_hobbies', () async {
@@ -26,67 +57,72 @@ class HobbyService {
           orderBy: 'created_at DESC',
         );
 
-    // Load completions for each hobby
-    List<Hobby> hobbies = [];
-    for (var hobbyData in hobbiesData) {
-      final List<Map<String, dynamic>> completionsData = await db.query(
-        'completions',
-        where: 'hobby_id = ?',
-        whereArgs: [hobbyData['id']],
-      );
+        // Load completions for each hobby
+        List<Hobby> hobbies = [];
+        for (var hobbyData in hobbiesData) {
+          final List<Map<String, dynamic>> completionsData = await db.query(
+            'completions',
+            where: 'hobby_id = ?',
+            whereArgs: [hobbyData['id']],
+          );
 
-      // Build completions map
-      Map<String, HobbyCompletion> completions = {};
-      for (var comp in completionsData) {
-        completions[comp['date']] = HobbyCompletion(
-          completed: comp['completed'] == 1,
-          completedAt: comp['completed_at'] != null
-              ? DateTime.fromMillisecondsSinceEpoch(comp['completed_at'])
-              : null,
-        );
-      }
+          // Build completions map
+          Map<String, HobbyCompletion> completions = {};
+          for (var comp in completionsData) {
+            completions[comp['date']] = HobbyCompletion(
+              completed: comp['completed'] == 1,
+              completedAt: comp['completed_at'] != null
+                  ? DateTime.fromMillisecondsSinceEpoch(comp['completed_at'])
+                  : null,
+            );
+          }
 
-      final hobby = Hobby(
-        id: hobbyData['id'],
-        name: hobbyData['name'],
-        notes: hobbyData['notes'] ?? '',
-        repeatMode: hobbyData['repeat_mode'] ?? 'daily',
-        color: hobbyData['color'],
-        completions: completions,
-        createdAt: hobbyData['created_at'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(hobbyData['created_at'])
-            : null,
-        reminderTime: hobbyData['reminder_time'],
-        customDay: hobbyData['custom_day'],
-        bestStreak: hobbyData['best_streak'] ?? 0,
-      );
-      
-      // One-time fix: Calculate true historical best streak from completions
-      final calculatedBestStreak = hobby.calculateBestStreakFromHistory();
-      
-      // Best streak should be the max of stored value, historical best, and current streak
-      final trueBestStreak = [hobby.bestStreak, calculatedBestStreak, hobby.currentStreak]
-          .reduce((a, b) => a > b ? a : b);
-      
-      // Update if the calculated best streak is higher than stored value
-      if (trueBestStreak > hobby.bestStreak) {
-        await db.update(
-          'hobbies',
-          {'best_streak': trueBestStreak},
-          where: 'id = ?',
-          whereArgs: [hobby.id],
-        );
-        // Create updated hobby with correct bestStreak
-        hobbies.add(hobby.copyWith(bestStreak: trueBestStreak));
-        print('🔧 Fixed bestStreak for ${hobby.name}: ${hobby.bestStreak} -> $trueBestStreak');
-      } else {
-        hobbies.add(hobby);
-      }
-    }
+          final hobby = Hobby(
+            id: hobbyData['id'],
+            name: hobbyData['name'],
+            notes: hobbyData['notes'] ?? '',
+            repeatMode: hobbyData['repeat_mode'] ?? 'daily',
+            color: hobbyData['color'],
+            completions: completions,
+            createdAt: hobbyData['created_at'] != null
+                ? DateTime.fromMillisecondsSinceEpoch(hobbyData['created_at'])
+                : null,
+            reminderTime: hobbyData['reminder_time'],
+            customDay: hobbyData['custom_day'],
+            bestStreak: hobbyData['best_streak'] ?? 0,
+          );
+
+          // One-time fix: Calculate true historical best streak from completions
+          final calculatedBestStreak = hobby.calculateBestStreakFromHistory();
+
+          // Best streak should be the max of stored value, historical best, and current streak
+          final trueBestStreak = [
+            hobby.bestStreak,
+            calculatedBestStreak,
+            hobby.currentStreak
+          ].reduce((a, b) => a > b ? a : b);
+
+          // Update if the calculated best streak is higher than stored value
+          if (trueBestStreak > hobby.bestStreak) {
+            await db.update(
+              'hobbies',
+              {'best_streak': trueBestStreak},
+              where: 'id = ?',
+              whereArgs: [hobby.id],
+            );
+            // Create updated hobby with correct bestStreak
+            hobbies.add(hobby.copyWith(bestStreak: trueBestStreak));
+            print(
+                '🔧 Fixed bestStreak for ${hobby.name}: ${hobby.bestStreak} -> $trueBestStreak');
+          } else {
+            hobbies.add(hobby);
+          }
+        }
 
         return hobbies;
       } catch (e, stackTrace) {
-        await _crashlytics.logError(e, stackTrace, reason: 'Failed to load hobbies');
+        await _crashlytics.logError(e, stackTrace,
+            reason: 'Failed to load hobbies');
         rethrow;
       }
     });
@@ -143,7 +179,8 @@ class HobbyService {
 
     // Schedule notification if reminder time is set
     if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
-      print('📅 Scheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
+      print(
+          '📅 Scheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
       final success = await _notificationService.scheduleNotification(hobby);
       if (success) {
         final pending = await _notificationService.getPendingNotifications();
@@ -202,7 +239,8 @@ class HobbyService {
     // Reschedule notification
     await _notificationService.cancelNotification(hobby.id);
     if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
-      print('📅 Rescheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
+      print(
+          '📅 Rescheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
       final success = await _notificationService.scheduleNotification(hobby);
       if (success) {
         final pending = await _notificationService.getPendingNotifications();
@@ -243,7 +281,7 @@ class HobbyService {
     );
 
     bool isCompleted = false;
-    
+
     if (existing.isEmpty) {
       // Insert new completion
       await db.insert('completions', {
@@ -271,23 +309,23 @@ class HobbyService {
     // Get updated hobby to check streak
     final hobbies = await loadHobbies();
     final hobby = hobbies.firstWhere((h) => h.id == hobbyId);
-    
+
     print('🔥 DEBUG: Hobby: ${hobby.name}');
     print('🔥 DEBUG: Current streak: ${hobby.currentStreak}');
     print('🔥 DEBUG: Best streak (before): ${hobby.bestStreak}');
-    
+
     // Calculate the true best streak from all completion history
     final calculatedBestStreak = hobby.calculateBestStreakFromHistory();
     print('🔥 DEBUG: Calculated historical best: $calculatedBestStreak');
-    
+
     // Best streak = longest consecutive streak in completion history
     // This recalculates based on actual data, so it can go down if completions are removed
-    final newBestStreak = calculatedBestStreak > hobby.currentStreak 
-        ? calculatedBestStreak 
+    final newBestStreak = calculatedBestStreak > hobby.currentStreak
+        ? calculatedBestStreak
         : hobby.currentStreak;
-    
+
     print('🔥 DEBUG: New best streak: $newBestStreak');
-    
+
     // Update best streak in database
     await db.update(
       'hobbies',
@@ -298,9 +336,9 @@ class HobbyService {
       where: 'id = ?',
       whereArgs: [hobbyId],
     );
-    
+
     print('🔥 DEBUG: Best streak updated in database');
-    
+
     // Track completion toggle
     await _analytics.logCompletionToggled(
       hobbyId: hobbyId,
@@ -325,12 +363,12 @@ class HobbyService {
       if (allCompletions == 1) {
         await _analytics.logFirstCompletion();
       }
-      
+
       // Increment completion count and check for rating prompt
       await _ratingService.incrementCompletionCount();
       await _ratingService.checkAndShowRatingPrompt();
     }
-    
+
     // Return the updated hobby
     return hobby.copyWith(bestStreak: newBestStreak);
   }

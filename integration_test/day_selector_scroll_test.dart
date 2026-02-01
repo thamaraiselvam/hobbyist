@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -8,7 +9,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Day Selector Scroll Behavior', () {
-    testWidgets('Day selector should scroll to selected date after creating hobby',
+    testWidgets(
+        'Day selector should scroll to selected date after creating hobby',
         (WidgetTester tester) async {
       // Launch the app
       app.main();
@@ -26,13 +28,15 @@ void main() {
 
       // Find the ListView with day selector
       final dayListView = find.byType(ListView).first;
-      
+
       // Get initial scroll position (should be centered on today after launch animation)
-      final initialScrollController = tester.widget<ListView>(dayListView).controller;
+      final initialScrollController =
+          tester.widget<ListView>(dayListView).controller;
       final initialScrollPosition = initialScrollController?.offset ?? 0.0;
-      
-      print('📍 Initial scroll position (centered on today): $initialScrollPosition');
-      
+
+      print(
+          '📍 Initial scroll position (centered on today): $initialScrollPosition');
+
       // Get today's date for verification
       final today = DateTime.now();
       final todayFormatted = DateFormat('d').format(today);
@@ -45,25 +49,28 @@ void main() {
 
       // Tap the + button to create a hobby
       final createButton = find.byIcon(Icons.add);
-      expect(createButton, findsOneWidget, reason: 'Create button should be visible');
+      expect(createButton, findsOneWidget,
+          reason: 'Create button should be visible');
       await tester.tap(createButton);
       await tester.pumpAndSettle();
 
       // We're now on the Add Hobby screen
       print('📝 On Add Hobby screen');
-      
+
       // Fill in hobby name
       final nameField = find.byType(TextField).first;
       await tester.enterText(nameField, 'Test Hobby for Scroll');
       await tester.pumpAndSettle();
 
       // Scroll down to find the Save button
-      await tester.drag(find.byType(SingleChildScrollView).first, const Offset(0, -500));
+      await tester.drag(
+          find.byType(SingleChildScrollView).first, const Offset(0, -500));
       await tester.pumpAndSettle();
 
       // Tap Save button
       final saveButton = find.text('Create Hobby');
-      expect(saveButton, findsOneWidget, reason: 'Save button should be visible');
+      expect(saveButton, findsOneWidget,
+          reason: 'Save button should be visible');
       await tester.tap(saveButton);
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -75,9 +82,10 @@ void main() {
 
       // Get the scroll position after returning from create hobby screen
       final afterScrollPosition = initialScrollController?.offset ?? 0.0;
-      
+
       print('📍 Scroll position after creating hobby: $afterScrollPosition');
-      print('📍 Difference from initial: ${(afterScrollPosition - initialScrollPosition).abs()}');
+      print(
+          '📍 Difference from initial: ${(afterScrollPosition - initialScrollPosition).abs()}');
 
       // Verify today's date pill is still visible (should be centered)
       expect(todayPill, findsWidgets,
@@ -88,10 +96,12 @@ void main() {
       expect(
         (afterScrollPosition - initialScrollPosition).abs(),
         lessThan(100),
-        reason: 'Scroll position should be re-centered on selected date (today) after creating hobby',
+        reason:
+            'Scroll position should be re-centered on selected date (today) after creating hobby',
       );
 
-      print('✅ Test passed: Day selector properly scrolls to selected date after creating hobby');
+      print(
+          '✅ Test passed: Day selector properly scrolls to selected date after creating hobby');
     });
 
     testWidgets('Day selector scroll position matches selected date',
@@ -113,7 +123,7 @@ void main() {
       // Get today's date
       final today = DateTime.now();
       final todayFormatted = DateFormat('d').format(today);
-      
+
       // Find today's date pill - it should be centered
       final todayPills = find.text(todayFormatted);
       expect(todayPills, findsWidgets,
