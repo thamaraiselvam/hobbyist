@@ -7,11 +7,16 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.19.0-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Enabled-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
-[![License](https://img.shields.io/badge/License-Personal-purple?style=for-the-badge)](LICENSE)
 
 **A minimalist Flutter application with a GitHub-style contribution chart to build lasting habits** 🚀
 
 [Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Usage](#-usage) • [Download](#-download)
+
+
+<img src="design/app_store_screenshots/01.png" width="200" alt="Landing Page"/>
+<img src="design/app_store_screenshots/02.png" width="200" alt="Splash Screen"/>
+<img src="design/app_store_screenshots/03.png" width="200" alt="Daily Tasks"/>
+<img src="design/app_store_screenshots/04.png" width="200" alt="Add Hobby"/>
 
 </div>
 
@@ -60,22 +65,6 @@
 
 ---
 
-## 📱 Screenshots
-
-<div align="center">
-
-### Landing & Onboarding
-<img src="design/app_screenshots/landing_page/screen.png" width="200" alt="Landing Page"/> <img src="design/app_screenshots/profile_name/screen.png" width="200" alt="Name Input"/> <img src="design/app_screenshots/splash_screen/screen.png" width="200" alt="Splash Screen"/>
-
-### Main Features
-<img src="design/app_screenshots/daily_hobby_tasks/screen.png" width="200" alt="Daily Tasks"/> <img src="design/app_screenshots/add_new_hobby_task/screen.png" width="200" alt="Add Hobby"/> <img src="design/app_screenshots/hobby_analytics/screen.png" width="200" alt="Analytics"/>
-
-### Settings & More
-<img src="design/app_screenshots/app_settings/screen.png" width="200" alt="Settings"/> <img src="design/app_screenshots/daily_hobby_tasks/days.png" width="200" alt="Contribution Chart"/>
-
-</div>
-
----
 
 ## 🚀 Installation
 
