@@ -5,17 +5,25 @@ Firebase credentials are now loaded from environment variables during build time
 
 ## Setup
 
-### 1. Create `.env` file (optional, for local reference)
+### 1. Download google-services.json (Required)
+While API keys are in environment variables, you still need `google-services.json` for Gradle:
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project
+3. Go to Project Settings > Your apps > Android app
+4. Click "Download google-services.json"
+5. Place it in `android/app/google-services.json`
+
+**Note:** `google-services.json` is in `.gitignore` and won't be committed.
+
+### 2. Create `.env` file (optional, for local reference)
 ```bash
 cp .env.example .env
 # Edit .env with your Firebase credentials
 ```
 
-### 2. Get Firebase Credentials
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project
-3. Go to Project Settings > Your apps > Android app
-4. Copy the configuration values
+### 3. Get Firebase Credentials
+1. From the same Firebase Console location
+2. Note the configuration values for use in build commands
 
 ## Building with Environment Variables
 
