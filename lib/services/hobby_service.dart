@@ -129,141 +129,183 @@ class HobbyService {
   }
 
   Future<void> addHobby(Hobby hobby) async {
-    final db = await _dbHelper.database;
-    final now = DateTime.now().millisecondsSinceEpoch;
+    try {
+      final db = await _dbHelper.database;
+      final now = DateTime.now().millisecondsSinceEpoch;
 
-    // Insert hobby
-    await db.insert(
-      'hobbies',
-      {
-        'id': hobby.id,
-        'name': hobby.name,
-        'notes': hobby.notes,
-        'repeat_mode': hobby.repeatMode,
-        'color': hobby.color,
-        'reminder_time': hobby.reminderTime,
-        'custom_day': hobby.customDay,
-        'best_streak': hobby.bestStreak,
-        'created_at': now,
-        'updated_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-
-    // Insert completions
-    for (var entry in hobby.completions.entries) {
+      // Insert hobby
       await db.insert(
-        'completions',
+        'hobbies',
         {
-          'hobby_id': hobby.id,
-          'date': entry.key,
-          'completed': entry.value.completed ? 1 : 0,
-          'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
+          'id': hobby.id,
+          'name': hobby.name,
+          'notes': hobby.notes,
+          'repeat_mode': hobby.repeatMode,
+          'color': hobby.color,
+          'reminder_time': hobby.reminderTime,
+          'custom_day': hobby.customDay,
+          'best_streak': hobby.bestStreak,
+          'created_at': now,
+          'updated_at': now,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-    }
 
-    // Track hobby creation in analytics
-    await _analytics.logHobbyCreated(
-      hobbyId: hobby.id,
-      repeatMode: hobby.repeatMode,
-      color: hobby.color,
-    );
-
-    // Check if this is the first hobby
-    final hobbies = await loadHobbies();
-    if (hobbies.length == 1) {
-      await _analytics.logFirstHobbyCreated();
-    }
-
-    // Schedule notification if reminder time is set
-    if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
-      print(
-          '📅 Scheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
-      final success = await _notificationService.scheduleNotification(hobby);
-      if (success) {
-        final pending = await _notificationService.getPendingNotifications();
-        print('✅ Notification scheduled. Total pending: ${pending.length}');
+      // Insert completions
+      for (var entry in hobby.completions.entries) {
+        await db.insert(
+          'completions',
+          {
+            'hobby_id': hobby.id,
+            'date': entry.key,
+            'completed': entry.value.completed ? 1 : 0,
+            'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
+
+      // Track hobby creation in analytics
+      await _analytics.logHobbyCreated(
+        hobbyId: hobby.id,
+        repeatMode: hobby.repeatMode,
+        color: hobby.color,
+      );
+
+      // Check if this is the first hobby
+      final hobbies = await loadHobbies();
+      if (hobbies.length == 1) {
+        await _analytics.logFirstHobbyCreated();
+      }
+
+      // Schedule notification if reminder time is set
+      if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
+        try {
+          print(
+              '📅 Scheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
+          final success = await _notificationService.scheduleNotification(hobby);
+          if (success) {
+            final pending = await _notificationService.getPendingNotifications();
+            print('✅ Notification scheduled. Total pending: ${pending.length}');
+          } else {
+            print('⚠️ Notification scheduling returned false for "${hobby.name}"');
+          }
+        } catch (notifError, notifStackTrace) {
+          // Log notification error but don't fail the hobby creation
+          print('⚠️ Failed to schedule notification for "${hobby.name}": $notifError');
+          await _crashlytics.logError(notifError, notifStackTrace,
+              reason: 'Failed to schedule notification during hobby creation');
+        }
+      }
+    } catch (e, stackTrace) {
+      await _crashlytics.logError(e, stackTrace,
+          reason: 'Failed to add hobby');
+      rethrow;
     }
   }
 
   Future<void> updateHobby(Hobby hobby) async {
-    final db = await _dbHelper.database;
+    try {
+      final db = await _dbHelper.database;
 
-    // Update hobby
-    await db.update(
-      'hobbies',
-      {
-        'name': hobby.name,
-        'notes': hobby.notes,
-        'repeat_mode': hobby.repeatMode,
-        'color': hobby.color,
-        'reminder_time': hobby.reminderTime,
-        'custom_day': hobby.customDay,
-        'best_streak': hobby.bestStreak,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      where: 'id = ?',
-      whereArgs: [hobby.id],
-    );
-
-    // Delete existing completions and re-insert
-    await db.delete(
-      'completions',
-      where: 'hobby_id = ?',
-      whereArgs: [hobby.id],
-    );
-
-    // Insert updated completions
-    for (var entry in hobby.completions.entries) {
-      await db.insert(
-        'completions',
+      // Update hobby
+      await db.update(
+        'hobbies',
         {
-          'hobby_id': hobby.id,
-          'date': entry.key,
-          'completed': entry.value.completed ? 1 : 0,
-          'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
+          'name': hobby.name,
+          'notes': hobby.notes,
+          'repeat_mode': hobby.repeatMode,
+          'color': hobby.color,
+          'reminder_time': hobby.reminderTime,
+          'custom_day': hobby.customDay,
+          'best_streak': hobby.bestStreak,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
         },
-        conflictAlgorithm: ConflictAlgorithm.replace,
+        where: 'id = ?',
+        whereArgs: [hobby.id],
       );
-    }
 
-    // Track hobby update in analytics
-    await _analytics.logHobbyUpdated(
-      hobbyId: hobby.id,
-      repeatMode: hobby.repeatMode,
-    );
+      // Delete existing completions and re-insert
+      await db.delete(
+        'completions',
+        where: 'hobby_id = ?',
+        whereArgs: [hobby.id],
+      );
 
-    // Reschedule notification
-    await _notificationService.cancelNotification(hobby.id);
-    if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
-      print(
-          '📅 Rescheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
-      final success = await _notificationService.scheduleNotification(hobby);
-      if (success) {
-        final pending = await _notificationService.getPendingNotifications();
-        print('✅ Notification rescheduled. Total pending: ${pending.length}');
+      // Insert updated completions
+      for (var entry in hobby.completions.entries) {
+        await db.insert(
+          'completions',
+          {
+            'hobby_id': hobby.id,
+            'date': entry.key,
+            'completed': entry.value.completed ? 1 : 0,
+            'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
+
+      // Track hobby update in analytics
+      await _analytics.logHobbyUpdated(
+        hobbyId: hobby.id,
+        repeatMode: hobby.repeatMode,
+      );
+
+      // Reschedule notification
+      try {
+        await _notificationService.cancelNotification(hobby.id);
+        if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
+          print(
+              '📅 Rescheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
+          final success = await _notificationService.scheduleNotification(hobby);
+          if (success) {
+            final pending = await _notificationService.getPendingNotifications();
+            print('✅ Notification rescheduled. Total pending: ${pending.length}');
+          } else {
+            print('⚠️ Notification rescheduling returned false for "${hobby.name}"');
+          }
+        }
+      } catch (notifError, notifStackTrace) {
+        // Log notification error but don't fail the hobby update
+        print('⚠️ Failed to reschedule notification for "${hobby.name}": $notifError');
+        await _crashlytics.logError(notifError, notifStackTrace,
+            reason: 'Failed to reschedule notification during hobby update');
+      }
+    } catch (e, stackTrace) {
+      await _crashlytics.logError(e, stackTrace,
+          reason: 'Failed to update hobby');
+      rethrow;
     }
   }
 
   Future<void> deleteHobby(String id) async {
-    final db = await _dbHelper.database;
+    try {
+      final db = await _dbHelper.database;
 
-    // Cancel notification
-    await _notificationService.cancelNotification(id);
+      // Cancel notification
+      try {
+        await _notificationService.cancelNotification(id);
+      } catch (notifError, notifStackTrace) {
+        print('⚠️ Failed to cancel notification for hobby "$id": $notifError');
+        await _crashlytics.logError(notifError, notifStackTrace,
+            reason: 'Failed to cancel notification during hobby deletion');
+      }
 
-    // Track hobby deletion
-    await _analytics.logHobbyDeleted(hobbyId: id);
+      // Track hobby deletion
+      await _analytics.logHobbyDeleted(hobbyId: id);
 
-    // Delete hobby (completions will be deleted automatically due to CASCADE)
-    await db.delete(
-      'hobbies',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+      // Delete hobby (completions will be deleted automatically due to CASCADE)
+      await db.delete(
+        'hobbies',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e, stackTrace) {
+      await _crashlytics.logError(e, stackTrace,
+          reason: 'Failed to delete hobby');
+      rethrow;
+    }
   }
 
   Future<void> clearAllData() async {

@@ -17,6 +17,8 @@ android/app/profile
 android/app/release
 android/key.properties
 android/upload-keystore.jks
+build
+builds
 
 # iOS
 ios/.symlinks/

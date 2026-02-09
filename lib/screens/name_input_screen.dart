@@ -136,12 +136,14 @@ class _NameInputScreenState extends State<NameInputScreen> {
                         child: ElevatedButton(
                           onPressed: _isButtonEnabled ? _saveName : null,
                           style: ElevatedButton.styleFrom(
-                            
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black87,
                             disabledBackgroundColor: const Color(0xFF3D3449),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            elevation: 0,
+                            elevation: 8,
+                            shadowColor: Colors.white.withOpacity(0.3),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -150,7 +152,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
                                 'Start My Journey',
                                 style: TextStyle(
                                   color: _isButtonEnabled
-                                      ? Colors.white
+                                      ? Colors.black87
                                       : Colors.white38,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -160,7 +162,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
                               Icon(
                                 Icons.arrow_forward,
                                 color: _isButtonEnabled
-                                    ? Colors.white
+                                    ? Colors.black87
                                     : Colors.white38,
                                 size: 20,
                               ),

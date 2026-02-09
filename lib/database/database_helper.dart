@@ -123,6 +123,12 @@ class DatabaseHelper {
       'updated_at': DateTime.now().millisecondsSinceEpoch,
     });
 
+    await db.insert('settings', {
+      'key': 'hide_google_signin',
+      'value': 'false',
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    });
+
     // Privacy-by-default: telemetry OFF by default (FR-022)
     await db.insert('settings', {
       'key': 'telemetry_enabled',

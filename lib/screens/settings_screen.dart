@@ -1,11 +1,13 @@
 // ignore_for_file: unused_field
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/hobby_service.dart';
 import '../services/notification_service.dart';
 import '../services/auth_service.dart';
 import '../services/performance_service.dart';
 import '../services/crashlytics_service.dart';
 import '../services/feature_flags_service.dart';
+import '../services/rating_service.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'developer_settings_screen.dart';
@@ -32,6 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final HobbyService _service = HobbyService();
   final NotificationService _notificationService = NotificationService();
   final AuthService _authService = AuthService();
+  final RatingService _ratingService = RatingService();
   String _userName = 'Tham';
   String? _userEmail;
   bool _isGoogleSignedIn = false;
@@ -697,14 +700,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.star_outline,
             iconColor: const Color(0xFFFFD700),
             title: 'Rate the App',
-            onTap: () {
-              // TODO: Open app store rating
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Opening app store...'),
-                  
-                ),
-              );
+            onTap: () async {
+              try {
+                await _ratingService.openStoreListing();
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Could not open app store: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
           ),
           const Divider(color: Color(0xFF382a54), height: 1),
@@ -726,15 +734,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNavTile(
             icon: Icons.description_outlined,
             iconColor: const Color(0xFF10B981),
-            title: 'Terms of Service',
-            onTap: () {
-              // TODO: Open terms of service
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Opening Terms of Service...'),
-                  
-                ),
-              );
+            title: 'Privacy Policy',
+            onTap: () async {
+              final url = Uri.parse(
+                  'https://github.com/thamaraiselvam/hobbyist-privacy-policy/blob/main/PRIVACY_POLICY.md');
+              try {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Could not open Privacy Policy: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
           ),
         ],

@@ -1288,13 +1288,37 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
                   // Only delete if confirmed
                   if (confirmed == true) {
-                    await _service.deleteHobby(hobby.id);
-                    // Reload hobbies and wait for widget rebuild
-                    await _loadHobbies();
-                    // Wait for build to complete
-                    await Future.delayed(const Duration(milliseconds: 100));
-                    // Now scroll to the selected date
-                    _animateToSelectedDate();
+                    try {
+                      final hobbyName = hobby.name;
+                      await _service.deleteHobby(hobby.id);
+                      
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('🗑️ Hobby "$hobbyName" deleted successfully'),
+                            backgroundColor: Colors.orange,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                      
+                      // Reload hobbies and wait for widget rebuild
+                      await _loadHobbies();
+                      // Wait for build to complete
+                      await Future.delayed(const Duration(milliseconds: 100));
+                      // Now scroll to the selected date
+                      _animateToSelectedDate();
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('❌ Error deleting hobby: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                    }
                   }
                 }
               },

@@ -484,8 +484,32 @@ class _TasksListScreenState extends State<TasksListScreen>
                     );
 
                     if (confirmed == true) {
-                      await _service.deleteHobby(hobby.id);
-                      _loadHobbies();
+                      try {
+                        final hobbyName = hobby.name;
+                        await _service.deleteHobby(hobby.id);
+                        
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('🗑️ Hobby "$hobbyName" deleted successfully'),
+                              backgroundColor: Colors.orange,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                        
+                        _loadHobbies();
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('❌ Error deleting hobby: ${e.toString()}'),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        }
+                      }
                     }
                   }
                 },

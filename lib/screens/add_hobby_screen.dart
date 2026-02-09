@@ -89,45 +89,77 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
 
   Future<void> _saveHobby() async {
     if (_formKey.currentState!.validate()) {
-      // Format notification time as HH:mm
-      final notificationTimeString = _notifyEnabled
-          ? '${_notificationTime.hour.toString().padLeft(2, '0')}:${_notificationTime.minute.toString().padLeft(2, '0')}'
-          : '';
+      try {
+        // Format notification time as HH:mm
+        final notificationTimeString = _notifyEnabled
+            ? '${_notificationTime.hour.toString().padLeft(2, '0')}:${_notificationTime.minute.toString().padLeft(2, '0')}'
+            : '';
 
-      // Get custom day based on repeat mode
-      int? customDay;
-      if (_repeatMode == 'weekly') {
-        customDay = _selectedWeekDay;
-      } else if (_repeatMode == 'monthly') {
-        customDay = _selectedMonthDay;
+        // Get custom day based on repeat mode
+        int? customDay;
+        if (_repeatMode == 'weekly') {
+          customDay = _selectedWeekDay;
+        } else if (_repeatMode == 'monthly') {
+          customDay = _selectedMonthDay;
+        }
+
+        if (widget.hobby != null) {
+          // Update existing hobby
+          final updatedHobby = widget.hobby!.copyWith(
+            name: _nameController.text,
+            notes: _notesController.text,
+            repeatMode: _repeatMode,
+            color: _selectedColor,
+            reminderTime: notificationTimeString,
+            customDay: customDay,
+          );
+          await _service.updateHobby(updatedHobby);
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('✅ Hobby "${_nameController.text}" updated successfully'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+            Navigator.pop(context, true);
+          }
+        } else {
+          // Create new hobby
+          final hobby = Hobby(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            name: _nameController.text,
+            notes: _notesController.text,
+            repeatMode: _repeatMode,
+            color: _selectedColor,
+            reminderTime: notificationTimeString,
+            customDay: customDay,
+          );
+          await _service.addHobby(hobby);
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('✅ Hobby "${_nameController.text}" created successfully'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+            Navigator.pop(context, true);
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Error saving hobby: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
-
-      if (widget.hobby != null) {
-        // Update existing hobby
-        final updatedHobby = widget.hobby!.copyWith(
-          name: _nameController.text,
-          notes: _notesController.text,
-          repeatMode: _repeatMode,
-          color: _selectedColor,
-          reminderTime: notificationTimeString,
-          customDay: customDay,
-        );
-        await _service.updateHobby(updatedHobby);
-      } else {
-        // Create new hobby
-        final hobby = Hobby(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: _nameController.text,
-          notes: _notesController.text,
-          repeatMode: _repeatMode,
-          color: _selectedColor,
-          reminderTime: notificationTimeString,
-          customDay: customDay,
-        );
-        await _service.addHobby(hobby);
-      }
-
-      if (mounted) Navigator.pop(context, true);
     }
   }
 
