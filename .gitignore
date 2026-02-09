@@ -6,7 +6,6 @@
 .pub/
 build/
 *.lock
-google-services.json
 
 # Android
 android/local.properties
@@ -17,6 +16,7 @@ android/app/profile
 android/app/release
 android/key.properties
 android/upload-keystore.jks
+android/app/google-services.json
 build
 builds
 
