@@ -28,7 +28,6 @@ ios/.generated/
 ios/Flutter/flutter_export_environment.sh
 ios/ServiceDefinitions.json
 ios/Runner/GeneratedPluginRegistrant.*
-lib/firebase_options.dart
 
 # macOS
 macos/Flutter/GeneratedPluginRegistrant.swift
