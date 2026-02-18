@@ -693,7 +693,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                               horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF10B981)
-                                                .withOpacity(0.2),
+                                                .withValues(alpha: 0.2),
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                           ),
@@ -843,7 +843,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           Icons.local_fire_department,
                           color: todayCompleted
                               ? const Color(0xFFFF6B35)
-                              : Colors.grey.withOpacity(0.5),
+                              : Colors.grey.withValues(alpha: 0.5),
                           size: 28,
                         ),
                         const SizedBox(width: 8),
@@ -852,7 +852,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           style: TextStyle(
                             color: todayCompleted
                                 ? Colors.white
-                                : Colors.grey.withOpacity(0.5),
+                                : Colors.grey.withValues(alpha: 0.5),
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1130,7 +1130,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B35).withOpacity(0.1),
+                              color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1162,7 +1162,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700).withOpacity(0.1),
+                              color: const Color(0xFFFFD700).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1398,7 +1398,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6C3FFF).withOpacity(0.4),
+              color: const Color(0xFF6C3FFF).withValues(alpha: 0.4),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
