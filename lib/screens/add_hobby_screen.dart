@@ -668,16 +668,18 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                         thumbColor: WidgetStateProperty
                                             .resolveWith<Color?>((states) {
                                           if (states
-                                              .contains(WidgetState.selected))
+                                              .contains(WidgetState.selected)) {
                                             return const Color(0xFF590df2);
+                                          }
                                           return null;
                                         }),
                                         trackColor: WidgetStateProperty
                                             .resolveWith<Color?>((states) {
                                           if (states
-                                              .contains(WidgetState.selected))
+                                              .contains(WidgetState.selected)) {
                                             return const Color(0xFF590df2)
                                                 .withValues(alpha: 0.5);
+                                          }
                                           return null;
                                         }),
                                       ),
