@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'daily_tasks_screen.dart';
 import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
+import '../constants/test_keys.dart';
 
 class NameInputScreen extends StatefulWidget {
   const NameInputScreen({super.key});
@@ -97,6 +98,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
                     ),
                     const SizedBox(height: 80),
                     TextField(
+                      key: const Key(TestKeys.nameInputField),
                       controller: _nameController,
                       style: const TextStyle(
                         color: Color(0xFF8B5CF6),
@@ -134,6 +136,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
+                          key: const Key(TestKeys.nameSubmitButton),
                           onPressed: _isButtonEnabled ? _saveName : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,

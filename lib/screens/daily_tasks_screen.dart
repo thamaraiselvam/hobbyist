@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously, unused_element, body_might_complete_normally_catch_error
 import 'package:flutter/material.dart';
+import '../constants/test_keys.dart';
 import 'package:intl/intl.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
@@ -820,6 +821,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               // Show streak when there are hobbies (even if 0)
               if (_hobbies.isNotEmpty)
                 GestureDetector(
+                  key: const Key(TestKeys.streakBadge),
                   onTap: () {
                     setState(() => _selectedIndex = 2); // Navigate to analytics
                   },
@@ -908,6 +910,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           final isToday = dateStr == todayStr;
 
           return GestureDetector(
+            key: Key(TestKeys.dayPill(dateStr)),
             onTap: () {
               setState(() {
                 _selectedDate = date;
@@ -1051,6 +1054,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     final isFutureDate = selectedDateOnly.isAfter(todayDate);
 
     return AnimatedContainer(
+      key: Key(TestKeys.taskCard(hobby.id)),
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       margin: const EdgeInsets.only(bottom: 8),
@@ -1067,6 +1071,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
             // Checkbox with hobby color
             Builder(
               builder: (context) => AnimatedCheckbox(
+                key: Key(TestKeys.taskCheckbox(hobby.id)),
                 isChecked: isCompleted,
                 onTap: isFutureDate
                     ? null
@@ -1189,6 +1194,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
             ),
             const SizedBox(width: 16),
             PopupMenuButton(
+              key: Key(TestKeys.hobbyMenu(hobby.id)),
               padding: EdgeInsets.zero,
               icon:
                   const Icon(Icons.more_vert, color: Colors.white38, size: 22),
@@ -1367,6 +1373,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
   Widget _buildCreateButton() {
     return GestureDetector(
+      key: const Key(TestKeys.addHobbyFab),
       behavior: HitTestBehavior.opaque,
       onTap: () async {
         await Navigator.push(
@@ -1416,6 +1423,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
+          key: Key(TestKeys.navItem(index)),
           onTap: () {
             setState(() => _selectedIndex = index);
             // When returning to home screen (index 0), scroll to selected date

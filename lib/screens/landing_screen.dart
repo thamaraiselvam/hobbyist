@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import '../services/analytics_service.dart';
+import '../constants/test_keys.dart';
 
 class LandingScreen extends StatefulWidget {
   final VoidCallback onGetStarted;
@@ -194,6 +195,7 @@ class _LandingScreenState extends State<LandingScreen> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
+              key: const Key(TestKeys.landingContinueButton),
               onPressed: widget.onGetStarted,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,

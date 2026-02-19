@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/feedback_service.dart';
+import '../constants/test_keys.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -127,6 +128,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   border: Border.all(color: const Color(0xFF382a54)),
                 ),
                 child: TextField(
+                  key: const Key(TestKeys.feedbackInput),
                   controller: _feedbackController,
                   maxLines: 8,
                   maxLength: 500,
@@ -178,6 +180,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   border: Border.all(color: const Color(0xFF382a54)),
                 ),
                 child: TextField(
+                  key: const Key(TestKeys.feedbackEmailInput),
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: const TextStyle(
@@ -206,6 +209,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               const SizedBox(height: 32),
               // Submit button
               ElevatedButton(
+                key: const Key(TestKeys.feedbackSubmitButton),
                 onPressed: _isSubmitting ? null : _submitFeedback,
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,

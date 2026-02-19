@@ -4,6 +4,7 @@ import '../models/hobby.dart';
 import '../services/hobby_service.dart';
 import '../services/notification_service.dart';
 import '../utils/default_hobbies.dart';
+import '../constants/test_keys.dart';
 
 class AddHobbyScreen extends StatefulWidget {
   final Hobby? hobby;
@@ -304,6 +305,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 TextFormField(
+                                  key: const Key(TestKeys.addHobbyNameInput),
                                   controller: _nameController,
                                   style: const TextStyle(
                                       color: Colors.white, fontSize: 16),
@@ -447,6 +449,9 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                         final isSelected =
                                             _selectedWeekDay == index;
                                         return GestureDetector(
+                                          key: Key(
+                                              TestKeys.addHobbyWeekdayButton(
+                                                  index)),
                                           onTap: () {
                                             setState(() {
                                               _selectedWeekDay = index;
@@ -624,6 +629,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                         ],
                                       ),
                                       Switch(
+                                        key: const Key(
+                                            TestKeys.addHobbyNotifyToggle),
                                         value: _notifyEnabled,
                                         onChanged: (value) async {
                                           if (value) {
@@ -689,6 +696,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                     const SizedBox(height: 16),
                                     // Notification time
                                     InkWell(
+                                      key: const Key(
+                                          TestKeys.addHobbyReminderPicker),
                                       onTap: _selectTime,
                                       borderRadius: BorderRadius.circular(16),
                                       child: Container(
@@ -773,15 +782,18 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                 Wrap(
                                   spacing: 12,
                                   runSpacing: 12,
-                                  children: _colorPalette.map((color) {
-                                    return _buildColorButton(color);
-                                  }).toList(),
+                                  children: List.generate(_colorPalette.length,
+                                      (index) {
+                                    return _buildColorButton(
+                                        _colorPalette[index], index);
+                                  }),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 32),
                             // Create button
                             ElevatedButton(
+                              key: const Key(TestKeys.addHobbySubmitButton),
                               onPressed: _saveHobby,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF590df2),
@@ -842,6 +854,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
     final isSelected = _repeatMode == value;
     return Expanded(
       child: GestureDetector(
+        key: Key(TestKeys.addHobbyFrequencyButton(value)),
         onTap: () {
           setState(() {
             _repeatMode = value;
@@ -867,9 +880,10 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
     );
   }
 
-  Widget _buildColorButton(int colorValue) {
+  Widget _buildColorButton(int colorValue, int index) {
     final isSelected = _selectedColor == colorValue;
     return GestureDetector(
+      key: Key(TestKeys.addHobbyColorButton(index)),
       onTap: () {
         setState(() {
           _selectedColor = colorValue;

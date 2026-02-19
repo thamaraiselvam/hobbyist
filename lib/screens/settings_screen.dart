@@ -13,6 +13,7 @@ import 'add_hobby_screen.dart';
 import 'developer_settings_screen.dart';
 import 'landing_screen.dart';
 import 'feedback_screen.dart';
+import '../constants/test_keys.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -382,6 +383,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildCreateButton() {
     return GestureDetector(
+      key: const Key(TestKeys.addHobbyFab),
       behavior: HitTestBehavior.opaque,
       onTap: () async {
         await Navigator.push(
@@ -425,6 +427,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
+          key: Key(TestKeys.navItem(index)),
           onTap: () => widget.onNavigate(index),
           borderRadius: BorderRadius.circular(24),
           child: Container(
@@ -459,6 +462,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // Profile Section
           GestureDetector(
+            key: const Key(TestKeys.settingsEditName),
             onTap: _showEditNameDialog,
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -533,6 +537,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() => _pushNotificationsEnabled = value);
               _service.setSetting('push_notifications', value.toString());
             },
+            testKey: TestKeys.settingsPushNotifications,
           ),
           const Divider(color: Color(0xFF3D3449), height: 1),
           _buildSwitchTile(
@@ -544,6 +549,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() => _completionSoundEnabled = value);
               _service.setSetting('completion_sound', value.toString());
             },
+            testKey: TestKeys.settingsSoundVibration,
           ),
         ],
       ),
@@ -556,6 +562,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
+    String? testKey,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -581,6 +588,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           Switch(
+            key: testKey != null ? Key(testKey) : null,
             value: value,
             onChanged: onChanged,
             thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
@@ -608,8 +616,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String? subtitle,
     required VoidCallback onTap,
     bool isEnabled = true,
+    String? testKey,
   }) {
     return InkWell(
+      key: testKey != null ? Key(testKey) : null,
       onTap: isEnabled ? onTap : null,
       child: Opacity(
         opacity: isEnabled ? 1.0 : 0.5,
@@ -706,6 +716,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.star_outline,
             iconColor: const Color(0xFFFFD700),
             title: 'Rate the App',
+            testKey: TestKeys.settingsRateApp,
             onTap: () async {
               try {
                 await _ratingService.openStoreListing();
@@ -726,6 +737,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.feedback_outlined,
             iconColor: const Color(0xFF6C3FFF),
             title: 'Send Feedback',
+            testKey: TestKeys.settingsSendFeedback,
             onTap: () {
               Navigator.push(
                 context,
@@ -741,6 +753,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.description_outlined,
             iconColor: const Color(0xFF10B981),
             title: 'Privacy Policy',
+            testKey: TestKeys.settingsPrivacyPolicy,
             onTap: () async {
               final url = Uri.parse(
                   'https://github.com/thamaraiselvam/hobbyist-privacy-policy/blob/main/PRIVACY_POLICY.md');
@@ -774,6 +787,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: Icons.info_outline,
         iconColor: const Color(0xFF6C3FFF),
         title: 'Version 1.0.0',
+        testKey: TestKeys.settingsAbout,
         onTap: () {
           showDialog(
             context: context,
@@ -857,6 +871,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: Icons.code,
         iconColor: const Color(0xFFFF6B35),
         title: 'Developer Options',
+        testKey: TestKeys.settingsDeveloperOptions,
         onTap: () {
           Navigator.push(
             context,
@@ -877,6 +892,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
+        key: const Key(TestKeys.settingsLogout),
         onTap: _handleLogout,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -917,6 +933,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
+        key: const Key(TestKeys.settingsRefreshFlags),
         onTap: () async {
           // Show loading
           ScaffoldMessenger.of(context).showSnackBar(
