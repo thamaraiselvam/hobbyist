@@ -194,31 +194,34 @@ class _LandingScreenState extends State<LandingScreen> {
           SizedBox(
             width: double.infinity,
             height: 56,
-            child: ElevatedButton(
-              key: const Key(TestKeys.landingContinueButton),
-              onPressed: widget.onGetStarted,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black87,
-                elevation: 8,
-                shadowColor: Colors.white.withValues(alpha: 0.3),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.cloud_off, size: 20, color: Colors.black87),
-                  SizedBox(width: 10),
-                  Text(
-                    'Continue Offline',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: Semantics(
+              identifier: TestKeys.landingContinueButton,
+              child: ElevatedButton(
+                key: const Key(TestKeys.landingContinueButton),
+                onPressed: widget.onGetStarted,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
+                  elevation: 8,
+                  shadowColor: Colors.white.withValues(alpha: 0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.cloud_off, size: 20, color: Colors.black87),
+                    SizedBox(width: 10),
+                    Text(
+                      'Continue Offline',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

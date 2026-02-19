@@ -127,7 +127,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFF382a54)),
                 ),
-                child: TextField(
+                child: Semantics(
+                  identifier: TestKeys.feedbackInput,
+                  child: TextField(
                   key: const Key(TestKeys.feedbackInput),
                   controller: _feedbackController,
                   maxLines: 8,
@@ -149,6 +151,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     contentPadding: EdgeInsets.all(16),
                     counterText: '',
                   ),
+                ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -179,21 +182,24 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFF382a54)),
                 ),
-                child: TextField(
-                  key: const Key(TestKeys.feedbackEmailInput),
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: 'your@email.com',
-                    hintStyle: TextStyle(color: Colors.white38),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                child: Semantics(
+                  identifier: TestKeys.feedbackEmailInput,
+                  child: TextField(
+                    key: const Key(TestKeys.feedbackEmailInput),
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'your@email.com',
+                      hintStyle: TextStyle(color: Colors.white38),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -208,7 +214,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ),
               const SizedBox(height: 32),
               // Submit button
-              ElevatedButton(
+              Semantics(
+                identifier: TestKeys.feedbackSubmitButton,
+                child: ElevatedButton(
                 key: const Key(TestKeys.feedbackSubmitButton),
                 onPressed: _isSubmitting ? null : _submitFeedback,
                 style: ElevatedButton.styleFrom(
@@ -238,6 +246,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                ),
               ),
             ],
           ),

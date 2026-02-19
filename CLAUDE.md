@@ -69,6 +69,45 @@ Named routes via `onGenerateRoute` in `MaterialApp` for the main flow: `/` (Spla
 - Services are mocked with `mockito` (run `flutter pub run build_runner build` after editing mock annotations)
 - Integration tests in `integration_test/` require a physical device or emulator to run
 
+### Maestro UI Tests (`maestro-tests/`)
+
+**Pre-test setup (run once per emulator session):**
+```bash
+# 1. Extract and install Maestro driver APKs
+cd /tmp && jar xf ~/.maestro/lib/maestro-client.jar maestro-app.apk maestro-server.apk
+adb install -r maestro-app.apk && adb install -r maestro-server.apk
+
+# 2. Start the driver (run in background)
+adb shell am instrument -w dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &
+adb forward tcp:7001 tcp:7001
+
+# 3. For onboarding.yml — clear app state first
+adb shell pm clear tham.hobbyist.app && adb shell am start -n tham.hobbyist.app/.MainActivity
+
+# 4. For add_hobby.yml — grant notification permission to avoid OS dialog
+adb shell pm grant tham.hobbyist.app android.permission.POST_NOTIFICATIONS
+adb shell am start -n tham.hobbyist.app/.MainActivity
+# Then run onboarding.yml first to complete onboarding
+```
+
+**Running tests:**
+```bash
+maestro test maestro-tests/onboarding.yml
+maestro test maestro-tests/add_hobby.yml
+```
+
+**Known issues and rules for writing Maestro YAML:**
+- `launchApp` (with or without `clearState`) crashes on this emulator due to a Maestro 2.1.0 TcpForwarder bug — never use it; manage app lifecycle via ADB instead
+- `timeout:` is **not** a valid property on `assertVisible` or `tapOn` — use `extendedWaitUntil: visible: ... timeout: N` when a wait is needed
+- Use `waitForAnimationToEnd` (not `waitForAnimationToSettle` — wrong name)
+- `text:` in `assertVisible` uses anchored regex — `Hello` won't match `Hello, John Doe!`; use `Hello.*`
+- After `adb shell pm clear`, Firebase init fails and crashes `AuthService` — fixed in code, but always re-grant permissions and restart cleanly
+
+**Flutter widget IDs for Maestro:**
+- `Key()` alone does **not** expose `resource-id` in the Android accessibility tree
+- Every testable widget needs `Semantics(identifier: TestKeys.xxx, child: Widget(key: const Key(TestKeys.xxx), ...))`
+- All TestKey string values are defined in `lib/constants/test_keys.dart`
+
 ## Code Conventions
 
 - Lint config extends `package:flutter_lints/flutter.yaml` — use `prefer_single_quotes`, avoid `print()` in production code

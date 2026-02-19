@@ -71,8 +71,23 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Disable Firebase services in debug to avoid crashes when credentials are absent
+            manifestPlaceholders = [
+                firebase_performance_collection_deactivated: "true",
+                firebase_crashlytics_collection_enabled: "false"
+            ]
+        }
         release {
-            signingConfig signingConfigs.release
+            manifestPlaceholders = [
+                firebase_performance_collection_deactivated: "false",
+                firebase_crashlytics_collection_enabled: "true"
+            ]
+            if (keystorePropertiesFile.exists() && keystoreProperties['storeFile']) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
         }
     }
 }

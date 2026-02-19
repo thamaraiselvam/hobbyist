@@ -97,79 +97,85 @@ class _NameInputScreenState extends State<NameInputScreen> {
                       ),
                     ),
                     const SizedBox(height: 80),
-                    TextField(
-                      key: const Key(TestKeys.nameInputField),
-                      controller: _nameController,
-                      style: const TextStyle(
-                        color: Color(0xFF8B5CF6),
-                        fontSize: 24,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Tham',
-                        hintStyle: TextStyle(
-                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                    Semantics(
+                      identifier: TestKeys.nameInputField,
+                      child: TextField(
+                        key: const Key(TestKeys.nameInputField),
+                        controller: _nameController,
+                        style: const TextStyle(
+                          color: Color(0xFF8B5CF6),
                           fontSize: 24,
                           fontWeight: FontWeight.w500,
                         ),
-                        enabledBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0xFF6C3FFF),
-                            width: 2,
+                        decoration: InputDecoration(
+                          hintText: 'e.g. Tham',
+                          hintStyle: TextStyle(
+                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
                           ),
-                        ),
-                        focusedBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0xFF6C3FFF),
-                            width: 2,
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0xFF6C3FFF),
+                              width: 2,
+                            ),
                           ),
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Color(0xFF6C3FFF),
+                              width: 2,
+                            ),
+                          ),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 16),
+                        textCapitalization: TextCapitalization.words,
+                        autofocus: true,
                       ),
-                      textCapitalization: TextCapitalization.words,
-                      autofocus: true,
                     ),
                     const Spacer(),
                     Center(
                       child: SizedBox(
                         width: double.infinity,
                         height: 56,
-                        child: ElevatedButton(
-                          key: const Key(TestKeys.nameSubmitButton),
-                          onPressed: _isButtonEnabled ? _saveName : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black87,
-                            disabledBackgroundColor: const Color(0xFF3D3449),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                        child: Semantics(
+                          identifier: TestKeys.nameSubmitButton,
+                          child: ElevatedButton(
+                            key: const Key(TestKeys.nameSubmitButton),
+                            onPressed: _isButtonEnabled ? _saveName : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black87,
+                              disabledBackgroundColor: const Color(0xFF3D3449),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 8,
+                              shadowColor: Colors.white.withValues(alpha: 0.3),
                             ),
-                            elevation: 8,
-                            shadowColor: Colors.white.withValues(alpha: 0.3),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Start My Journey',
-                                style: TextStyle(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Start My Journey',
+                                  style: TextStyle(
+                                    color: _isButtonEnabled
+                                        ? Colors.black87
+                                        : Colors.white38,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.arrow_forward,
                                   color: _isButtonEnabled
                                       ? Colors.black87
                                       : Colors.white38,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  size: 20,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.arrow_forward,
-                                color: _isButtonEnabled
-                                    ? Colors.black87
-                                    : Colors.white38,
-                                size: 20,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),

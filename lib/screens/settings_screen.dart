@@ -426,22 +426,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Expanded(
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          key: Key(TestKeys.navItem(index)),
-          onTap: () => widget.onNavigate(index),
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: isSelected
-                ? BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  )
-                : null,
-            child: Icon(
-              icon,
-              color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
-              size: 26,
+        child: Semantics(
+          identifier: TestKeys.navItem(index),
+          child: InkWell(
+            key: Key(TestKeys.navItem(index)),
+            onTap: () => widget.onNavigate(index),
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: isSelected
+                  ? BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                    )
+                  : null,
+              child: Icon(
+                icon,
+                color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
+                size: 26,
+              ),
             ),
           ),
         ),
@@ -587,22 +590,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-          Switch(
-            key: testKey != null ? Key(testKey) : null,
-            value: value,
-            onChanged: onChanged,
-            thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.selected)) {
-                return const Color(0xFF10B981);
-              }
-              return Colors.white;
-            }),
-            trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.selected)) {
-                return const Color(0xFF10B981).withValues(alpha: 0.5);
-              }
-              return const Color(0xFF3D3449);
-            }),
+          Semantics(
+            identifier: testKey ?? '',
+            child: Switch(
+              key: testKey != null ? Key(testKey) : null,
+              value: value,
+              onChanged: onChanged,
+              thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const Color(0xFF10B981);
+                }
+                return Colors.white;
+              }),
+              trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const Color(0xFF10B981).withValues(alpha: 0.5);
+                }
+                return const Color(0xFF3D3449);
+              }),
+            ),
           ),
         ],
       ),
@@ -618,10 +624,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool isEnabled = true,
     String? testKey,
   }) {
-    return InkWell(
-      key: testKey != null ? Key(testKey) : null,
-      onTap: isEnabled ? onTap : null,
-      child: Opacity(
+    return Semantics(
+      identifier: testKey ?? '',
+      child: InkWell(
+        key: testKey != null ? Key(testKey) : null,
+        onTap: isEnabled ? onTap : null,
+        child: Opacity(
         opacity: isEnabled ? 1.0 : 0.5,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -669,7 +677,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildDataCard() {

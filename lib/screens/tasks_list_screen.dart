@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/test_keys.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
 import '../utils/page_transitions.dart';
@@ -688,21 +689,25 @@ class _TasksListScreenState extends State<TasksListScreen>
     return Expanded(
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: () => widget.onNavigate(index),
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: isSelected
-                ? BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  )
-                : null,
-            child: Icon(
-              icon,
-              color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
-              size: 26,
+        child: Semantics(
+          identifier: TestKeys.navItem(index),
+          child: InkWell(
+            key: Key(TestKeys.navItem(index)),
+            onTap: () => widget.onNavigate(index),
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: isSelected
+                  ? BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                    )
+                  : null,
+              child: Icon(
+                icon,
+                color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
+                size: 26,
+              ),
             ),
           ),
         ),
