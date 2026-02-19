@@ -448,11 +448,14 @@ class HobbyService {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
-    // Track settings changes
-    await _analytics.logSettingChanged(
-      settingName: key,
-      settingValue: value,
-    );
+    // Track settings changes — skip PII keys (never send user data to Firebase)
+    const sensitiveSettingKeys = {'userName', 'userEmail', 'userPhoto'};
+    if (!sensitiveSettingKeys.contains(key)) {
+      await _analytics.logSettingChanged(
+        settingName: key,
+        settingValue: value,
+      );
+    }
   }
 
   // Migration helper - for backward compatibility
