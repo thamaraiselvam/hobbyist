@@ -32,6 +32,10 @@ appId: tham.hobbyist.app
 
 - inputText: "Weekly Review"
 
+# Dismiss keyboard before tapping frequency button — keyboard can cover
+# the lower half of the form on the CI emulator (1440×2560 @ 560dpi).
+- hideKeyboard
+
 - waitForAnimationToEnd
 
 # Select Weekly frequency

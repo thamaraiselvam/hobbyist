@@ -67,6 +67,10 @@ appId: tham.hobbyist.app
 
 - inputText: "user@example.com"
 
+# Dismiss keyboard — submit button is at the bottom of the column and is
+# covered by the open keyboard after email input.
+- hideKeyboard
+
 # Submit
 - tapOn:
     id: "submit_feedback_button"
