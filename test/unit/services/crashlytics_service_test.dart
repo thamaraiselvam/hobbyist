@@ -19,6 +19,10 @@ void main() {
   late CrashlyticsService service;
   late MockFirebaseCrashlytics mockCrashlytics;
 
+  // Each test file gets a unique temp directory so concurrent test runs
+  // don't collide on the same hobbyist.db file path.
+  final testDir = Directory.systemTemp.createTempSync('hobbyist_crashlytics_test_');
+
   setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -27,14 +31,15 @@ void main() {
         .setMockMethodCallHandler(
             const MethodChannel('plugins.flutter.io/path_provider'),
             (MethodCall methodCall) async {
-      return '.';
+      return testDir.path;
     });
   });
 
   setUp(() async {
-    final file = File('hobbyist.db');
+    // Close before deleting so sqflite's singleInstance pool releases the path.
+    await DatabaseHelper.instance.close();
+    final file = File('${testDir.path}/hobbyist.db');
     if (file.existsSync()) file.deleteSync();
-    DatabaseHelper.reset();
     mockCrashlytics = MockFirebaseCrashlytics();
     CrashlyticsService.mockCrashlytics = mockCrashlytics;
     await CrashlyticsService.initialize();

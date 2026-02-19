@@ -12,6 +12,7 @@ import 'package:hobbyist/database/database_helper.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'hobby_service_test.mocks.dart';
+import 'dart:io';
 
 @GenerateNiceMocks([
   MockSpec<DatabaseHelper>(),
@@ -29,6 +30,10 @@ void main() {
   late MockCrashlyticsService mockCrashlytics;
   late MockRatingService mockRating;
 
+  // Each test file gets a unique temp directory so concurrent test runs
+  // don't collide on the same hobbyist.db file path.
+  final testDir = Directory.systemTemp.createTempSync('hobbyist_hobby_svc_test_');
+
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -37,7 +42,7 @@ void main() {
         .setMockMethodCallHandler(
             const MethodChannel('plugins.flutter.io/path_provider'),
             (MethodCall methodCall) async {
-      return '.';
+      return testDir.path;
     });
 
     // Mock local_notifications
@@ -64,6 +69,7 @@ void main() {
   });
 
   setUp(() async {
+    DatabaseHelper.reset();
     mockNotification = MockNotificationService();
     mockAnalytics = MockAnalyticsService();
     mockPerformance = MockPerformanceService();
