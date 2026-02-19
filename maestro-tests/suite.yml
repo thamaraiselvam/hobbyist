@@ -1,0 +1,71 @@
+appId: tham.hobbyist.app
+---
+# Master Test Suite — runs all flows in the required order.
+#
+# Maestro executes each runFlow sequentially; the app session is shared
+# across all sub-flows (no app restart between steps).
+#
+# ─── HOW TO RUN ──────────────────────────────────────────────────────────────
+# Use the companion shell script which handles ADB setup and teardown:
+#
+#   ./run_tests.sh
+#
+# Or to run manually (after completing the ADB setup steps yourself):
+#
+#   maestro test maestro-tests/suite.yml
+#
+# ─── ADB SETUP (required once per emulator session) ──────────────────────────
+#   cd /tmp && jar xf ~/.maestro/lib/maestro-client.jar maestro-app.apk maestro-server.apk
+#   adb install -r maestro-app.apk && adb install -r maestro-server.apk
+#   adb shell am instrument -w dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &
+#   adb forward tcp:7001 tcp:7001
+#
+# ─── PRE-SUITE SETUP (before each suite run) ─────────────────────────────────
+#   adb shell pm clear tham.hobbyist.app
+#   adb shell pm grant tham.hobbyist.app android.permission.POST_NOTIFICATIONS
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+#
+# ─── POST-SUITE TEARDOWN ─────────────────────────────────────────────────────
+#   adb shell pm clear tham.hobbyist.app
+# (run_tests.sh handles this automatically)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 01 — Onboarding: Splash → Landing → Name Input → Dashboard
+- runFlow:
+    file: "onboarding.yml"
+
+# 02 — Add hobby and verify colour palette switching works
+- runFlow:
+    file: "add_hobby_with_color_change.yml"
+
+# 03 — Add daily hobby with custom reminder time
+- runFlow:
+    file: "add_hobby_daily.yml"
+
+# 04 — Add monthly hobby with day-of-month selection
+- runFlow:
+    file: "add_hobby_monthly.yml"
+
+# 05 — Add weekly hobby with specific weekday selection
+- runFlow:
+    file: "add_hobby_weekly.yml"
+
+# 06 — Add hobby with notification reminder enabled
+- runFlow:
+    file: "add_hobby_with_notification.yml"
+
+# 07 — Add hobby with notification reminder disabled
+- runFlow:
+    file: "add_hobby_without_notification.yml"
+
+# 08 — Complete one daily hobby (left completed for analytics verification)
+- runFlow:
+    file: "complete_hobby.yml"
+
+# 09 — View analytics and verify completed data is reflected
+- runFlow:
+    file: "view_analytics.yml"
+
+# 10 — Settings toggles and feedback submission
+- runFlow:
+    file: "settings_feedback.yml"

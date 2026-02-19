@@ -1,0 +1,57 @@
+appId: tham.hobbyist.app
+---
+# Add Hobby (Without Notification)
+# Tests that a hobby can be created with the notify toggle left OFF (default).
+# The reminder_time_picker must NOT appear when notify is disabled.
+# Keys used: add_hobby_fab, hobby_name_input, daily_frequency_button,
+#            color_palette_button_9, notify_toggle, create_hobby_button
+#
+# Before running:
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+# Onboarding must be complete (run onboarding.yml first).
+
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000
+
+- tapOn:
+    id: "add_hobby_fab"
+
+- assertVisible:
+    text: ADD NEW HOBBY TASK
+
+# Enter hobby name
+- tapOn:
+    id: "hobby_name_input"
+
+- inputText: "Journaling"
+
+- waitForAnimationToEnd
+
+# Select Daily frequency
+- tapOn:
+    id: "daily_frequency_button"
+
+- assertVisible:
+    text: Repeats every day
+
+# Pick a color (amber, index 9)
+- tapOn:
+    id: "color_palette_button_9"
+
+# Notify toggle is OFF by default — verify reminder_time_picker is not shown
+- assertNotVisible:
+    id: "reminder_time_picker"
+
+# Do NOT tap notify_toggle — leave notifications disabled
+
+# Create the hobby
+- tapOn:
+    id: "create_hobby_button"
+
+# Verify hobby appears on dashboard
+- extendedWaitUntil:
+    visible:
+      text: Journaling
+    timeout: 5000

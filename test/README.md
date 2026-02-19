@@ -1,6 +1,6 @@
 # Test Suite Documentation
 
-This test suite provides comprehensive unit, widget, and integration tests for the Hobby Tracker application.
+This test suite provides comprehensive unit and widget tests for the Hobby Tracker application.
 
 ## Test Structure
 
@@ -17,8 +17,7 @@ test/
 │   ├── name_input_screen_test.dart   # NameInputScreen widget tests
 │   ├── add_hobby_screen_test.dart    # AddHobbyScreen widget tests
 │   └── settings_screen_test.dart     # SettingsScreen widget tests
-└── integration/
-    └── app_flow_test.dart             # Full app integration tests
+
 ```
 
 ## Test Coverage
@@ -79,19 +78,6 @@ test/
 - ✅ Bottom navigation
 - ✅ Navigation callbacks
 
-### Integration Tests
-
-#### App Flow Tests (`app_flow_test.dart`)
-- ✅ Complete onboarding flow
-- ✅ Skip onboarding for returning users
-- ✅ Navigate between tabs
-- ✅ Add new hobby flow
-- ✅ Complete hobby task flow
-- ✅ View analytics with/without data
-- ✅ Change analytics period
-- ✅ Settings navigation
-- ✅ Pull to refresh
-
 ## Running Tests
 
 ### Run All Tests
@@ -106,9 +92,6 @@ flutter test test/unit/
 
 # Widget tests only
 flutter test test/widget/
-
-# Integration tests only
-flutter test test/integration/
 ```
 
 ### Run Specific Test File
@@ -142,12 +125,6 @@ The following packages are required for testing:
 - Use `pumpAndSettle` for animations
 - Use `find` to locate widgets
 - Test user interactions with `tap`, `enterText`, etc.
-
-### Integration Tests
-- Test complete user flows
-- Verify navigation between screens
-- Test data persistence
-- Verify UI updates after actions
 
 ## Notes
 

@@ -107,33 +107,6 @@ jobs:
           path: coverage/
           retention-days: 30
 
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.41.1'
-          channel: 'stable'
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build integration test APK
-        run: flutter build apk --debug --target=integration_test/app_test.dart
-
-      - name: Note about integration tests
-        run: |
-          echo "⚠️  Integration tests require an emulator or physical device."
-          echo "Skipping actual test execution in CI. Run locally with:"
-          echo "flutter test integration_test/"
-
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
@@ -241,7 +214,7 @@ jobs:
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [prechecks, security-checks, unit-tests, integration-tests, build-android]
+    needs: [prechecks, security-checks, unit-tests, build-android]
     if: always()
     steps:
       - name: Check job statuses
@@ -253,7 +226,6 @@ jobs:
           echo "| Pre-checks | ${{ needs.prechecks.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Security Checks | ${{ needs.security-checks.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Integration Tests | ${{ needs.integration-tests.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Android Build | ${{ needs.build-android.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Download Artifacts" >> $GITHUB_STEP_SUMMARY

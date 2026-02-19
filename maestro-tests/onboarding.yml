@@ -1,54 +1,44 @@
-appId: com.thamaraiselvam.hobbyist
+appId: tham.hobbyist.app
 ---
 # Onboarding Flow: Splash → Landing → Name Input → Dashboard
 # Keys used: TestKeys.landingContinueButton, nameInputField, nameSubmitButton
 
-- launchApp:
-    clearState: true
-
+# NOTE: clearState via launchApp has a known TcpForwarder issue on some emulators.
+# Before running this test, clear app state manually:
+#   adb shell pm clear tham.hobbyist.app && adb shell am start -n tham.hobbyist.app/.MainActivity
 - assertVisible:
     text: Design Your Discipline
-    timeout: 5000
 
 # Landing Screen - tap "Continue Offline"
 - tapOn:
     id: "continue_offline_button"
-    timeout: 3000
 
 - assertVisible:
     text: What should we call you?
-    timeout: 3000
 
 # Name Input Screen - enter a name
 - tapOn:
     id: "name_input_field"
-    timeout: 2000
 
 - inputText: "John Doe"
 
 - assertVisible:
     text: Start My Journey
-    timeout: 2000
 
 # Tap Start Journey button
 - tapOn:
     id: "start_journey_button"
-    timeout: 3000
 
 # Dashboard should load
 - assertVisible:
-    text: Hello
-    timeout: 5000
+    text: "Hello.*"
 
 # Verify bottom nav is present
 - assertVisible:
     id: "bottom_nav_home"
-    timeout: 2000
 
 - assertVisible:
     id: "bottom_nav_settings"
-    timeout: 2000
 
 - assertVisible:
     id: "add_hobby_fab"
-    timeout: 2000

@@ -2,10 +2,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 class FeedbackService {
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestore;
+
+  static FirebaseFirestore? _createFirestore() {
+    try {
+      return FirebaseFirestore.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   FeedbackService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? _createFirestore();
 
   /// Submit user feedback to Firestore
   /// Returns true if successful, false otherwise
@@ -40,7 +48,11 @@ class FeedbackService {
       debugPrint('   Email provided: ${email != null && email.isNotEmpty}');
 
       // Write to Firestore
-      await _firestore.collection('feedback').add(feedbackData);
+      if (_firestore == null) {
+        debugPrint('   ❌ Firestore unavailable (Firebase not initialized)');
+        return false;
+      }
+      await _firestore!.collection('feedback').add(feedbackData);
 
       debugPrint('   ✅ Feedback submitted successfully');
       return true;

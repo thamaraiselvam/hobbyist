@@ -1069,15 +1069,19 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         child: Row(
           children: [
             // Checkbox with hobby color
-            Builder(
-              builder: (context) => AnimatedCheckbox(
-                key: Key(TestKeys.taskCheckbox(hobby.id)),
-                isChecked: isCompleted,
-                onTap: isFutureDate
-                    ? null
-                    : () => _toggleToday(hobby), // Disable tap for future dates
-                size: 24,
-                color: Color(hobby.color),
+            Semantics(
+              identifier: TestKeys.taskCheckbox(hobby.id),
+              child: Builder(
+                builder: (context) => AnimatedCheckbox(
+                  key: Key(TestKeys.taskCheckbox(hobby.id)),
+                  isChecked: isCompleted,
+                  onTap: isFutureDate
+                      ? null
+                      : () =>
+                          _toggleToday(hobby), // Disable tap for future dates
+                  size: 24,
+                  color: Color(hobby.color),
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -1372,46 +1376,49 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   }
 
   Widget _buildCreateButton() {
-    return GestureDetector(
-      key: const Key(TestKeys.addHobbyFab),
-      behavior: HitTestBehavior.opaque,
-      onTap: () async {
-        await Navigator.push(
-          context,
-          SlidePageRoute(
-            page: const AddHobbyScreen(),
-            direction: AxisDirection.up,
-          ),
-        );
-        // Reload hobbies and wait for widget rebuild
-        await _loadHobbies();
-        // Wait for build to complete
-        await Future.delayed(const Duration(milliseconds: 100));
-        // Now scroll to the selected date
-        _animateToSelectedDate();
-      },
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6C3FFF).withValues(alpha: 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
+    return Semantics(
+      identifier: TestKeys.addHobbyFab,
+      child: GestureDetector(
+        key: const Key(TestKeys.addHobbyFab),
+        behavior: HitTestBehavior.opaque,
+        onTap: () async {
+          await Navigator.push(
+            context,
+            SlidePageRoute(
+              page: const AddHobbyScreen(),
+              direction: AxisDirection.up,
             ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 30,
+          );
+          // Reload hobbies and wait for widget rebuild
+          await _loadHobbies();
+          // Wait for build to complete
+          await Future.delayed(const Duration(milliseconds: 100));
+          // Now scroll to the selected date
+          _animateToSelectedDate();
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C3FFF).withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 30,
+          ),
         ),
       ),
     );
@@ -1422,32 +1429,35 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     return Expanded(
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          key: Key(TestKeys.navItem(index)),
-          onTap: () {
-            setState(() => _selectedIndex = index);
-            // When returning to home screen (index 0), scroll to selected date
-            if (index == 0) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && _dayScrollController.hasClients) {
-                  _animateToSelectedDate();
-                }
-              });
-            }
-          },
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: isSelected
-                ? BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  )
-                : null,
-            child: Icon(
-              icon,
-              color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
-              size: 26,
+        child: Semantics(
+          identifier: TestKeys.navItem(index),
+          child: InkWell(
+            key: Key(TestKeys.navItem(index)),
+            onTap: () {
+              setState(() => _selectedIndex = index);
+              // When returning to home screen (index 0), scroll to selected date
+              if (index == 0) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted && _dayScrollController.hasClients) {
+                    _animateToSelectedDate();
+                  }
+                });
+              }
+            },
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: isSelected
+                  ? BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                    )
+                  : null,
+              child: Icon(
+                icon,
+                color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
+                size: 26,
+              ),
             ),
           ),
         ),

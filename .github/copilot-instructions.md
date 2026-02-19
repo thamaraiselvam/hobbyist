@@ -26,7 +26,6 @@ flutter analyze                    # Run static analysis
 flutter test                       # Run all tests
 flutter test test/unit/            # Run unit tests only
 flutter test test/widget/          # Run widget tests only
-flutter test test/integration/     # Run integration tests
 flutter test --coverage            # Generate coverage report
 flutter test test/unit/models/hobby_test.dart  # Run single test file
 ```
@@ -113,7 +112,7 @@ Extends `package:flutter_lints/flutter.yaml` with additional rules:
 ### Testing Patterns
 - Unit tests: Test services and models in isolation
 - Widget tests: Use `WidgetTester` to test UI components
-- Integration tests: Test full user flows
+- E2E UI tests: Maestro flows in `maestro-tests/` (run with `maestro test maestro-tests/suite.yml`)
 - Mock database with `sqflite_common_ffi` for unit tests (see test setup files)
 
 ### File Organization
@@ -140,8 +139,8 @@ lib/
 
 test/
 ├── unit/                          # Service and model tests
-├── widget/                        # UI component tests
-└── integration/                   # Full app flow tests
+└── widget/                        # UI component tests
+maestro-tests/                     # E2E UI flows (Maestro)
 ```
 
 ## Platform-Specific Notes
