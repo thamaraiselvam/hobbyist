@@ -324,7 +324,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B35).withOpacity(0.1),
+                              color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -357,7 +357,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700).withOpacity(0.1),
+                              color: const Color(0xFFFFD700).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -522,7 +522,7 @@ class _TasksListScreenState extends State<TasksListScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF6C3FFF).withOpacity(0.1),
+                color: const Color(0xFF6C3FFF).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -664,7 +664,7 @@ class _TasksListScreenState extends State<TasksListScreen>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6C3FFF).withOpacity(0.4),
+              color: const Color(0xFF6C3FFF).withValues(alpha: 0.4),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),

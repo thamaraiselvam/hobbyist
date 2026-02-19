@@ -55,8 +55,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Thank you for your feedback!'),
-              backgroundColor: const Color(0xFF4CAF78), // Readable green
-              
+              backgroundColor: Color(0xFF4CAF78), // Readable green
             ),
           );
           Navigator.pop(context);
@@ -215,7 +214,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   
                   foregroundColor: Colors.white,
                   disabledBackgroundColor:
-                      const Color(0xFF6C3FFF).withOpacity(0.5),
+                      const Color(0xFF6C3FFF).withValues(alpha: 0.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

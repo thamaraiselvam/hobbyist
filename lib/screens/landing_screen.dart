@@ -1,7 +1,6 @@
 // ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import '../services/analytics_service.dart';
-import 'daily_tasks_screen.dart';
 
 class LandingScreen extends StatefulWidget {
   final VoidCallback onGetStarted;
@@ -133,7 +132,7 @@ class _LandingScreenState extends State<LandingScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF590df2).withOpacity(0.2),
+              color: const Color(0xFF590df2).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -200,7 +199,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black87,
                 elevation: 8,
-                shadowColor: Colors.white.withOpacity(0.3),
+                shadowColor: Colors.white.withValues(alpha: 0.3),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

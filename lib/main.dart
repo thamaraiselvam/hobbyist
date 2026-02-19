@@ -87,9 +87,8 @@ class HobbyTrackerApp extends StatelessWidget {
           primary: Color(0xFF6C3FFF),
           secondary: Color(0xFF8B5CF6),
           surface: Color(0xFF2A2238),
-          background: Color(0xFF1A1625),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 0,
           color: const Color(0xFF2A2238),
           shape: RoundedRectangleBorder(

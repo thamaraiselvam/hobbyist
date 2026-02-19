@@ -55,7 +55,9 @@ void main() {
     test('checkAndShowRatingPrompt shows on 10th completion if skipped before', () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('first_rating_prompt_shown', true);
-      for (int i = 0; i < 10; i++) await service.incrementCompletionCount();
+      for (int i = 0; i < 10; i++) {
+        await service.incrementCompletionCount();
+      }
       
       when(mockInAppReview.isAvailable()).thenAnswer((_) async => true);
       

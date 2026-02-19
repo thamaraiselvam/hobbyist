@@ -421,7 +421,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFF161022)
-                                          .withOpacity(0.4),
+                                          .withValues(alpha: 0.4),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
@@ -462,7 +462,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                                 color: isSelected
                                                     ? const Color(0xFF590df2)
                                                     : Colors.white
-                                                        .withOpacity(0.05),
+                                                        .withValues(alpha: 0.05),
                                               ),
                                             ),
                                             child: Center(
@@ -487,7 +487,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF161022)
-                                            .withOpacity(0.4),
+                                            .withValues(alpha: 0.4),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: const Row(
@@ -536,11 +536,11 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                                 const Color(0xFF590df2),
                                             inactiveTrackColor:
                                                 const Color(0xFF590df2)
-                                                    .withOpacity(0.2),
+                                                    .withValues(alpha: 0.2),
                                             thumbColor: const Color(0xFF590df2),
                                             overlayColor:
                                                 const Color(0xFF590df2)
-                                                    .withOpacity(0.2),
+                                                    .withValues(alpha: 0.2),
                                             thumbShape:
                                                 const RoundSliderThumbShape(
                                                     enabledThumbRadius: 10),
@@ -601,7 +601,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             height: 32,
                                             decoration: BoxDecoration(
                                               color: const Color(0xFF590df2)
-                                                  .withOpacity(0.1),
+                                                  .withValues(alpha: 0.1),
                                               shape: BoxShape.circle,
                                             ),
                                             child: const Icon(
@@ -660,10 +660,14 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             _notifyEnabled = value;
                                           });
                                         },
-                                        activeColor: const Color(0xFF590df2),
-                                        activeTrackColor:
-                                            const Color(0xFF590df2)
-                                                .withOpacity(0.5),
+                                        thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                                          if (states.contains(WidgetState.selected)) return const Color(0xFF590df2);
+                                          return null;
+                                        }),
+                                        trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                                          if (states.contains(WidgetState.selected)) return const Color(0xFF590df2).withValues(alpha: 0.5);
+                                          return null;
+                                        }),
                                       ),
                                     ],
                                   ),
@@ -677,12 +681,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                         padding: const EdgeInsets.all(16),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFF161022)
-                                              .withOpacity(0.4),
+                                              .withValues(alpha: 0.4),
                                           borderRadius:
                                               BorderRadius.circular(16),
                                           border: Border.all(
                                               color: Colors.white
-                                                  .withOpacity(0.05)),
+                                                  .withValues(alpha: 0.05)),
                                         ),
                                         child: Row(
                                           children: [
@@ -775,7 +779,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                 ),
                                 elevation: 8,
                                 shadowColor:
-                                    const Color(0xFF590df2).withOpacity(0.3),
+                                    const Color(0xFF590df2).withValues(alpha: 0.3),
                               ),
                               child: Text(
                                 widget.hobby != null
@@ -870,7 +874,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Color(colorValue).withOpacity(0.4),
+                    color: Color(colorValue).withValues(alpha: 0.4),
                     blurRadius: 6,
                     spreadRadius: 1,
                   ),

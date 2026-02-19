@@ -60,7 +60,8 @@ Future<void> setupFirebaseMocks() async {
   
   // Mock Firebase Auth
   const MethodChannel authChannel = MethodChannel('plugins.flutter.io/firebase_auth');
-  authChannel.setMockMethodCallHandler((MethodCall methodCall) async {
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(authChannel, (MethodCall methodCall) async {
     if (methodCall.method == 'Auth#registerIdTokenListener') {
       return null;
     }
@@ -72,19 +73,22 @@ Future<void> setupFirebaseMocks() async {
   
   // Mock Firebase Analytics
   const MethodChannel analyticsChannel = MethodChannel('plugins.flutter.io/firebase_analytics');
-  analyticsChannel.setMockMethodCallHandler((MethodCall methodCall) async {
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(analyticsChannel, (MethodCall methodCall) async {
     return null;
   });
 
    // Mock Firebase Performance
   const MethodChannel performanceChannel = MethodChannel('plugins.flutter.io/firebase_performance');
-  performanceChannel.setMockMethodCallHandler((MethodCall methodCall) async {
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(performanceChannel, (MethodCall methodCall) async {
     return null;
   });
 
   // Mock Firebase Remote Config
   const MethodChannel remoteConfigChannel = MethodChannel('plugins.flutter.io/firebase_remote_config');
-  remoteConfigChannel.setMockMethodCallHandler((MethodCall methodCall) async {
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(remoteConfigChannel, (MethodCall methodCall) async {
      if (methodCall.method == 'RemoteConfig#ensureInitialized') {
       return {
         'lastFetchTime': 0,
@@ -97,13 +101,15 @@ Future<void> setupFirebaseMocks() async {
   
   // Mock Firebase Crashlytics
     const MethodChannel crashlyticsChannel = MethodChannel('plugins.flutter.io/firebase_crashlytics');
-  crashlyticsChannel.setMockMethodCallHandler((MethodCall methodCall) async {
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(crashlyticsChannel, (MethodCall methodCall) async {
     return null;
   });
   
   // Mock Google Sign In
   const MethodChannel googleSignInChannel = MethodChannel('plugins.flutter.io/google_sign_in');
-  googleSignInChannel.setMockMethodCallHandler((MethodCall methodCall) async {
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(googleSignInChannel, (MethodCall methodCall) async {
     if (methodCall.method == 'init') {
       return null;
     }

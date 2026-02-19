@@ -19,14 +19,14 @@ void main() async {
 
   setUpAll(() async {
     // Mock path_provider
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/path_provider'), (MethodCall methodCall) async {
       return '.';
     });
 
     // Mock shared_preferences
-    const MethodChannel('plugins.flutter.io/shared_preferences')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/shared_preferences'), (MethodCall methodCall) async {
       if (methodCall.method == 'getAll') {
         return <String, Object>{};
       }
@@ -90,7 +90,7 @@ void main() async {
       await tester.pumpWidget(
         MaterialApp(
           home: AnalyticsScreen(
-            hobbies: [],
+            hobbies: const [],
             onBack: () {},
             onNavigate: (_) {},
             onRefresh: () async {},

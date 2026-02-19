@@ -12,8 +12,8 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
 
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/path_provider'), (MethodCall methodCall) async {
       return '.';
     });
   });
@@ -94,12 +94,8 @@ void main() {
       });
       await dbV1.close();
 
-      print('DEBUG: dbPath=$dbPath');
-      print('DEBUG: upgradePath=$upgradePath');
-
       if (File(dbPath).existsSync()) File(dbPath).deleteSync();
       File(upgradePath).copySync(dbPath);
-      print('DEBUG: File copied: ${File(dbPath).existsSync()}');
 
       final db = await DatabaseHelper.instance.database;
       

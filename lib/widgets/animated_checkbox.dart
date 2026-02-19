@@ -75,12 +75,12 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
             height: widget.size,
             decoration: BoxDecoration(
               color: widget.isChecked
-                  ? widget.color.withOpacity(isEnabled ? 1.0 : 0.3)
+                  ? widget.color.withValues(alpha: isEnabled ? 1.0 : 0.3)
                   : Colors.transparent,
               shape: BoxShape.circle,
               border: Border.all(
                 color: widget.isChecked
-                    ? widget.color.withOpacity(isEnabled ? 1.0 : 0.3)
+                    ? widget.color.withValues(alpha: isEnabled ? 1.0 : 0.3)
                     : (isEnabled
                         ? const Color(0xFF4A4458)
                         : const Color(0xFF2A2738)),
@@ -91,7 +91,7 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
                 ? CustomPaint(
                     painter: CheckmarkPainter(
                       progress: _checkAnimation.value,
-                      color: Colors.white.withOpacity(isEnabled ? 1.0 : 0.5),
+                      color: Colors.white.withValues(alpha: isEnabled ? 1.0 : 0.5),
                     ),
                   )
                 : null,

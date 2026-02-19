@@ -5,7 +5,6 @@ import 'package:hobbyist/services/analytics_service.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:flutter/services.dart';
-import 'dart:async';
 
 @GenerateNiceMocks([
   MockSpec<HobbyService>(),
