@@ -129,6 +129,39 @@ jobs:
           channel: 'stable'
           cache: true
 
+      # google-services.json is gitignored. Write a placeholder so the Gradle
+      # google-services plugin is satisfied at build time. Firebase will fail to
+      # initialise at runtime, but the app handles this gracefully via try/catch
+      # in main.dart and AuthService. Core hobby tracking (SQLite) works fine.
+      # For a production release, replace this with a secret-injected real file.
+      - name: Create placeholder google-services.json
+        run: |
+          cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "placeholder-project",
+              "storage_bucket": "placeholder-project.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": {
+                    "package_name": "tham.hobbyist.app"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [{ "current_key": "placeholder_api_key" }],
+                "services": {
+                  "appinvite_service": { "other_platform_oauth_client": [] }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -211,10 +244,140 @@ jobs:
   #         path: build/ios/iphoneos/hobbyist-release.ipa
   #         retention-days: 30
 
+  maestro-e2e:
+    name: Maestro E2E Tests
+    runs-on: ubuntu-latest
+    needs: build-android
+    # Skip on PRs — E2E adds ~15 min and emulator flakiness shouldn't gate fast
+    # PR feedback. Runs on push to main/develop (regression guard) and on
+    # workflow_dispatch (manual trigger for debugging).
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    # Non-blocking while the suite stabilises in CI. Remove continue-on-error
+    # once the failure rate has been consistently low over a few weeks of runs.
+    continue-on-error: true
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # GitHub Actions ubuntu-latest runners support KVM since Jan 2024.
+      # This udev rule grants the runner user rw access to /dev/kvm, which
+      # reactivecircus/android-emulator-runner requires for hardware acceleration.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # JDK is needed for: (1) `jar xf` to extract Maestro driver APKs from
+      # maestro-client.jar, and (2) the Maestro CLI runtime itself (JVM-based).
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Download debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: hobbyist-debug-apk
+          path: build/
+
+      - name: Install Maestro CLI
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      # Cache the AVD to avoid a full 3-5 min emulator creation on each run.
+      # Key is stable per API level + arch + OS. Delete via GH Actions cache UI
+      # if the snapshot becomes stale or corrupted.
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34-google_apis-x86_64-${{ runner.os }}
+
+      # On cache miss: boot the emulator once to create and persist the snapshot.
+      # Subsequent runs restore from cache and skip this step entirely.
+      - name: Create AVD snapshot (cache miss only)
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: echo "AVD snapshot created for caching"
+
+      - name: Run Maestro E2E suite
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          # google_apis image required — Firebase services need Google Play Services,
+          # which are absent from AOSP (default) images. API 34 is also required
+          # because POST_NOTIFICATIONS is a runtime permission only on API 33+.
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          # -no-snapshot-save: don't overwrite the cached AVD snapshot each run.
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          emulator-boot-timeout: 300
+          script: |
+            # Install the Hobbyist app APK
+            adb install -r build/hobbyist-debug.apk
+
+            # ── Maestro driver setup ──────────────────────────────────────────
+            # The standard `launchApp` command crashes on Maestro 2.1.0 due to a
+            # TcpForwarder/port-7001 bug. Workaround: extract the driver APKs from
+            # the bundled JAR, side-load them, and forward port 7001 manually.
+            # All 10 YAML flows avoid `launchApp`; app lifecycle is ADB-only.
+            # See: run_tests.sh and CLAUDE.md → "Known issues and rules".
+            TMPDIR=$(mktemp -d)
+            pushd "$TMPDIR"
+            jar xf "$HOME/.maestro/lib/maestro-client.jar" maestro-app.apk maestro-server.apk
+            adb install -r maestro-app.apk
+            adb install -r maestro-server.apk
+            popd
+
+            # Start the on-device gRPC server and expose it to the host Maestro CLI.
+            adb shell am instrument -w dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &
+            adb forward tcp:7001 tcp:7001
+            sleep 3
+
+            # Pre-suite setup: fresh app state + pre-grant notification permission
+            # so the OS dialog never appears mid-test. POST_NOTIFICATIONS became a
+            # runtime permission in API 33; must be granted before the app starts.
+            adb shell pm clear tham.hobbyist.app
+            adb shell pm grant tham.hobbyist.app android.permission.POST_NOTIFICATIONS
+            adb shell am start -n tham.hobbyist.app/.MainActivity
+            sleep 3
+
+            # Run the full 10-flow ordered test suite
+            maestro test maestro-tests/suite.yml
+
+      # Upload results even on failure so flaky runs can be diagnosed.
+      # The job is non-blocking (continue-on-error: true) so this always fires.
+      - name: Upload Maestro test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-e2e-results
+          path: ~/.maestro/tests/
+          retention-days: 14
+          if-no-files-found: ignore
+
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [prechecks, security-checks, unit-tests, build-android]
+    needs: [prechecks, security-checks, unit-tests, build-android, maestro-e2e]
     if: always()
     steps:
       - name: Check job statuses
@@ -227,8 +390,10 @@ jobs:
           echo "| Security Checks | ${{ needs.security-checks.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Android Build | ${{ needs.build-android.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Maestro E2E | ${{ needs.maestro-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Download Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Debug APK: Available in artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Release APK: Available in artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Coverage Report: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- E2E Results: Available in artifacts (push/dispatch runs only)" >> $GITHUB_STEP_SUMMARY
