@@ -282,6 +282,71 @@ jobs:
           disable-animations: true
           script: echo "AVD snapshot created for caching"
 
+      # Write the test script as a proper bash file before launching the
+      # emulator. The android-emulator-runner `script:` parameter runs under
+      # /usr/bin/sh (dash), which lacks pushd/popd and has limited error
+      # propagation. Using a pre-written bash script avoids those limitations
+      # and lets us use a readiness poll instead of a blind fixed sleep.
+      - name: Create Maestro CI test script
+        run: |
+          cat > /tmp/run-maestro-ci.sh << 'SCRIPT'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          APP_ID="tham.hobbyist.app"
+          MAESTRO_JAR="$HOME/.maestro/lib/maestro-client.jar"
+
+          echo "--- Installing Hobbyist APK ---"
+          adb install -r build/hobbyist-debug.apk
+
+          # ── Maestro driver setup ────────────────────────────────────────────
+          # launchApp crashes on Maestro 2.1.0 (TcpForwarder/port-7001 bug).
+          # Workaround: side-load driver APKs, start am instrument, forward
+          # port 7001, then poll until the gRPC server is actually accepting
+          # connections before running the suite.
+          echo "--- Installing Maestro driver APKs ---"
+          TMPDIR=$(mktemp -d)
+          pushd "$TMPDIR"
+          jar xf "$MAESTRO_JAR" maestro-app.apk maestro-server.apk
+          adb install -r maestro-app.apk
+          adb install -r maestro-server.apk
+          popd
+          rm -rf "$TMPDIR"
+
+          echo "--- Starting Maestro gRPC driver ---"
+          adb shell am instrument -w \
+            dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &
+          adb forward tcp:7001 tcp:7001
+
+          # Poll until the gRPC server is ready (up to 60 s).
+          # adb forward routes localhost:7001 → device:7001, so nc -z
+          # probes whether the server is actually listening on the device.
+          echo "Waiting for Maestro driver gRPC server (up to 60s)..."
+          READY=0
+          for i in $(seq 1 30); do
+            if nc -z -w2 localhost 7001 2>/dev/null; then
+              echo "Maestro driver ready after $((i * 2))s"
+              READY=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$READY" -eq 0 ]; then
+            echo "WARNING: Maestro driver did not respond within 60s — continuing anyway"
+          fi
+
+          # ── Pre-suite app setup ─────────────────────────────────────────────
+          echo "--- Setting up app state ---"
+          adb shell pm clear "$APP_ID"
+          adb shell pm grant "$APP_ID" android.permission.POST_NOTIFICATIONS
+          adb shell am start -n "$APP_ID/.MainActivity"
+          sleep 3
+
+          echo "--- Running Maestro suite ---"
+          maestro test maestro-tests/suite.yml
+          SCRIPT
+          chmod +x /tmp/run-maestro-ci.sh
+
       - name: Run Maestro E2E suite
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -297,38 +362,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
           emulator-boot-timeout: 300
-          script: |
-            # Install the Hobbyist app APK
-            adb install -r build/hobbyist-debug.apk
-
-            # ── Maestro driver setup ──────────────────────────────────────────
-            # The standard `launchApp` command crashes on Maestro 2.1.0 due to a
-            # TcpForwarder/port-7001 bug. Workaround: extract the driver APKs from
-            # the bundled JAR, side-load them, and forward port 7001 manually.
-            # All 10 YAML flows avoid `launchApp`; app lifecycle is ADB-only.
-            # See: run_tests.sh and CLAUDE.md → "Known issues and rules".
-            # Note: script runs under /usr/bin/sh (dash); pushd/popd are bash-only.
-            # Use a fixed dir + full paths to avoid variable-persistence issues.
-            mkdir -p /tmp/maestro-driver
-            cd /tmp/maestro-driver && jar xf "$HOME/.maestro/lib/maestro-client.jar" maestro-app.apk maestro-server.apk
-            adb install -r /tmp/maestro-driver/maestro-app.apk
-            adb install -r /tmp/maestro-driver/maestro-server.apk
-
-            # Start the on-device gRPC server and expose it to the host Maestro CLI.
-            adb shell am instrument -w dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &
-            adb forward tcp:7001 tcp:7001
-            sleep 3
-
-            # Pre-suite setup: fresh app state + pre-grant notification permission
-            # so the OS dialog never appears mid-test. POST_NOTIFICATIONS became a
-            # runtime permission in API 33; must be granted before the app starts.
-            adb shell pm clear tham.hobbyist.app
-            adb shell pm grant tham.hobbyist.app android.permission.POST_NOTIFICATIONS
-            adb shell am start -n tham.hobbyist.app/.MainActivity
-            sleep 3
-
-            # Run the full 10-flow ordered test suite
-            maestro test maestro-tests/suite.yml
+          script: bash /tmp/run-maestro-ci.sh
 
       # Upload results even on failure so flaky runs can be diagnosed.
       # The job is non-blocking (continue-on-error: true) so this always fires.
