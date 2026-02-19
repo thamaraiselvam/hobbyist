@@ -206,13 +206,8 @@ jobs:
       - name: Build debug APK
         run: flutter build apk --debug --no-pub
 
-      - name: Build release APK
-        run: flutter build apk --release --no-pub
-
-      - name: Rename APKs
-        run: |
-          mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/hobbyist-debug.apk
-          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/hobbyist-release.apk
+      - name: Rename APK
+        run: mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/hobbyist-debug.apk
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -220,19 +215,6 @@ jobs:
           name: hobbyist-debug-apk
           path: build/app/outputs/flutter-apk/hobbyist-debug.apk
           retention-days: 30
-
-      - name: Upload release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: hobbyist-release-apk
-          path: build/app/outputs/flutter-apk/hobbyist-release.apk
-          retention-days: 30
-
-      - name: Get APK info
-        run: |
-          ls -lh build/app/outputs/flutter-apk/
-          echo "✅ Android APK builds completed successfully!"
-          echo "📦 Download the artifacts from the Actions tab."
 
   maestro-e2e:
     name: Maestro E2E Tests
@@ -384,6 +366,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Download Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Debug APK: Available in artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Release APK: Available in artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- Coverage Report: Available in artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- E2E Results: Available in artifacts (push/dispatch runs only)" >> $GITHUB_STEP_SUMMARY
