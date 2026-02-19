@@ -330,12 +330,12 @@ jobs:
             # the bundled JAR, side-load them, and forward port 7001 manually.
             # All 10 YAML flows avoid `launchApp`; app lifecycle is ADB-only.
             # See: run_tests.sh and CLAUDE.md → "Known issues and rules".
-            TMPDIR=$(mktemp -d)
-            pushd "$TMPDIR"
-            jar xf "$HOME/.maestro/lib/maestro-client.jar" maestro-app.apk maestro-server.apk
-            adb install -r maestro-app.apk
-            adb install -r maestro-server.apk
-            popd
+            # Note: script runs under /usr/bin/sh (dash); pushd/popd are bash-only.
+            # Use a fixed dir + full paths to avoid variable-persistence issues.
+            mkdir -p /tmp/maestro-driver
+            cd /tmp/maestro-driver && jar xf "$HOME/.maestro/lib/maestro-client.jar" maestro-app.apk maestro-server.apk
+            adb install -r /tmp/maestro-driver/maestro-app.apk
+            adb install -r /tmp/maestro-driver/maestro-server.apk
 
             # Start the on-device gRPC server and expose it to the host Maestro CLI.
             adb shell am instrument -w dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &

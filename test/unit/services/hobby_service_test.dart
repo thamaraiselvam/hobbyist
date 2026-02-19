@@ -32,7 +32,8 @@ void main() {
 
   // Each test file gets a unique temp directory so concurrent test runs
   // don't collide on the same hobbyist.db file path.
-  final testDir = Directory.systemTemp.createTempSync('hobbyist_hobby_svc_test_');
+  final testDir =
+      Directory.systemTemp.createTempSync('hobbyist_hobby_svc_test_');
 
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
