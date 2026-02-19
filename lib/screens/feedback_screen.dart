@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/feedback_service.dart';
+import '../constants/test_keys.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -31,7 +32,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         const SnackBar(
           content: Text('Please enter your feedback'),
           backgroundColor: Color(0xFFD84A4A), // Readable red
-          
         ),
       );
       return;
@@ -55,8 +55,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Thank you for your feedback!'),
-              backgroundColor: const Color(0xFF4CAF78), // Readable green
-              
+              backgroundColor: Color(0xFF4CAF78), // Readable green
             ),
           );
           Navigator.pop(context);
@@ -65,7 +64,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             const SnackBar(
               content: Text('Failed to submit feedback. Please try again.'),
               backgroundColor: Color(0xFFD84A4A), // Readable red
-          
             ),
           );
         }
@@ -76,7 +74,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           SnackBar(
             content: Text('Error: ${e.toString()}'),
             backgroundColor: const Color(0xFFD84A4A), // Readable red
-            
           ),
         );
       }
@@ -131,6 +128,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   border: Border.all(color: const Color(0xFF382a54)),
                 ),
                 child: TextField(
+                  key: const Key(TestKeys.feedbackInput),
                   controller: _feedbackController,
                   maxLines: 8,
                   maxLength: 500,
@@ -182,6 +180,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   border: Border.all(color: const Color(0xFF382a54)),
                 ),
                 child: TextField(
+                  key: const Key(TestKeys.feedbackEmailInput),
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: const TextStyle(
@@ -210,12 +209,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               const SizedBox(height: 32),
               // Submit button
               ElevatedButton(
+                key: const Key(TestKeys.feedbackSubmitButton),
                 onPressed: _isSubmitting ? null : _submitFeedback,
                 style: ElevatedButton.styleFrom(
-                  
                   foregroundColor: Colors.white,
                   disabledBackgroundColor:
-                      const Color(0xFF6C3FFF).withOpacity(0.5),
+                      const Color(0xFF6C3FFF).withValues(alpha: 0.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

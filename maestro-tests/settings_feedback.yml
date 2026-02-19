@@ -1,0 +1,76 @@
+appId: com.thamaraiselvam.hobbyist
+---
+# Settings & Feedback Flow: Dashboard → Settings → toggles → feedback
+# Keys used: TestKeys.navSettings ('bottom_nav_settings'),
+#             settingsPushNotifications, settingsSoundVibration,
+#             settingsSendFeedback, feedbackInput, feedbackEmailInput,
+#             feedbackSubmitButton, navHome ('bottom_nav_home')
+
+- launchApp
+
+- assertVisible:
+    text: Hello
+    timeout: 5000
+
+# Navigate to Settings
+- tapOn:
+    id: "bottom_nav_settings"
+    timeout: 2000
+
+- assertVisible:
+    text: Settings
+    timeout: 3000
+
+# Toggle Push Notifications
+- tapOn:
+    id: "push_notifications_toggle"
+    timeout: 1000
+
+- waitForAnimationToSettle:
+    timeout: 300
+
+# Toggle Sound and Vibration
+- tapOn:
+    id: "completion_sound_toggle"
+    timeout: 1000
+
+- waitForAnimationToSettle:
+    timeout: 300
+
+# Scroll down to reach feedback option
+- swipe:
+    direction: UP
+    duration: 500
+
+# Tap Send Feedback
+- tapOn:
+    id: "send_feedback_button"
+    timeout: 2000
+
+- assertVisible:
+    text: Send Feedback
+    timeout: 3000
+
+# Enter feedback text
+- tapOn:
+    id: "feedback_textarea"
+    timeout: 2000
+
+- inputText: "This is a great app! Love the hobby tracking feature."
+
+# Enter email
+- tapOn:
+    id: "email_input"
+    timeout: 1000
+
+- inputText: "user@example.com"
+
+# Submit
+- tapOn:
+    id: "submit_feedback_button"
+    timeout: 3000
+
+# Verify success message
+- assertVisible:
+    text: Thank you for your feedback!
+    timeout: 3000

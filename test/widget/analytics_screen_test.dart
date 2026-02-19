@@ -19,14 +19,18 @@ void main() async {
 
   setUpAll(() async {
     // Mock path_provider
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
       return '.';
     });
 
     // Mock shared_preferences
-    const MethodChannel('plugins.flutter.io/shared_preferences')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/shared_preferences'),
+            (MethodCall methodCall) async {
       if (methodCall.method == 'getAll') {
         return <String, Object>{};
       }
@@ -44,9 +48,9 @@ void main() async {
       SharedPreferences.setMockInitialValues({});
       mockAnalyticsService = MockAnalyticsService();
       AnalyticsService.instance = mockAnalyticsService;
-      
+
       when(mockAnalyticsService.logAnalyticsViewed()).thenAnswer((_) async {});
-      
+
       testHobbies = [
         Hobby(
           id: 'test-1',
@@ -86,11 +90,12 @@ void main() async {
       expect(find.byType(AnalyticsScreen), findsOneWidget);
     });
 
-    testWidgets('should display with empty hobbies list', (WidgetTester tester) async {
+    testWidgets('should display with empty hobbies list',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: AnalyticsScreen(
-            hobbies: [],
+            hobbies: const [],
             onBack: () {},
             onNavigate: (_) {},
             onRefresh: () async {},
@@ -133,7 +138,8 @@ void main() async {
       expect(find.text('W'), findsOneWidget);
     });
 
-    testWidgets('should display hobbies with completions', (WidgetTester tester) async {
+    testWidgets('should display hobbies with completions',
+        (WidgetTester tester) async {
       final hobbyWithCompletions = Hobby(
         id: 'test-completed',
         name: 'Completed Hobby',
@@ -162,7 +168,8 @@ void main() async {
       expect(find.byType(AnalyticsScreen), findsOneWidget);
     });
 
-    testWidgets('should respond to didUpdateWidget', (WidgetTester tester) async {
+    testWidgets('should respond to didUpdateWidget',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: AnalyticsScreen(
@@ -189,7 +196,8 @@ void main() async {
       expect(find.byType(AnalyticsScreen), findsOneWidget);
     });
 
-    testWidgets('should handle hobby with all repeat modes', (WidgetTester tester) async {
+    testWidgets('should handle hobby with all repeat modes',
+        (WidgetTester tester) async {
       final allModeHobbies = [
         Hobby(
           id: 'daily-hobby',
@@ -239,7 +247,8 @@ void main() async {
       expect(find.byType(AnalyticsScreen), findsOneWidget);
     });
 
-    testWidgets('should display hobby with high streak', (WidgetTester tester) async {
+    testWidgets('should display hobby with high streak',
+        (WidgetTester tester) async {
       final highStreakHobby = Hobby(
         id: 'high-streak',
         name: 'High Streak Hobby',

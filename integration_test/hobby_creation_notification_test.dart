@@ -41,7 +41,7 @@ void main() {
         name: 'Daily Reading',
         notes: 'Read for 30 minutes',
         repeatMode: 'daily',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '09:00', // 9 AM
       );
 
@@ -71,7 +71,7 @@ void main() {
         name: 'Weekly Gym',
         notes: 'Go to gym on Mondays',
         repeatMode: 'weekly',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '08:00', // 8 AM
       );
 
@@ -100,7 +100,7 @@ void main() {
         name: 'Monthly Review',
         notes: 'Review goals on 15th',
         repeatMode: 'monthly',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '10:00', // 10 AM
       );
 
@@ -128,7 +128,7 @@ void main() {
         name: 'Flexible Task',
         notes: 'No specific time',
         repeatMode: 'daily',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '', // Empty means no notification
       );
 
@@ -155,7 +155,7 @@ void main() {
         name: 'Meditation',
         notes: 'Daily meditation',
         repeatMode: 'daily',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '07:00',
       );
 
@@ -187,7 +187,7 @@ void main() {
         name: 'Temporary Task',
         notes: 'Will be deleted',
         repeatMode: 'daily',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '12:00',
       );
 
@@ -220,7 +220,7 @@ void main() {
         id: '${DateTime.now().millisecondsSinceEpoch}_1',
         name: 'Daily Exercise',
         repeatMode: 'daily',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '06:00',
       );
 
@@ -228,7 +228,7 @@ void main() {
         id: '${DateTime.now().millisecondsSinceEpoch}_2',
         name: 'Weekly Planning',
         repeatMode: 'weekly',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '09:00',
       );
 
@@ -236,7 +236,7 @@ void main() {
         id: '${DateTime.now().millisecondsSinceEpoch}_3',
         name: 'Monthly Budget',
         repeatMode: 'monthly',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '10:00',
       );
 
@@ -275,7 +275,7 @@ void main() {
         name: 'Future Task',
         notes: 'Should notify in 2 minutes',
         repeatMode: 'daily',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: reminderTime,
       );
 
@@ -315,7 +315,7 @@ void main() {
           id: '${DateTime.now().millisecondsSinceEpoch}_$i',
           name: names[i],
           repeatMode: 'daily',
-          color: const Color(0xFF590df2).value,
+          color: const Color(0xFF590df2).toARGB32(),
           reminderTime: '${8 + i}:00',
         );
 
@@ -340,7 +340,7 @@ void main() {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Midnight Task',
         repeatMode: 'daily',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '00:00',
       );
 
@@ -359,7 +359,7 @@ void main() {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Late Night Task',
         repeatMode: 'daily',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '23:59',
       );
 
@@ -389,7 +389,7 @@ void main() {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Weekly Task',
         repeatMode: 'weekly',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '10:00',
       );
 
@@ -408,7 +408,7 @@ void main() {
           id: '${DateTime.now().millisecondsSinceEpoch}_$day',
           name: 'Monthly Task Day $day',
           repeatMode: 'monthly',
-          color: const Color(0xFF590df2).value,
+          color: const Color(0xFF590df2).toARGB32(),
           reminderTime: '10:00',
         );
 
@@ -428,7 +428,7 @@ void main() {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Daily Task',
         repeatMode: 'daily',
-        color: const Color(0xFF590df2).value,
+        color: const Color(0xFF590df2).toARGB32(),
         reminderTime: '08:00',
       );
 

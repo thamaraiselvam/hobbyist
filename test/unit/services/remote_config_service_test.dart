@@ -60,7 +60,7 @@ void main() {
             .thenReturn(RemoteConfigFetchStatus.success);
         when(mockRemoteConfig.getString('allow_developer_settings'))
             .thenReturn('{"feature_access_by_email":{}}');
-        
+
         // Re-initialize with stubbed methods
         await RemoteConfigService.initialize();
         expect(true, true);
@@ -83,9 +83,9 @@ void main() {
         when(mockRemoteConfig.lastFetchStatus)
             .thenReturn(RemoteConfigFetchStatus.success);
         // String longer than 100 characters to test substring logic
-        when(mockRemoteConfig.getString('allow_developer_settings'))
-            .thenReturn('{"feature_access_by_email":{"test@example.com":{"developer_options":true,"analytics_and_crash_reports":true}}}');
-        
+        when(mockRemoteConfig.getString('allow_developer_settings')).thenReturn(
+            '{"feature_access_by_email":{"test@example.com":{"developer_options":true,"analytics_and_crash_reports":true}}}');
+
         await RemoteConfigService.initialize();
         expect(true, true);
       });
@@ -98,7 +98,7 @@ void main() {
             .thenReturn(RemoteConfigFetchStatus.success);
         when(mockRemoteConfig.getString('allow_developer_settings'))
             .thenReturn('');
-        
+
         await RemoteConfigService.initialize();
         expect(true, true);
       });
@@ -115,7 +115,8 @@ void main() {
       });
 
       test('should return false when already up to date', () async {
-        when(mockRemoteConfig.fetchAndActivate()).thenAnswer((_) async => false);
+        when(mockRemoteConfig.fetchAndActivate())
+            .thenAnswer((_) async => false);
 
         final result = await service.fetchConfig();
 
@@ -153,7 +154,8 @@ void main() {
       });
 
       test('isSoundFeedbackEnabled should return config value', () {
-        when(mockRemoteConfig.getBool('enable_sound_feedback')).thenReturn(true);
+        when(mockRemoteConfig.getBool('enable_sound_feedback'))
+            .thenReturn(true);
         expect(service.isSoundFeedbackEnabled, true);
 
         when(mockRemoteConfig.getBool('enable_sound_feedback'))
@@ -263,7 +265,8 @@ void main() {
 
       test('getString should return config value not default', () {
         when(mockRemoteConfig.getString('any_key')).thenReturn('from_config');
-        expect(service.getString('any_key', defaultValue: 'fallback'), 'from_config');
+        expect(service.getString('any_key', defaultValue: 'fallback'),
+            'from_config');
       });
 
       test('getInt should return config int', () {
@@ -331,10 +334,10 @@ void main() {
       test('lastFetchTime should return different times', () {
         final time1 = DateTime(2024, 1, 15);
         final time2 = DateTime(2024, 6, 20);
-        
+
         when(mockRemoteConfig.lastFetchTime).thenReturn(time1);
         expect(service.lastFetchTime, time1);
-        
+
         when(mockRemoteConfig.lastFetchTime).thenReturn(time2);
         expect(service.lastFetchTime, time2);
       });

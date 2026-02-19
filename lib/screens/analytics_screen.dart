@@ -7,6 +7,7 @@ import '../services/hobby_service.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/test_keys.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   final List<Hobby> hobbies;
@@ -578,7 +579,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     border: Border.all(color: const Color(0x0DFFFFFF)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
+                        color: Colors.black.withValues(alpha: 0.25),
                         blurRadius: 30,
                         offset: const Offset(0, 8),
                       ),
@@ -670,7 +671,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     border: Border.all(color: const Color(0x0DFFFFFF)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
+                        color: Colors.black.withValues(alpha: 0.25),
                         blurRadius: 30,
                         offset: const Offset(0, 8),
                       ),
@@ -762,7 +763,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     border: Border.all(color: const Color(0x0DFFFFFF)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
+                        color: Colors.black.withValues(alpha: 0.25),
                         blurRadius: 30,
                         offset: const Offset(0, 8),
                       ),
@@ -888,18 +889,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildPeriodButton(String label, bool isSelected) {
+    final period = label == 'WEEKLY'
+        ? 'weekly'
+        : label == 'MONTHLY'
+            ? 'monthly'
+            : 'yearly';
     return Expanded(
       child: GestureDetector(
+        key: Key(TestKeys.analyticsPeriodButton(period)),
         onTap: () {
-          String period;
-          if (label == 'WEEKLY') {
-            period = 'Weekly';
-          } else if (label == 'MONTHLY') {
-            period = 'Monthly';
-          } else {
-            period = 'Yearly';
-          }
-          setState(() => _selectedPeriod = period);
+          setState(() =>
+              _selectedPeriod = period[0].toUpperCase() + period.substring(1));
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -925,6 +925,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget _buildCompactPeriodButton(
       String label, bool isSelected, String period) {
     return GestureDetector(
+      key: Key(TestKeys.analyticsPeriodButton(period.toLowerCase())),
       onTap: () {
         setState(() => _selectedPeriod = period);
       },
@@ -1119,7 +1120,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: barColor.withOpacity(0.4),
+                                            color:
+                                                barColor.withValues(alpha: 0.4),
                                             blurRadius: 2,
                                             offset: const Offset(0, 1),
                                           ),
@@ -1389,7 +1391,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         borderRadius: BorderRadius.circular(2),
         border: isToday
             ? Border.all(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 width: 1,
               )
             : null,
@@ -1506,7 +1508,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF6B35).withOpacity(0.1),
+                        color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -1536,7 +1538,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFD700).withOpacity(0.1),
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -1618,7 +1620,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         borderRadius: BorderRadius.circular(2),
         border: isToday
             ? Border.all(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 width: 1,
               )
             : null,
@@ -1695,6 +1697,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _buildCreateButton() {
     return GestureDetector(
+      key: const Key(TestKeys.addHobbyFab),
       behavior: HitTestBehavior.opaque,
       onTap: () async {
         await Navigator.push(
@@ -1718,7 +1721,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6C3FFF).withOpacity(0.4),
+              color: const Color(0xFF6C3FFF).withValues(alpha: 0.4),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -1739,6 +1742,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
+          key: Key(TestKeys.navItem(index)),
           onTap: () => widget.onNavigate(index),
           borderRadius: BorderRadius.circular(24),
           child: Container(

@@ -4,10 +4,8 @@ import 'package:firebase_performance/firebase_performance.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:hobbyist/database/database_helper.dart';
-import 'package:sqflite/sqflite.dart';
 import 'dart:io';
 
 @GenerateNiceMocks([
@@ -27,8 +25,10 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
 
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
       return '.';
     });
   });
@@ -40,20 +40,23 @@ void main() {
 
     mockPerformance = MockFirebasePerformance();
     mockTrace = MockTrace();
-    
+
     when(mockPerformance.newTrace(any)).thenReturn(mockTrace);
-    
+
     PerformanceService.mockPerformance = mockPerformance;
     await PerformanceService.initialize();
     service = PerformanceService();
 
     // Enable telemetry for tests that expect it enabled
     final db = await DatabaseHelper.instance.database;
-    await db.insert('settings', {
-      'key': 'telemetry_enabled',
-      'value': 'true',
-      'updated_at': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+        'settings',
+        {
+          'key': 'telemetry_enabled',
+          'value': 'true',
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace);
   });
 
   tearDown(() {
@@ -68,7 +71,7 @@ void main() {
     test('updateCollectionEnabled', () async {
       when(mockPerformance.setPerformanceCollectionEnabled(true))
           .thenAnswer((_) async {});
-      
+
       await service.updateCollectionEnabled();
       verify(mockPerformance.setPerformanceCollectionEnabled(true)).called(1);
     });
@@ -87,7 +90,7 @@ void main() {
       final result = await service.traceDatabaseQuery('test_query', () async {
         return 'success';
       });
-      
+
       expect(result, 'success');
       verify(mockPerformance.newTrace('db_test_query')).called(1);
       verify(mockTrace.start()).called(1);
@@ -100,7 +103,7 @@ void main() {
           throw Exception('error');
         });
       } catch (_) {}
-      
+
       verify(mockTrace.start()).called(1);
       verify(mockTrace.stop()).called(1);
     });
@@ -109,19 +112,15 @@ void main() {
       await service.traceScreenLoad('test_screen', () async {
         return 'done';
       });
-      
+
       verify(mockPerformance.newTrace('screen_test_screen')).called(1);
       verify(mockTrace.stop()).called(1);
     });
 
     test('traceOperation with attributes and metrics', () async {
-      await service.traceOperation(
-        'test_op', 
-        () async => 'result',
-        attributes: {'attr': 'val'},
-        metrics: {'met': 123}
-      );
-      
+      await service.traceOperation('test_op', () async => 'result',
+          attributes: {'attr': 'val'}, metrics: {'met': 123});
+
       verify(mockTrace.putAttribute('attr', 'val')).called(1);
       verify(mockTrace.setMetric('met', 123)).called(1);
       verify(mockTrace.start()).called(1);
@@ -134,7 +133,7 @@ void main() {
           throw Exception('error');
         });
       } catch (_) {}
-      
+
       verify(mockTrace.stop()).called(1);
     });
 
@@ -148,11 +147,14 @@ void main() {
 
     test('Behavior when telemetry is disabled', () async {
       final db = await DatabaseHelper.instance.database;
-      await db.insert('settings', {
-        'key': 'telemetry_enabled',
-        'value': 'false',
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert(
+          'settings',
+          {
+            'key': 'telemetry_enabled',
+            'value': 'false',
+            'updated_at': DateTime.now().millisecondsSinceEpoch,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace);
 
       final trace = await service.startTrace('test');
       expect(trace, isNull);

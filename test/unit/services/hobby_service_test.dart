@@ -23,7 +23,6 @@ import 'hobby_service_test.mocks.dart';
 ])
 void main() {
   late HobbyService service;
-  late MockDatabaseHelper mockDatabase;
   late MockNotificationService mockNotification;
   late MockAnalyticsService mockAnalytics;
   late MockPerformanceService mockPerformance;
@@ -32,22 +31,28 @@ void main() {
 
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    
+
     // Mock path_provider
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
       return '.';
     });
 
     // Mock local_notifications
-    const MethodChannel('dexterous.com/flutter/local_notifications')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('dexterous.com/flutter/local_notifications'),
+            (MethodCall methodCall) async {
       return null;
     });
 
     // Mock shared_preferences
-    const MethodChannel('plugins.flutter.io/shared_preferences')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/shared_preferences'),
+            (MethodCall methodCall) async {
       if (methodCall.method == 'getAll') {
         return <String, Object>{}; // Return empty map
       }
@@ -76,15 +81,17 @@ void main() {
 
     await DatabaseHelper.instance.clearAllData();
 
-    // Default stubs
-    when(mockPerformance.traceDatabaseQuery(any, any))
-        .thenAnswer((invocation) async {
-      final callback = invocation.positionalArguments[1] as Future<dynamic> Function();
-      return await callback();
+    // Default stubs - use non-async handler to preserve generic type T
+    when(mockPerformance.traceDatabaseQuery(any, any)).thenAnswer((invocation) {
+      final callback =
+          invocation.positionalArguments[1] as Future<dynamic> Function();
+      return callback();
     });
-    
-    when(mockNotification.scheduleNotification(any)).thenAnswer((_) async => true);
-    when(mockNotification.getPendingNotifications()).thenAnswer((_) async => []);
+
+    when(mockNotification.scheduleNotification(any))
+        .thenAnswer((_) async => true);
+    when(mockNotification.getPendingNotifications())
+        .thenAnswer((_) async => []);
   });
 
   group('HobbyService Tests', () {

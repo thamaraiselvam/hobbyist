@@ -13,8 +13,10 @@ void main() async {
 
   setUpAll(() async {
     // Mock path_provider
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
       return '.';
     });
 
@@ -25,7 +27,6 @@ void main() async {
   });
 
   group('NameInputScreen Widget Tests', () {
-
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });

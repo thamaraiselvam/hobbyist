@@ -12,8 +12,10 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
 
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
       return '.';
     });
   });
@@ -37,19 +39,22 @@ void main() {
       expect(db, isNotNull);
       expect(db.path, contains('hobbyist.db'));
 
-      final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
+      final tables = await db
+          .rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
       final tableNames = tables.map((t) => t['name'] as String).toList();
-      
+
       expect(tableNames, containsAll(['hobbies', 'completions', 'settings']));
     });
 
     test('clearAllData', () async {
       final db = await DatabaseHelper.instance.database;
-      
+
       // Ensure landing setting exists (it should from _createDB)
-      final existingNames = await db.query('settings', where: 'key = ?', whereArgs: ['has_seen_landing']);
+      final existingNames = await db
+          .query('settings', where: 'key = ?', whereArgs: ['has_seen_landing']);
       if (existingNames.isEmpty) {
-        await db.insert('settings', {'key': 'has_seen_landing', 'value': 'true', 'updated_at': 0});
+        await db.insert('settings',
+            {'key': 'has_seen_landing', 'value': 'true', 'updated_at': 0});
       }
 
       // Insert some data
@@ -60,13 +65,14 @@ void main() {
         'created_at': 0,
         'updated_at': 0,
       });
-      
+
       await DatabaseHelper.instance.clearAllData();
-      
+
       final hobbies = await db.query('hobbies');
       expect(hobbies, isEmpty);
-      
-      final setting = await db.query('settings', where: 'key = ?', whereArgs: ['has_seen_landing']);
+
+      final setting = await db
+          .query('settings', where: 'key = ?', whereArgs: ['has_seen_landing']);
       expect(setting, isNotEmpty);
       expect(setting.first['value'], 'false');
     });
@@ -88,33 +94,33 @@ void main() {
       final upgradePath = join(dbFolder, 'hobbyist_upgrade.db');
 
       // Create version 1 database manually
-      final dbV1 = await openDatabase(upgradePath, version: 1, onCreate: (db, version) async {
-        await db.execute('CREATE TABLE hobbies (id TEXT PRIMARY KEY, name TEXT NOT NULL, notes TEXT, repeat_mode TEXT NOT NULL DEFAULT "daily", priority INTEGER NOT NULL DEFAULT 0, color INTEGER NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)');
-        await db.execute('CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL)');
+      final dbV1 = await openDatabase(upgradePath, version: 1,
+          onCreate: (db, version) async {
+        await db.execute(
+            'CREATE TABLE hobbies (id TEXT PRIMARY KEY, name TEXT NOT NULL, notes TEXT, repeat_mode TEXT NOT NULL DEFAULT "daily", priority INTEGER NOT NULL DEFAULT 0, color INTEGER NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)');
+        await db.execute(
+            'CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL)');
       });
       await dbV1.close();
 
-      print('DEBUG: dbPath=$dbPath');
-      print('DEBUG: upgradePath=$upgradePath');
-
       if (File(dbPath).existsSync()) File(dbPath).deleteSync();
       File(upgradePath).copySync(dbPath);
-      print('DEBUG: File copied: ${File(dbPath).existsSync()}');
 
       final db = await DatabaseHelper.instance.database;
-      
+
       // Check if columns from upgrades exist
       final columns = await db.rawQuery('PRAGMA table_info(hobbies)');
       final columnNames = columns.map((c) => c['name'] as String).toList();
-      
+
       expect(columnNames, contains('reminder_time')); // v2
-      expect(columnNames, contains('custom_day'));    // v3
-      expect(columnNames, contains('best_streak'));   // v4
-      
+      expect(columnNames, contains('custom_day')); // v3
+      expect(columnNames, contains('best_streak')); // v4
+
       // Check if telemetry_enabled setting was added
-      final telemetry = await db.query('settings', where: 'key = ?', whereArgs: ['telemetry_enabled']);
+      final telemetry = await db.query('settings',
+          where: 'key = ?', whereArgs: ['telemetry_enabled']);
       expect(telemetry, isNotEmpty);
-      
+
       await DatabaseHelper.instance.close();
       if (File(upgradePath).existsSync()) File(upgradePath).deleteSync();
       if (File(dbPath).existsSync()) File(dbPath).deleteSync();
