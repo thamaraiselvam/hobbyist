@@ -91,7 +91,8 @@ class _AnimatedCheckboxState extends State<AnimatedCheckbox>
                 ? CustomPaint(
                     painter: CheckmarkPainter(
                       progress: _checkAnimation.value,
-                      color: Colors.white.withValues(alpha: isEnabled ? 1.0 : 0.5),
+                      color:
+                          Colors.white.withValues(alpha: isEnabled ? 1.0 : 0.5),
                     ),
                   )
                 : null,

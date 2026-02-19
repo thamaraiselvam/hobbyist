@@ -39,7 +39,8 @@ void main() {
     test('isFeatureEnabled when logged in but no config', () {
       when(mockAuth.isLoggedIn).thenReturn(true);
       when(mockAuth.userEmail).thenReturn('test@example.com');
-      when(mockRemoteConfig.getString('allow_developer_settings')).thenReturn('');
+      when(mockRemoteConfig.getString('allow_developer_settings'))
+          .thenReturn('');
 
       expect(service.isFeatureEnabled('any'), false);
     });
@@ -53,10 +54,11 @@ void main() {
           }
         }
       };
-      
+
       when(mockAuth.isLoggedIn).thenReturn(true);
       when(mockAuth.userEmail).thenReturn('test@example.com');
-      when(mockRemoteConfig.getString('allow_developer_settings')).thenReturn(jsonEncode(config));
+      when(mockRemoteConfig.getString('allow_developer_settings'))
+          .thenReturn(jsonEncode(config));
 
       expect(service.isFeatureEnabled('feat_1'), true);
       expect(service.isFeatureEnabled('feat_2'), false);
@@ -73,10 +75,11 @@ void main() {
           }
         }
       };
-      
+
       when(mockAuth.isLoggedIn).thenReturn(true);
       when(mockAuth.userEmail).thenReturn('test@example.com');
-      when(mockRemoteConfig.getString('allow_developer_settings')).thenReturn(jsonEncode(config));
+      when(mockRemoteConfig.getString('allow_developer_settings'))
+          .thenReturn(jsonEncode(config));
 
       final enabled = service.getEnabledFeatures();
       expect(enabled, containsAll(['feat_1', 'feat_3']));
@@ -92,10 +95,11 @@ void main() {
           }
         }
       };
-      
+
       when(mockAuth.isLoggedIn).thenReturn(true);
       when(mockAuth.userEmail).thenReturn('test@example.com');
-      when(mockRemoteConfig.getString('allow_developer_settings')).thenReturn(jsonEncode(config));
+      when(mockRemoteConfig.getString('allow_developer_settings'))
+          .thenReturn(jsonEncode(config));
 
       expect(service.isDeveloperOptionsEnabled, true);
       expect(service.isAnalyticsAndCrashReportsEnabled, false);
@@ -109,8 +113,9 @@ void main() {
     });
 
     test('Error handling in loadDeveloperSettings', () {
-      when(mockRemoteConfig.getString('allow_developer_settings')).thenReturn('invalid json');
-      
+      when(mockRemoteConfig.getString('allow_developer_settings'))
+          .thenReturn('invalid json');
+
       // Should not throw, just set settings to null
       service.loadDeveloperSettings();
       when(mockAuth.isLoggedIn).thenReturn(true);

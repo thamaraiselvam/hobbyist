@@ -31,22 +31,28 @@ void main() {
 
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    
+
     // Mock path_provider
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/path_provider'), (MethodCall methodCall) async {
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
       return '.';
     });
 
     // Mock local_notifications
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('dexterous.com/flutter/local_notifications'), (MethodCall methodCall) async {
+        .setMockMethodCallHandler(
+            const MethodChannel('dexterous.com/flutter/local_notifications'),
+            (MethodCall methodCall) async {
       return null;
     });
 
     // Mock shared_preferences
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/shared_preferences'), (MethodCall methodCall) async {
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/shared_preferences'),
+            (MethodCall methodCall) async {
       if (methodCall.method == 'getAll') {
         return <String, Object>{}; // Return empty map
       }
@@ -78,12 +84,15 @@ void main() {
     // Default stubs
     when(mockPerformance.traceDatabaseQuery(any, any))
         .thenAnswer((invocation) async {
-      final callback = invocation.positionalArguments[1] as Future<dynamic> Function();
+      final callback =
+          invocation.positionalArguments[1] as Future<dynamic> Function();
       return await callback();
     });
-    
-    when(mockNotification.scheduleNotification(any)).thenAnswer((_) async => true);
-    when(mockNotification.getPendingNotifications()).thenAnswer((_) async => []);
+
+    when(mockNotification.scheduleNotification(any))
+        .thenAnswer((_) async => true);
+    when(mockNotification.getPendingNotifications())
+        .thenAnswer((_) async => []);
   });
 
   group('HobbyService Tests', () {

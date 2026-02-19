@@ -94,7 +94,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Name is synced from your Google account'),
-          
         ),
       );
       return;
@@ -467,7 +466,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    
                     child: _isGoogleSignedIn && _userEmail != null
                         ? const Icon(Icons.person,
                             color: Colors.white, size: 28)
@@ -586,11 +584,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: value,
             onChanged: onChanged,
             thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.selected)) return const Color(0xFF10B981);
+              if (states.contains(WidgetState.selected))
+                return const Color(0xFF10B981);
               return Colors.white;
             }),
             trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.selected)) return const Color(0xFF10B981).withValues(alpha: 0.5);
+              if (states.contains(WidgetState.selected))
+                return const Color(0xFF10B981).withValues(alpha: 0.5);
               return const Color(0xFF3D3449);
             }),
           ),
@@ -920,7 +920,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Refreshing feature flags from Firebase...'),
-              
               duration: Duration(seconds: 2),
             ),
           );
@@ -938,7 +937,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 content: Text(
                     'Feature flags refreshed! Email: ${_authService.userEmail}'),
                 backgroundColor: const Color(0xFF4CAF78), // Readable green
-                
+
                 duration: const Duration(seconds: 3),
               ),
             );

@@ -21,29 +21,29 @@ void main() {
     mockFirestore = MockFirebaseFirestore();
     mockCollection = MockCollectionReference();
     mockDocument = MockDocumentReference();
-    
+
     when(mockFirestore.collection(any)).thenReturn(mockCollection);
-    
+
     service = FeedbackService(firestore: mockFirestore);
   });
 
   group('FeedbackService Tests', () {
     test('submitFeedback success', () async {
       when(mockCollection.add(any)).thenAnswer((_) async => mockDocument);
-      
+
       final result = await service.submitFeedback(
-        feedbackText: 'Great app!',
-        email: 'test@example.com'
-      );
-      
+          feedbackText: 'Great app!', email: 'test@example.com');
+
       expect(result, true);
       verify(mockFirestore.collection('feedback')).called(1);
-      verify(mockCollection.add(argThat(containsPair('feedback', 'Great app!')))).called(1);
+      verify(mockCollection
+              .add(argThat(containsPair('feedback', 'Great app!'))))
+          .called(1);
     });
 
     test('submitFeedback empty text', () async {
       final result = await service.submitFeedback(feedbackText: '  ');
-      
+
       expect(result, false);
       verifyNever(mockFirestore.collection(any));
     });
@@ -51,16 +51,17 @@ void main() {
     test('submitFeedback too long text', () async {
       final longText = 'a' * 501;
       final result = await service.submitFeedback(feedbackText: longText);
-      
+
       expect(result, false);
       verifyNever(mockFirestore.collection(any));
     });
 
     test('submitFeedback firestore error', () async {
-      when(mockCollection.add(any)).thenThrow(FirebaseException(plugin: 'firestore', message: 'test error'));
-      
+      when(mockCollection.add(any)).thenThrow(
+          FirebaseException(plugin: 'firestore', message: 'test error'));
+
       final result = await service.submitFeedback(feedbackText: 'test');
-      
+
       expect(result, false);
     });
   });

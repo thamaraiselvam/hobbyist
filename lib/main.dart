@@ -96,7 +96,8 @@ class HobbyTrackerApp extends StatelessWidget {
           ),
         ),
         snackBarTheme: const SnackBarThemeData(
-          backgroundColor: Color(0xFF3D3560), // Darker purple-grey for background
+          backgroundColor:
+              Color(0xFF3D3560), // Darker purple-grey for background
           contentTextStyle: TextStyle(
             color: Color(0xFFE8E5F0), // Light purple-white for text
             fontSize: 14,

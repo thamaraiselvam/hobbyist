@@ -183,23 +183,26 @@ class HobbyService {
         try {
           print(
               '📅 Scheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
-          final success = await _notificationService.scheduleNotification(hobby);
+          final success =
+              await _notificationService.scheduleNotification(hobby);
           if (success) {
-            final pending = await _notificationService.getPendingNotifications();
+            final pending =
+                await _notificationService.getPendingNotifications();
             print('✅ Notification scheduled. Total pending: ${pending.length}');
           } else {
-            print('⚠️ Notification scheduling returned false for "${hobby.name}"');
+            print(
+                '⚠️ Notification scheduling returned false for "${hobby.name}"');
           }
         } catch (notifError, notifStackTrace) {
           // Log notification error but don't fail the hobby creation
-          print('⚠️ Failed to schedule notification for "${hobby.name}": $notifError');
+          print(
+              '⚠️ Failed to schedule notification for "${hobby.name}": $notifError');
           await _crashlytics.logError(notifError, notifStackTrace,
               reason: 'Failed to schedule notification during hobby creation');
         }
       }
     } catch (e, stackTrace) {
-      await _crashlytics.logError(e, stackTrace,
-          reason: 'Failed to add hobby');
+      await _crashlytics.logError(e, stackTrace, reason: 'Failed to add hobby');
       rethrow;
     }
   }
@@ -258,17 +261,22 @@ class HobbyService {
         if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
           print(
               '📅 Rescheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
-          final success = await _notificationService.scheduleNotification(hobby);
+          final success =
+              await _notificationService.scheduleNotification(hobby);
           if (success) {
-            final pending = await _notificationService.getPendingNotifications();
-            print('✅ Notification rescheduled. Total pending: ${pending.length}');
+            final pending =
+                await _notificationService.getPendingNotifications();
+            print(
+                '✅ Notification rescheduled. Total pending: ${pending.length}');
           } else {
-            print('⚠️ Notification rescheduling returned false for "${hobby.name}"');
+            print(
+                '⚠️ Notification rescheduling returned false for "${hobby.name}"');
           }
         }
       } catch (notifError, notifStackTrace) {
         // Log notification error but don't fail the hobby update
-        print('⚠️ Failed to reschedule notification for "${hobby.name}": $notifError');
+        print(
+            '⚠️ Failed to reschedule notification for "${hobby.name}": $notifError');
         await _crashlytics.logError(notifError, notifStackTrace,
             reason: 'Failed to reschedule notification during hobby update');
       }

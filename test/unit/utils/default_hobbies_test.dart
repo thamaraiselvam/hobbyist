@@ -28,16 +28,21 @@ void main() {
 
     test('should include fitness hobbies', () {
       final fitnessHobbies = DefaultHobbies.hobbies
-          .where((h) => ['Running', 'Cycling', 'Swimming', 'Yoga', 'Gym Workout']
-              .contains(h.name))
+          .where((h) => [
+                'Running',
+                'Cycling',
+                'Swimming',
+                'Yoga',
+                'Gym Workout'
+              ].contains(h.name))
           .toList();
       expect(fitnessHobbies.length, 5);
     });
 
     test('should include creative hobbies', () {
       final creativeHobbies = DefaultHobbies.hobbies
-          .where((h) =>
-              ['Painting', 'Drawing', 'Photography', 'Writing'].contains(h.name))
+          .where((h) => ['Painting', 'Drawing', 'Photography', 'Writing']
+              .contains(h.name))
           .toList();
       expect(creativeHobbies.length, 4);
     });
@@ -83,7 +88,7 @@ void main() {
         final resultsLower = DefaultHobbies.search('running');
         final resultsUpper = DefaultHobbies.search('RUNNING');
         final resultsMixed = DefaultHobbies.search('RuNnInG');
-        
+
         expect(resultsLower.length, 1);
         expect(resultsUpper.length, 1);
         expect(resultsMixed.length, 1);

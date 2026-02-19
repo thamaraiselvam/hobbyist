@@ -24,7 +24,7 @@ void main() {
 
       expect(find.byType(SplashScreen), findsOneWidget);
       expect(find.byType(FadeTransition), findsOneWidget);
-      
+
       await tester.pump(const Duration(seconds: 3));
     });
 
@@ -84,7 +84,7 @@ void main() {
       );
 
       expect(fadeTransition.opacity, isNotNull);
-      
+
       // Drain the timer
       await tester.pump(const Duration(seconds: 3));
     });

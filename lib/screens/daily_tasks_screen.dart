@@ -1123,7 +1123,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
+                              color: const Color(0xFFFF6B35)
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1155,7 +1156,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700).withValues(alpha: 0.1),
+                              color: const Color(0xFFFFD700)
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1291,17 +1293,18 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                     try {
                       final hobbyName = hobby.name;
                       await _service.deleteHobby(hobby.id);
-                      
+
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('🗑️ Hobby "$hobbyName" deleted successfully'),
+                            content: Text(
+                                '🗑️ Hobby "$hobbyName" deleted successfully'),
                             backgroundColor: Colors.orange,
                             duration: const Duration(seconds: 2),
                           ),
                         );
                       }
-                      
+
                       // Reload hobbies and wait for widget rebuild
                       await _loadHobbies();
                       // Wait for build to complete
@@ -1312,7 +1315,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('❌ Error deleting hobby: ${e.toString()}'),
+                            content:
+                                Text('❌ Error deleting hobby: ${e.toString()}'),
                             backgroundColor: Colors.red,
                             duration: const Duration(seconds: 4),
                           ),

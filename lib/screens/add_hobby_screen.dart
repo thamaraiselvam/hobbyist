@@ -114,11 +114,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             customDay: customDay,
           );
           await _service.updateHobby(updatedHobby);
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('✅ Hobby "${_nameController.text}" updated successfully'),
+                content: Text(
+                    '✅ Hobby "${_nameController.text}" updated successfully'),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
               ),
@@ -137,11 +138,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             customDay: customDay,
           );
           await _service.addHobby(hobby);
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('✅ Hobby "${_nameController.text}" created successfully'),
+                content: Text(
+                    '✅ Hobby "${_nameController.text}" created successfully'),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
               ),
@@ -461,8 +463,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                               border: Border.all(
                                                 color: isSelected
                                                     ? const Color(0xFF590df2)
-                                                    : Colors.white
-                                                        .withValues(alpha: 0.05),
+                                                    : Colors.white.withValues(
+                                                        alpha: 0.05),
                                               ),
                                             ),
                                             child: Center(
@@ -645,9 +647,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                                     const SnackBar(
                                                       content: Text(
                                                         'Notification permission denied. Please enable it in settings.',
-                                                        style: TextStyle(color: Colors.white),
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white),
                                                       ),
-                                                      backgroundColor: Color(0xFFE88D39), // Readable orange
+                                                      backgroundColor: Color(
+                                                          0xFFE88D39), // Readable orange
                                                     ),
                                                   );
                                                 }
@@ -660,12 +665,19 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             _notifyEnabled = value;
                                           });
                                         },
-                                        thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                                          if (states.contains(WidgetState.selected)) return const Color(0xFF590df2);
+                                        thumbColor: WidgetStateProperty
+                                            .resolveWith<Color?>((states) {
+                                          if (states
+                                              .contains(WidgetState.selected))
+                                            return const Color(0xFF590df2);
                                           return null;
                                         }),
-                                        trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                                          if (states.contains(WidgetState.selected)) return const Color(0xFF590df2).withValues(alpha: 0.5);
+                                        trackColor: WidgetStateProperty
+                                            .resolveWith<Color?>((states) {
+                                          if (states
+                                              .contains(WidgetState.selected))
+                                            return const Color(0xFF590df2)
+                                                .withValues(alpha: 0.5);
                                           return null;
                                         }),
                                       ),
@@ -778,8 +790,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 elevation: 8,
-                                shadowColor:
-                                    const Color(0xFF590df2).withValues(alpha: 0.3),
+                                shadowColor: const Color(0xFF590df2)
+                                    .withValues(alpha: 0.3),
                               ),
                               child: Text(
                                 widget.hobby != null

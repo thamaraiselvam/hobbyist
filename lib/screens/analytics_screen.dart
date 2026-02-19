@@ -1119,7 +1119,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: barColor.withValues(alpha: 0.4),
+                                            color:
+                                                barColor.withValues(alpha: 0.4),
                                             blurRadius: 2,
                                             offset: const Offset(0, 1),
                                           ),

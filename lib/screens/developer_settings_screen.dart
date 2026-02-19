@@ -234,7 +234,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✅ Created 15 predefined tasks!'),
-              
               duration: Duration(seconds: 2),
             ),
           );
@@ -278,7 +277,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✅ Added random completions to existing tasks!'),
-              
               duration: Duration(seconds: 2),
             ),
           );
@@ -323,9 +321,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              
-            ),
+            style: ElevatedButton.styleFrom(),
             child: const Text('Create'),
           ),
         ],
@@ -376,7 +372,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Created "create app" with 100 days streak!'),
-            
             duration: Duration(seconds: 3),
           ),
         );
@@ -452,7 +447,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Test notification sent!'),
-            
           ),
         );
       }
@@ -529,7 +523,8 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                 ),
                 value: _pullToRefreshEnabled,
                 thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                  if (states.contains(WidgetState.selected)) return const Color(0xFF6C3FFF);
+                  if (states.contains(WidgetState.selected))
+                    return const Color(0xFF6C3FFF);
                   return null;
                 }),
                 onChanged: _togglePullToRefresh,

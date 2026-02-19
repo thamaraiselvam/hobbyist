@@ -31,7 +31,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         const SnackBar(
           content: Text('Please enter your feedback'),
           backgroundColor: Color(0xFFD84A4A), // Readable red
-          
         ),
       );
       return;
@@ -64,7 +63,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             const SnackBar(
               content: Text('Failed to submit feedback. Please try again.'),
               backgroundColor: Color(0xFFD84A4A), // Readable red
-          
             ),
           );
         }
@@ -75,7 +73,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           SnackBar(
             content: Text('Error: ${e.toString()}'),
             backgroundColor: const Color(0xFFD84A4A), // Readable red
-            
           ),
         );
       }
@@ -211,7 +208,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitFeedback,
                 style: ElevatedButton.styleFrom(
-                  
                   foregroundColor: Colors.white,
                   disabledBackgroundColor:
                       const Color(0xFF6C3FFF).withValues(alpha: 0.5),
