@@ -130,28 +130,28 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 child: Semantics(
                   identifier: TestKeys.feedbackInput,
                   child: TextField(
-                  key: const Key(TestKeys.feedbackInput),
-                  controller: _feedbackController,
-                  maxLines: 8,
-                  maxLength: 500,
-                  onChanged: (text) {
-                    setState(() {
-                      _remainingChars = 500 - text.length;
-                    });
-                  },
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
+                    key: const Key(TestKeys.feedbackInput),
+                    controller: _feedbackController,
+                    maxLines: 8,
+                    maxLength: 500,
+                    onChanged: (text) {
+                      setState(() {
+                        _remainingChars = 500 - text.length;
+                      });
+                    },
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText:
+                          'Share your feedback, suggestions, or report issues...',
+                      hintStyle: TextStyle(color: Colors.white38),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(16),
+                      counterText: '',
+                    ),
                   ),
-                  decoration: const InputDecoration(
-                    hintText:
-                        'Share your feedback, suggestions, or report issues...',
-                    hintStyle: TextStyle(color: Colors.white38),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(16),
-                    counterText: '',
-                  ),
-                ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -217,35 +217,35 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               Semantics(
                 identifier: TestKeys.feedbackSubmitButton,
                 child: ElevatedButton(
-                key: const Key(TestKeys.feedbackSubmitButton),
-                onPressed: _isSubmitting ? null : _submitFeedback,
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor:
-                      const Color(0xFF6C3FFF).withValues(alpha: 0.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                  key: const Key(TestKeys.feedbackSubmitButton),
+                  onPressed: _isSubmitting ? null : _submitFeedback,
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        const Color(0xFF6C3FFF).withValues(alpha: 0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  elevation: 0,
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Submit Feedback',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      )
-                    : const Text(
-                        'Submit Feedback',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
                 ),
               ),
             ],

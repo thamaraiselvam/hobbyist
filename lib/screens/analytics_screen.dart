@@ -900,8 +900,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         child: GestureDetector(
           key: Key(TestKeys.analyticsPeriodButton(period)),
           onTap: () {
-            setState(() =>
-                _selectedPeriod = period[0].toUpperCase() + period.substring(1));
+            setState(() => _selectedPeriod =
+                period[0].toUpperCase() + period.substring(1));
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10),

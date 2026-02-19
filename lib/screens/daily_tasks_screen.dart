@@ -1077,7 +1077,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                   isChecked: isCompleted,
                   onTap: isFutureDate
                       ? null
-                      : () => _toggleToday(hobby), // Disable tap for future dates
+                      : () =>
+                          _toggleToday(hobby), // Disable tap for future dates
                   size: 24,
                   color: Color(hobby.color),
                 ),

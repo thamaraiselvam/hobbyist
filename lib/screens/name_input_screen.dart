@@ -110,7 +110,8 @@ class _NameInputScreenState extends State<NameInputScreen> {
                         decoration: InputDecoration(
                           hintText: 'e.g. Tham',
                           hintStyle: TextStyle(
-                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                            color:
+                                const Color(0xFF8B5CF6).withValues(alpha: 0.4),
                             fontSize: 24,
                             fontWeight: FontWeight.w500,
                           ),

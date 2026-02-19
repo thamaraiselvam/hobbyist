@@ -324,8 +324,9 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                         borderRadius: BorderRadius.circular(16),
                                         borderSide: BorderSide.none,
                                       ),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 24, vertical: 20),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 24, vertical: 20),
                                     ),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
@@ -632,7 +633,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                         ],
                                       ),
                                       Semantics(
-                                        identifier: TestKeys.addHobbyNotifyToggle,
+                                        identifier:
+                                            TestKeys.addHobbyNotifyToggle,
                                         child: Switch(
                                           key: const Key(
                                               TestKeys.addHobbyNotifyToggle),
@@ -654,7 +656,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                                 if (!granted) {
                                                   // Permission denied, show message
                                                   if (mounted) {
-                                                    ScaffoldMessenger.of(context)
+                                                    ScaffoldMessenger.of(
+                                                            context)
                                                         .showSnackBar(
                                                       const SnackBar(
                                                         content: Text(
@@ -679,16 +682,16 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                           },
                                           thumbColor: WidgetStateProperty
                                               .resolveWith<Color?>((states) {
-                                            if (states
-                                                .contains(WidgetState.selected)) {
+                                            if (states.contains(
+                                                WidgetState.selected)) {
                                               return const Color(0xFF590df2);
                                             }
                                             return null;
                                           }),
                                           trackColor: WidgetStateProperty
                                               .resolveWith<Color?>((states) {
-                                            if (states
-                                                .contains(WidgetState.selected)) {
+                                            if (states.contains(
+                                                WidgetState.selected)) {
                                               return const Color(0xFF590df2)
                                                   .withValues(alpha: 0.5);
                                             }
@@ -702,70 +705,72 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                     const SizedBox(height: 16),
                                     // Notification time
                                     Semantics(
-                                      identifier: TestKeys.addHobbyReminderPicker,
+                                      identifier:
+                                          TestKeys.addHobbyReminderPicker,
                                       child: InkWell(
                                         key: const Key(
                                             TestKeys.addHobbyReminderPicker),
                                         onTap: _selectTime,
                                         borderRadius: BorderRadius.circular(16),
                                         child: Container(
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF161022)
-                                              .withValues(alpha: 0.4),
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          border: Border.all(
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.05)),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.alarm,
-                                              color: Color(0xFFa490cb),
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    'REMINDER TIME',
-                                                    style: TextStyle(
-                                                      color: Color(0xFFa490cb),
-                                                      fontSize: 10,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      letterSpacing: 1.2,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    _formatTime(
-                                                        _notificationTime),
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ],
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF161022)
+                                                .withValues(alpha: 0.4),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            border: Border.all(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.05)),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.alarm,
+                                                color: Color(0xFFa490cb),
+                                                size: 20,
                                               ),
-                                            ),
-                                            const Icon(
-                                              Icons.expand_more,
-                                              color: Color(0xFF6B6B6B),
-                                              size: 18,
-                                            ),
-                                          ],
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'REMINDER TIME',
+                                                      style: TextStyle(
+                                                        color:
+                                                            Color(0xFFa490cb),
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        letterSpacing: 1.2,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      _formatTime(
+                                                          _notificationTime),
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const Icon(
+                                                Icons.expand_more,
+                                                color: Color(0xFF6B6B6B),
+                                                size: 18,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
                                   ],
                                 ],
                               ),
