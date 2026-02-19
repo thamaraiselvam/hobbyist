@@ -64,6 +64,9 @@ appId: tham.hobbyist.app
 
 # No notification for this test
 
+# Scroll down so the create button is in the visible viewport.
+- scroll
+
 # Create the hobby
 - tapOn:
     id: "create_hobby_button"

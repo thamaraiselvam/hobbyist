@@ -80,6 +80,10 @@ appId: tham.hobbyist.app
 - assertVisible:
     id: "reminder_time_picker"
 
+# Scroll down so the create button clears the visible viewport — notify
+# section expands the form and can push the button below the fold.
+- scroll
+
 # Create the hobby
 - tapOn:
     id: "create_hobby_button"

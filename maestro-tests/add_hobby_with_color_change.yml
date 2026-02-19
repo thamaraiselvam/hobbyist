@@ -71,6 +71,10 @@ appId: tham.hobbyist.app
 - tapOn:
     text: OK
 
+# Scroll down so the create button clears the visible viewport — notify
+# section expands the form and can push the button below the fold.
+- scroll
+
 # Create the hobby
 - tapOn:
     id: "create_hobby_button"

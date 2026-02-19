@@ -50,6 +50,10 @@ appId: tham.hobbyist.app
 
 # Do NOT tap notify_toggle — leave notifications disabled
 
+# Scroll down so the create button is in the visible viewport — the color
+# palette section fills the lower half of the form and can push it below fold.
+- scroll
+
 # Create the hobby
 - tapOn:
     id: "create_hobby_button"
