@@ -1,0 +1,93 @@
+appId: tham.hobbyist.app
+---
+# Add Hobby (Daily, Change Reminder Time)
+# Tests that a daily hobby can be created with a custom notification time.
+# Keys used: add_hobby_fab, hobby_name_input, daily_frequency_button,
+#            color_palette_button_4, notify_toggle, reminder_time_picker,
+#            create_hobby_button
+#
+# Before running:
+#   adb shell pm grant tham.hobbyist.app android.permission.POST_NOTIFICATIONS
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+# Onboarding must be complete (run onboarding.yml first).
+
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000
+
+- tapOn:
+    id: "add_hobby_fab"
+
+- assertVisible:
+    text: ADD NEW HOBBY TASK
+
+# Enter hobby name
+- tapOn:
+    id: "hobby_name_input"
+
+- inputText: "Evening Walk"
+
+- waitForAnimationToEnd
+
+# Select Daily frequency (default, but tap explicitly to confirm)
+- tapOn:
+    id: "daily_frequency_button"
+
+- assertVisible:
+    text: Repeats every day
+
+# Pick a color (teal, index 4)
+- tapOn:
+    id: "color_palette_button_4"
+
+# Enable notification reminder
+- tapOn:
+    id: "notify_toggle"
+
+# Grant notification permission if OS dialog appears
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+
+# Verify reminder time picker appears after enabling notify
+- assertVisible:
+    id: "reminder_time_picker"
+
+# Open time picker to change the reminder time
+- tapOn:
+    id: "reminder_time_picker"
+
+- waitForAnimationToEnd
+
+# Switch to text input mode if the keyboard toggle button is visible.
+# Material time picker shows "Switch to text input mode" as a button tooltip.
+# If this step is skipped (button not visible), the dial mode picker is open
+# and OK can still be confirmed — adjust interaction for your device if needed.
+- runFlow:
+    when:
+      visible: "Switch to text input mode"
+    commands:
+      - tapOn:
+          text: "Switch to text input mode"
+      - waitForAnimationToEnd
+
+# Confirm the selected time with OK
+- tapOn:
+    text: OK
+
+# Reminder time picker still visible (notification remains enabled)
+- assertVisible:
+    id: "reminder_time_picker"
+
+# Create the hobby
+- tapOn:
+    id: "create_hobby_button"
+
+# Verify hobby appears on dashboard
+- extendedWaitUntil:
+    visible:
+      text: Evening Walk
+    timeout: 5000

@@ -1,0 +1,87 @@
+appId: tham.hobbyist.app
+---
+# Add Hobby (With Notification)
+# Tests that enabling the notify toggle reveals the reminder_time_picker and
+# that the hobby is saved with a notification reminder set.
+# Keys used: add_hobby_fab, hobby_name_input, daily_frequency_button,
+#            color_palette_button_0, notify_toggle, reminder_time_picker,
+#            create_hobby_button
+#
+# Before running:
+#   adb shell pm grant tham.hobbyist.app android.permission.POST_NOTIFICATIONS
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+# Onboarding must be complete (run onboarding.yml first).
+# Pre-granting the notification permission avoids the OS permission dialog.
+
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000
+
+- tapOn:
+    id: "add_hobby_fab"
+
+- assertVisible:
+    text: ADD NEW HOBBY TASK
+
+# Enter hobby name
+- tapOn:
+    id: "hobby_name_input"
+
+- inputText: "Meditation"
+
+- waitForAnimationToEnd
+
+# Select Daily frequency
+- tapOn:
+    id: "daily_frequency_button"
+
+- assertVisible:
+    text: Repeats every day
+
+# Pick a color (purple, index 0)
+- tapOn:
+    id: "color_palette_button_0"
+
+# Verify reminder_time_picker is hidden before enabling notify
+- assertNotVisible:
+    id: "reminder_time_picker"
+
+# Enable notification reminder (toggle is OFF by default)
+- tapOn:
+    id: "notify_toggle"
+
+# Grant notification permission if OS dialog appears (should be pre-granted)
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+
+# Verify reminder_time_picker becomes visible after enabling toggle
+- assertVisible:
+    id: "reminder_time_picker"
+
+# Open time picker to confirm it works and accept the default time (8:00 AM)
+- tapOn:
+    id: "reminder_time_picker"
+
+- waitForAnimationToEnd
+
+# Dismiss with OK (keeping default time)
+- tapOn:
+    text: OK
+
+# Reminder time picker still visible (notification remains enabled)
+- assertVisible:
+    id: "reminder_time_picker"
+
+# Create the hobby
+- tapOn:
+    id: "create_hobby_button"
+
+# Verify hobby appears on dashboard
+- extendedWaitUntil:
+    visible:
+      text: Meditation
+    timeout: 5000

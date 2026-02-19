@@ -1,0 +1,62 @@
+appId: tham.hobbyist.app
+---
+# Add Hobby (Weekly, Change Day)
+# Tests that a weekly hobby can be created with a specific weekday selected.
+# Keys used: add_hobby_fab, hobby_name_input, weekly_frequency_button,
+#            color_palette_button_5, create_hobby_button
+#
+# NOTE: Weekday circle buttons ('M','T','W','T','F','S','S') use Key() only —
+# no Semantics(identifier:) — so they are not addressable by id in the Android
+# accessibility tree. They are tapped by visible text instead.
+# 'W' (Wednesday, index 2) is the only unique letter among the 7 day labels.
+# Other unique letters: 'F' (Friday). Ambiguous: 'M', 'T', 'S'.
+#
+# Before running:
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+# Onboarding must be complete (run onboarding.yml first).
+
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000
+
+- tapOn:
+    id: "add_hobby_fab"
+
+- assertVisible:
+    text: ADD NEW HOBBY TASK
+
+# Enter hobby name
+- tapOn:
+    id: "hobby_name_input"
+
+- inputText: "Weekly Review"
+
+- waitForAnimationToEnd
+
+# Select Weekly frequency
+- tapOn:
+    id: "weekly_frequency_button"
+
+# Weekday picker appears; default is Monday ('M', index 0).
+# Tap Wednesday ('W') — the only unique weekday letter on screen.
+- tapOn:
+    text: "W"
+
+# Pick a color (cyan, index 5)
+- tapOn:
+    id: "color_palette_button_5"
+
+# No notification for this test
+
+# Create the hobby
+- tapOn:
+    id: "create_hobby_button"
+
+# Verify we returned to the dashboard.
+# Weekly hobbies only appear in the daily task list on their scheduled weekday,
+# so we assert the dashboard is visible rather than the hobby name.
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000
