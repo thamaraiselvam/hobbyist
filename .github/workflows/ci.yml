@@ -316,23 +316,29 @@ jobs:
           echo "--- Starting Maestro gRPC driver ---"
           adb shell am instrument -w \
             dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &
-          adb forward tcp:7001 tcp:7001
 
-          # Poll until the gRPC server is ready (up to 60 s).
-          # adb forward routes localhost:7001 → device:7001, so nc -z
-          # probes whether the server is actually listening on the device.
-          echo "Waiting for Maestro driver gRPC server (up to 60s)..."
+          # Do NOT run `adb forward tcp:7001 tcp:7001` here.
+          # Maestro CLI uses dadb internally to create its own TCP tunnel to
+          # device:7001. A pre-existing adb forward binds HOST:7001 and makes
+          # `nc -z localhost 7001` always succeed immediately (false positive),
+          # masking the fact that the DEVICE gRPC server isn't ready yet.
+
+          # Instead, poll /proc/net/tcp directly on the device.
+          # Port 7001 = 0x1B59 in hex, which is how the kernel lists it.
+          # This is a true positive: it only succeeds once the gRPC server
+          # has actually bound to device:7001.
+          echo "Polling device port 7001 via /proc/net/tcp (up to 60s)..."
           READY=0
           for i in $(seq 1 30); do
-            if nc -z -w2 localhost 7001 2>/dev/null; then
-              echo "Maestro driver ready after $((i * 2))s"
+            if adb shell grep -q 1B59 /proc/net/tcp /proc/net/tcp6 2>/dev/null; then
+              echo "Maestro gRPC server ready on device after $((i * 2))s"
               READY=1
               break
             fi
             sleep 2
           done
           if [ "$READY" -eq 0 ]; then
-            echo "WARNING: Maestro driver did not respond within 60s — continuing anyway"
+            echo "WARNING: Device port 7001 not seen within 60s — continuing anyway"
           fi
 
           # ── Pre-suite app setup ─────────────────────────────────────────────
