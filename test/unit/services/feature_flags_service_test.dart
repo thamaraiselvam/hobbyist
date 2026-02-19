@@ -24,6 +24,7 @@ void main() {
       remoteConfig: mockRemoteConfig,
       authService: mockAuth,
     );
+    FeatureFlagsService.instance = service;
   });
 
   group('FeatureFlagsService Tests', () {

@@ -81,12 +81,11 @@ void main() {
 
     await DatabaseHelper.instance.clearAllData();
 
-    // Default stubs
-    when(mockPerformance.traceDatabaseQuery(any, any))
-        .thenAnswer((invocation) async {
+    // Default stubs - use non-async handler to preserve generic type T
+    when(mockPerformance.traceDatabaseQuery(any, any)).thenAnswer((invocation) {
       final callback =
           invocation.positionalArguments[1] as Future<dynamic> Function();
-      return await callback();
+      return callback();
     });
 
     when(mockNotification.scheduleNotification(any))
