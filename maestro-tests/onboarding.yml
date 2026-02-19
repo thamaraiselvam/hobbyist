@@ -22,6 +22,9 @@ appId: tham.hobbyist.app
 
 - inputText: "John Doe"
 
+# Dismiss the soft keyboard so the bottom button is in the visible viewport.
+- hideKeyboard
+
 - assertVisible:
     text: Start My Journey
 
