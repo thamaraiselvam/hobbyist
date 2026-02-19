@@ -904,6 +904,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
     final isSelected = _selectedColor == colorValue;
     return Semantics(
       identifier: TestKeys.addHobbyColorButton(index),
+      // label is required so Flutter keeps this semantics node in the
+      // accessibility tree. Without semantic content (no Text child),
+      // Flutter may prune the node and the resource-id is never surfaced
+      // to the Android accessibility service (and therefore Maestro).
+      label: TestKeys.addHobbyColorButton(index),
+      button: true,
       child: GestureDetector(
         key: Key(TestKeys.addHobbyColorButton(index)),
         onTap: () {
