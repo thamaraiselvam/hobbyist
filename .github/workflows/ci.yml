@@ -39,6 +39,18 @@ jobs:
       - name: Check Dart formatting
         run: dart format --set-exit-if-changed .
 
+      - name: Check for secrets in code
+        run: |
+          echo "Scanning for potential secrets..."
+          ! grep -r "api[_-]key\s*=\s*['\"][a-zA-Z0-9]\+" lib/ || (echo "Potential API key found!" && exit 1)
+          ! grep -r "password\s*=\s*['\"][^'\"]\+" lib/ || (echo "Potential password found!" && exit 1)
+          echo "No obvious secrets found."
+
+      - name: Check for TODO security issues
+        run: |
+          echo "Checking for security-related TODOs..."
+          grep -r "TODO.*security\|FIXME.*security\|XXX.*security" . || echo "No security TODOs found."
+
   security-checks:
     name: Security Checks
     runs-on: ubuntu-latest
@@ -70,19 +82,6 @@ jobs:
           echo "Checking for known vulnerabilities in dependencies..."
           flutter pub outdated --json > outdated.json || true
           cat outdated.json
-
-      - name: Check for secrets in code
-        run: |
-          echo "Scanning for potential secrets..."
-          # Check for common secret patterns
-          ! grep -r "api[_-]key\s*=\s*['\"][a-zA-Z0-9]\+" lib/ || (echo "Potential API key found!" && exit 1)
-          ! grep -r "password\s*=\s*['\"][^'\"]\+" lib/ || (echo "Potential password found!" && exit 1)
-          echo "No obvious secrets found."
-
-      - name: Check for TODO security issues
-        run: |
-          echo "Checking for security-related TODOs..."
-          grep -r "TODO.*security\|FIXME.*security\|XXX.*security" . || echo "No security TODOs found."
 
   unit-tests:
     name: Unit Tests
@@ -150,15 +149,6 @@ jobs:
           channel: 'stable'
           cache: true
           cache-key: flutter-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
-
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-${{ runner.os }}-
 
       - name: Cache pub dependencies
         uses: actions/cache@v4
@@ -241,13 +231,8 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # JDK is needed for: (1) `jar xf` to extract Maestro driver APKs from
-      # maestro-client.jar, and (2) the Maestro CLI runtime itself (JVM-based).
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+      # ubuntu-latest has Java 17 pre-installed; no explicit Setup Java needed.
+      # jar xf and the Maestro CLI JVM both use the system JDK.
 
       - name: Download debug APK
         uses: actions/download-artifact@v4
@@ -255,10 +240,20 @@ jobs:
           name: hobbyist-debug-apk
           path: build/
 
+      - name: Cache Maestro CLI
+        id: maestro-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.maestro
+          key: maestro-${{ runner.os }}-0.39.x
+
       - name: Install Maestro CLI
+        if: steps.maestro-cache.outputs.cache-hit != 'true'
         run: |
           curl -fsSL "https://get.maestro.mobile.dev" | bash
-          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Add Maestro to PATH
+        run: echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
       # Cache the AVD to avoid a full 3-5 min emulator creation on each run.
       # Key is stable per API level + arch + OS. Delete via GH Actions cache UI
