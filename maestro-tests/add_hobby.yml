@@ -1,0 +1,73 @@
+appId: com.thamaraiselvam.hobbyist
+---
+# Add Hobby Flow: Dashboard → Add Hobby Screen → Create Hobby
+# Keys used: TestKeys.addHobbyFab, addHobbyNameInput, addHobbyFrequencyButton,
+#             addHobbyColorButton, addHobbyNotifyToggle, addHobbyReminderPicker,
+#             addHobbySubmitButton
+
+- launchApp
+
+- assertVisible:
+    text: Hello
+    timeout: 5000
+
+# Tap the centre (+) FAB button
+- tapOn:
+    id: "add_hobby_fab"
+    timeout: 3000
+
+- assertVisible:
+    text: ADD NEW HOBBY TASK
+    timeout: 3000
+
+# Enter hobby name
+- tapOn:
+    id: "hobby_name_input"
+    timeout: 2000
+
+- inputText: "Read a book"
+
+- waitForAnimationToSettle:
+    timeout: 1000
+
+# Select Daily frequency
+- tapOn:
+    id: "daily_frequency_button"
+    timeout: 2000
+
+- assertVisible:
+    text: Repeats every day
+    timeout: 2000
+
+# Select colour at index 3 (4th swatch in palette)
+- tapOn:
+    id: "color_palette_button_3"
+    timeout: 1000
+
+# Enable notification reminder
+- tapOn:
+    id: "notify_toggle"
+    timeout: 1000
+
+# Set reminder time (only visible when notify_toggle is on)
+- tapOn:
+    id: "reminder_time_picker"
+    timeout: 2000
+
+- waitForAnimationToSettle:
+    timeout: 500
+
+# Dismiss time picker with OK
+- tapOn:
+    text: OK
+    timeout: 2000
+
+# Create the hobby
+- tapOn:
+    id: "create_hobby_button"
+    timeout: 3000
+
+# Verify hobby appears on dashboard
+- assertVisible:
+    text: Read a book
+    timeout: 5000

@@ -1,0 +1,74 @@
+appId: com.thamaraiselvam.hobbyist
+---
+# Analytics Flow: Dashboard → Analytics → period selectors → back
+# Keys used: TestKeys.navAnalytics ('bottom_nav_analytics'),
+#             analyticsPeriodButton('weekly'/'monthly'/'yearly'),
+#             navHome ('bottom_nav_home')
+
+- launchApp
+
+- assertVisible:
+    text: Hello
+    timeout: 5000
+
+# Navigate to Analytics tab
+- tapOn:
+    id: "bottom_nav_analytics"
+    timeout: 2000
+
+- assertVisible:
+    text: Current Streak
+    timeout: 3000
+
+- assertVisible:
+    text: Best Streak
+    timeout: 2000
+
+- assertVisible:
+    text: Total Done
+    timeout: 2000
+
+# Switch to Monthly period
+- tapOn:
+    id: "period_monthly_button"
+    timeout: 2000
+
+- assertVisible:
+    text: 30-Day Performance
+    timeout: 2000
+
+# Switch to Yearly period
+- tapOn:
+    id: "period_yearly_button"
+    timeout: 2000
+
+- assertVisible:
+    text: 52-Week Performance
+    timeout: 2000
+
+# Switch back to Weekly
+- tapOn:
+    id: "period_weekly_button"
+    timeout: 2000
+
+- assertVisible:
+    text: 7-Day Performance
+    timeout: 2000
+
+# Scroll down to see contribution grid
+- swipe:
+    direction: UP
+    duration: 500
+
+- assertVisible:
+    text: Last 365 days
+    timeout: 2000
+
+# Return to dashboard
+- tapOn:
+    id: "bottom_nav_home"
+    timeout: 2000
+
+- assertVisible:
+    text: Hello
+    timeout: 2000

@@ -1,0 +1,11 @@
+appId: tham.hobbyist.app
+---
+- launchApp:
+    clearState: true
+- tapOn: Continue Offline
+- tapOn: e.g. Tham
+- inputText: Tham
+- tapOn: Start My Journey
+- extendedWaitUntil:
+    visible: "No hobbies yet"
+- tapOn: { id: "add_hobby_button" }

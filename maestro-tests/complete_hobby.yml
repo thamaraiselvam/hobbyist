@@ -1,0 +1,45 @@
+appId: com.thamaraiselvam.hobbyist
+---
+# Complete Hobby Flow: Dashboard → tap checkbox → verify completion
+# Keys used: TestKeys.taskCheckbox(hobby.id)
+#
+# NOTE: hobby.id is a timestamp string generated at creation time.
+# To target a specific hobby, replace <HOBBY_ID> with the actual id.
+# Example id: "1708123456789"
+#
+# For a smoke test against the first available checkbox, use text-based selection:
+#   tapOn:
+#     text: "Read a book"   # then tap the checkbox next to it
+
+- launchApp
+
+- assertVisible:
+    text: In Progress
+    timeout: 5000
+
+# Tap the checkbox for a specific hobby (replace <HOBBY_ID> with actual id)
+- tapOn:
+    id: "hobby_checkbox_<HOBBY_ID>"
+    timeout: 2000
+
+# Wait for animated checkbox to complete
+- waitForAnimationToSettle:
+    timeout: 500
+
+# Verify hobby moved to Completed section
+- assertVisible:
+    text: Completed
+    timeout: 2000
+
+# Tap again to uncheck
+- tapOn:
+    id: "hobby_checkbox_<HOBBY_ID>"
+    timeout: 1000
+
+- waitForAnimationToSettle:
+    timeout: 500
+
+# Verify it returned to In Progress
+- assertVisible:
+    text: In Progress
+    timeout: 2000
