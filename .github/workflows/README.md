@@ -26,11 +26,7 @@ The pipeline runs automatically on:
 - Generates code coverage report
 - Uploads coverage report as artifact
 
-### 4. Integration Tests
-- Builds integration test APK
-- Note: Actual test execution requires emulator/device (run locally)
-
-### 5. Build Android
+### 4. Build Android
 - Builds both debug and release APKs
 - Renames APKs to `hobbyist-debug.apk` and `hobbyist-release.apk`
 - Uploads both APKs as downloadable artifacts
@@ -79,8 +75,7 @@ flutter test test/unit/ --coverage
 # Widget tests
 flutter test test/widget/
 
-# Integration tests (requires device/emulator)
-flutter test integration_test/
+
 ```
 
 ### Build

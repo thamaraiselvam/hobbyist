@@ -14,7 +14,6 @@ Added automated CI/CD pipeline with the following capabilities:
 🧪 Testing:
   - Unit tests with coverage reporting
   - Widget tests
-  - Integration test build
 
 📦 Build Automation:
   - Android debug APK

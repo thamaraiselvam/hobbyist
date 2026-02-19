@@ -44,7 +44,6 @@ Test:
 ## Tests
 
 - Unit/widget tests: `flutter test`
-- Integration tests: `flutter test integration_test`
 
 ## Database debugging
 

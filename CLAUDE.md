@@ -67,7 +67,6 @@ Named routes via `onGenerateRoute` in `MaterialApp` for the main flow: `/` (Spla
 ### Testing Patterns
 - Unit tests use `sqflite_common_ffi` for an in-memory SQLite database
 - Services are mocked with `mockito` (run `flutter pub run build_runner build` after editing mock annotations)
-- Integration tests in `integration_test/` require a physical device or emulator to run
 
 ### Maestro UI Tests (`maestro-tests/`)
 
@@ -92,8 +91,8 @@ adb shell am start -n tham.hobbyist.app/.MainActivity
 
 **Running tests:**
 ```bash
-maestro test maestro-tests/onboarding.yml
-maestro test maestro-tests/add_hobby.yml
+maestro test maestro-tests/suite.yml          # full suite (all 10 flows)
+maestro test maestro-tests/onboarding.yml    # individual flow
 ```
 
 **Known issues and rules for writing Maestro YAML:**

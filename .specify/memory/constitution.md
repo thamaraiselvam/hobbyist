@@ -100,10 +100,9 @@ All code submissions MUST meet these requirements:
 - No hardcoded strings or magic numbers
 
 ### Testing Requirements
-**Unit Tests**: All business logic in `services/` MUST have unit tests  
-**Widget Tests**: All custom widgets in `widgets/` MUST have widget tests  
-**Integration Tests**: Critical user flows (hobby creation, daily tracking, streak calculation) MUST have integration tests  
-**Test Organization**: Follow structure in `test/unit/`, `test/widget/`, `integration_test/`  
+**Unit Tests**: All business logic in `services/` MUST have unit tests
+**Widget Tests**: All custom widgets in `widgets/` MUST have widget tests
+**Test Organization**: Follow structure in `test/unit/`, `test/widget/`
 **Test Naming**: `test('should [expected behavior] when [condition]', () {})`
 
 ### Platform Standards

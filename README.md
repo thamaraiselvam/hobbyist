@@ -165,9 +165,6 @@ flutter test test/unit/
 # Widget tests only
 flutter test test/widget/
 
-# Integration tests
-flutter test test/integration/
-
 # With coverage
 flutter test --coverage
 ```
@@ -175,7 +172,6 @@ flutter test --coverage
 ### Coverage Report
 - ✅ **Unit Tests**: Services, models, and business logic
 - ✅ **Widget Tests**: UI components and screens
-- ✅ **Integration Tests**: Full user flows
 - 📊 **Coverage Report**: Available in `coverage/lcov.info`
 
 ---
@@ -233,8 +229,7 @@ hobbyist/
 │       └── tada_animation.dart
 ├── test/                              # Test suites
 │   ├── unit/                          # Service & model tests
-│   ├── widget/                        # UI component tests
-│   └── integration/                   # Full flow tests
+│   └── widget/                        # UI component tests
 ├── assets/
 │   ├── sounds/                        # Audio files
 │   └── images/                        # Icons & logos

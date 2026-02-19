@@ -1,4 +1,4 @@
-# Integration Test Coverage Gaps
+# Test Coverage Gaps
 
 ## ❌ NOT Tested - High Priority
 
@@ -219,7 +219,7 @@
 
 ---
 
-## ⚠️ Cannot Be Tested in Integration Tests
+## ⚠️ Cannot Be Tested with Automated Tests
 
 ### 31. **Actual Notifications**
 - Real notification delivery

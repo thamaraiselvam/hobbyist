@@ -5,7 +5,7 @@
 ### Main Pipeline Configuration
 - **File**: `.github/workflows/ci.yml`
 - **Size**: ~8KB
-- **Jobs**: 7 (prechecks, security, unit tests, integration tests, Android build, iOS template, summary)
+- **Jobs**: 6 (prechecks, security, unit tests, Android build, iOS template, summary)
 - **Triggers**: Push/PR to main/develop, manual dispatch
 
 ### Documentation Files
@@ -32,7 +32,6 @@
 ### 🧪 Testing
 - Unit tests with coverage
 - Widget tests
-- Integration test build preparation
 - Coverage report generation
 
 ### 📦 Build Automation
@@ -215,11 +214,6 @@ retention-days: 30  # Change this
 - Use GitHub Secrets for sensitive data
 - Pipeline checks for common patterns
 
-### Testing
-- Integration tests need emulator/device
-- Pipeline only builds test APK
-- Run integration tests locally
-
 ### iOS Builds
 - Requires macOS runner
 - Needs code signing setup
@@ -258,7 +252,7 @@ flutter build apk --debug
 ## 📈 Metrics
 
 ### Pipeline Stats
-- **Jobs**: 7 parallel/sequential
+- **Jobs**: 6 parallel/sequential
 - **Steps**: ~40 total
 - **Artifacts**: 3 per run
 - **Retention**: 30 days
