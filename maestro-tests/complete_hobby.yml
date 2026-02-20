@@ -26,6 +26,8 @@ appId: tham.hobbyist.app
 # Wait for animated checkbox to complete
 - waitForAnimationToEnd
 
-# Verify hobby moved to Completed section
+# Verify hobby moved to Completed section.
+# The header reads "Completed Today" when the selected day is today (anchored
+# regex — bare "Completed" won't match "Completed Today").
 - assertVisible:
-    text: Completed
+    text: "Completed.*"
