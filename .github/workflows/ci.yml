@@ -130,17 +130,13 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
-    needs: [security-checks, unit-tests]
+    needs: [prechecks, unit-tests]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          cache: 'gradle'
+      # ubuntu-latest already has Java 17 pre-installed at $JAVA_HOME_17_X64.
+      # Using it directly saves ~15s vs downloading Zulu 17 via setup-java.
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -150,6 +146,15 @@ jobs:
           cache: true
           cache-key: flutter-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
 
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       - name: Cache pub dependencies
         uses: actions/cache@v4
         with:
@@ -157,12 +162,47 @@ jobs:
           key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: pub-${{ runner.os }}-
 
+      # Cache Android SDK platform packages that Gradle downloads at build time.
+      # ubuntu-latest only pre-installs a subset of SDK platforms; missing ones
+      # (e.g. android-33 required by Firebase/Play deps) are fetched via
+      # sdkmanager during the build, adding ~30-60s on every cache-cold run.
+      # The platforms dir is stable for a given set of dependencies, so we key
+      # on the Gradle files that declare compileSdkVersion and dependencies.
+      - name: Cache Android SDK platforms
+        id: sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/lib/android/sdk/platforms
+          key: android-sdk-platforms-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle.properties') }}
+          restore-keys: android-sdk-platforms-${{ runner.os }}-
+
+      # Pre-install any SDK platforms that the build requires so Gradle does
+      # not pause mid-build to download and accept licences.
+      # compileSdkVersion 36 + Firebase deps pulling android-33.
+      - name: Pre-install required Android SDK platforms
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-33" \
+            "platforms;android-36" \
+            --sdk_root=$ANDROID_HOME 2>/dev/null || true
+
+      # Cache the built APK so we can skip the ~2min Gradle build when
+      # Flutter/Android sources haven't changed.
+      - name: Cache debug APK
+        id: apk-cache
+        uses: actions/cache@v4
+        with:
+          path: build/app/outputs/flutter-apk/hobbyist-debug.apk
+          key: apk-debug-${{ runner.os }}-${{ hashFiles('lib/**', 'pubspec.yaml', 'pubspec.lock', 'android/**') }}
+
       # google-services.json is gitignored. Write a placeholder so the Gradle
       # google-services plugin is satisfied at build time. Firebase will fail to
       # initialise at runtime, but the app handles this gracefully via try/catch
       # in main.dart and AuthService. Core hobby tracking (SQLite) works fine.
       # For a production release, replace this with a secret-injected real file.
       - name: Create placeholder google-services.json
+        if: steps.apk-cache.outputs.cache-hit != 'true'
         run: |
           cat > android/app/google-services.json << 'EOF'
           {
@@ -191,12 +231,17 @@ jobs:
           EOF
 
       - name: Install dependencies
+        if: steps.apk-cache.outputs.cache-hit != 'true'
         run: flutter pub get
 
       - name: Build debug APK
-        run: flutter build apk --debug --no-pub
+        if: steps.apk-cache.outputs.cache-hit != 'true'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_17_X64
+          flutter build apk --debug --no-pub
 
       - name: Rename APK
+        if: steps.apk-cache.outputs.cache-hit != 'true'
         run: mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/hobbyist-debug.apk
 
       - name: Upload debug APK
@@ -210,13 +255,7 @@ jobs:
     name: Maestro E2E Tests
     runs-on: ubuntu-latest
     needs: build-android
-    # Skip on PRs — E2E adds ~15 min and emulator flakiness shouldn't gate fast
-    # PR feedback. Runs on push to main/develop (regression guard) and on
-    # workflow_dispatch (manual trigger for debugging).
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    # Non-blocking while the suite stabilises in CI. Remove continue-on-error
-    # once the failure rate has been consistently low over a few weeks of runs.
-    continue-on-error: true
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 25
     steps:
       - name: Checkout code
@@ -265,7 +304,8 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-34-google_apis-x86_64-${{ runner.os }}
+          # Separate cache key to force recreation with S24 Ultra-like viewport.
+          key: avd-34-google_apis-x86_64-s24ultra-${{ runner.os }}
 
       # On cache miss: boot the emulator once to create and persist the snapshot.
       # Subsequent runs restore from cache and skip this step entirely.
@@ -278,7 +318,8 @@ jobs:
           arch: x86_64
           profile: Nexus 6
           force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          # Match S24 Ultra viewport (1440x3120 @ ~560dpi) to reduce layout drift.
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -skin 1440x3120 -dpi-device 560
           disable-animations: true
           script: echo "AVD snapshot created for caching"
 
@@ -344,7 +385,51 @@ jobs:
           # ── Pre-suite app setup ─────────────────────────────────────────────
           echo "--- Setting up app state ---"
           adb shell pm clear "$APP_ID"
+
+          # Grant POST_NOTIFICATIONS (runtime, API 33+)
           adb shell pm grant "$APP_ID" android.permission.POST_NOTIFICATIONS
+
+          # Grant SCHEDULE_EXACT_ALARM via appops (special app access, API 31+).
+          # requestPermissions() in notification_service.dart calls
+          # requestExactAlarmsPermission() immediately after the POST_NOTIFICATIONS
+          # dialog. On API 33+ with targetSdk 36, requestExactAlarmsPermission()
+          # opens the system "Alarms & Reminders" settings screen — navigating away
+          # from the add hobby form — so create_hobby_button is never found.
+          # Pre-granting via appops makes canScheduleExactAlarms() return true and
+          # the system settings redirect never fires.
+          adb shell appops set "$APP_ID" SCHEDULE_EXACT_ALARM allow
+
+          # Wait for both grants to be committed to Android's permission database
+          # before starting the app. On the software-rendered CI emulator, pm grant
+          # can return before the system has flushed the grant to disk. If the app
+          # starts too quickly, areNotificationsEnabled() reads stale state
+          # (not-granted) and calls requestPermissions(), triggering both dialogs.
+          echo "Verifying POST_NOTIFICATIONS grant is committed..."
+          PERM_CONFIRMED=0
+          for i in $(seq 1 10); do
+            if adb shell dumpsys package "$APP_ID" 2>/dev/null \
+                | grep -q "POST_NOTIFICATIONS.*granted=true"; then
+              echo "Permission confirmed after ${i}s"
+              PERM_CONFIRMED=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$PERM_CONFIRMED" -eq 0 ]; then
+            echo "WARNING: Could not confirm permission grant — proceeding anyway"
+          fi
+
+          # Suppress the in-app rating prompt that fires on the 1st completion.
+          # RatingService.isAvailable() returns false on emulators/debug builds,
+          # so the fallback openStoreListing() launches Chrome, navigating away
+          # from the app mid-test. Pre-seeding flutter.has_rated_app=true causes
+          # checkAndShowRatingPrompt() to return immediately (hasRated guard).
+          echo "--- Suppressing in-app rating prompt ---"
+          adb shell run-as "$APP_ID" mkdir -p "/data/data/$APP_ID/shared_prefs" || true
+          echo '<?xml version="1.0" encoding="utf-8"?><map><boolean name="flutter.has_rated_app" value="true" /></map>' \
+            | adb shell run-as "$APP_ID" sh -c "cat > /data/data/$APP_ID/shared_prefs/FlutterSharedPreferences.xml" \
+            || echo "WARNING: Could not pre-seed rating prefs (non-fatal — Maestro flow handles fallback)"
+
           adb shell am start -n "$APP_ID/.MainActivity"
           sleep 3
 
@@ -365,13 +450,13 @@ jobs:
           profile: Nexus 6
           force-avd-creation: false
           # -no-snapshot-save: don't overwrite the cached AVD snapshot each run.
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          # Match S24 Ultra viewport (1440x3120 @ ~560dpi) to reduce layout drift.
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -skin 1440x3120 -dpi-device 560
           disable-animations: true
           emulator-boot-timeout: 300
           script: bash /tmp/run-maestro-ci.sh
 
       # Upload results even on failure so flaky runs can be diagnosed.
-      # The job is non-blocking (continue-on-error: true) so this always fires.
       - name: Upload Maestro test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -380,4 +465,3 @@ jobs:
           path: ~/.maestro/tests/
           retention-days: 14
           if-no-files-found: ignore
-
