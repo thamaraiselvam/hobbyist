@@ -10,9 +10,6 @@ on:
 jobs:
   prechecks:
     name: Pre-checks (Analyze & Format)
-    # Temporarily disabled to accelerate Maestro CI debugging.
-    # Re-enable after Maestro pipeline is stable.
-    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -56,8 +53,6 @@ jobs:
 
   security-checks:
     name: Security Checks
-    # Temporarily disabled to accelerate Maestro CI debugging.
-    if: ${{ false }}
     runs-on: ubuntu-latest
     needs: prechecks
     steps:
@@ -90,8 +85,6 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    # Temporarily disabled to accelerate Maestro CI debugging.
-    if: ${{ false }}
     runs-on: ubuntu-latest
     needs: prechecks
     steps:
@@ -137,7 +130,7 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
-    # Temporarily run without waiting for broader CI jobs so Maestro can run fast.
+    needs: [prechecks, unit-tests]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -217,12 +210,7 @@ jobs:
     name: Maestro E2E Tests
     runs-on: ubuntu-latest
     needs: build-android
-    # Temporarily run on PRs too while Maestro failures are being debugged.
-    # Revert to push/workflow_dispatch-only once stabilised.
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    # Non-blocking while the suite stabilises in CI. Remove continue-on-error
-    # once the failure rate has been consistently low over a few weeks of runs.
-    continue-on-error: true
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 25
     steps:
       - name: Checkout code
@@ -424,7 +412,6 @@ jobs:
           script: bash /tmp/run-maestro-ci.sh
 
       # Upload results even on failure so flaky runs can be diagnosed.
-      # The job is non-blocking (continue-on-error: true) so this always fires.
       - name: Upload Maestro test results
         if: always()
         uses: actions/upload-artifact@v4
