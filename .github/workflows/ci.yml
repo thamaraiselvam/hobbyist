@@ -353,6 +353,28 @@ jobs:
           echo "--- Setting up app state ---"
           adb shell pm clear "$APP_ID"
           adb shell pm grant "$APP_ID" android.permission.POST_NOTIFICATIONS
+
+          # Wait for the permission grant to be committed to Android's permission
+          # database before starting the app. On the software-rendered CI emulator,
+          # pm grant can return before the system has flushed the grant to disk.
+          # If the app starts too quickly, areNotificationsEnabled() reads stale
+          # state (not-granted) and calls requestPermissions(), showing the OS
+          # dialog mid-test. Polling dumpsys package eliminates this race condition.
+          echo "Verifying notification permission is committed..."
+          PERM_CONFIRMED=0
+          for i in $(seq 1 10); do
+            if adb shell dumpsys package "$APP_ID" 2>/dev/null \
+                | grep -q "android.permission.POST_NOTIFICATIONS.*granted=true"; then
+              echo "Permission confirmed after ${i}s"
+              PERM_CONFIRMED=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$PERM_CONFIRMED" -eq 0 ]; then
+            echo "WARNING: Could not confirm permission grant — proceeding anyway"
+          fi
+
           adb shell am start -n "$APP_ID/.MainActivity"
           sleep 3
 

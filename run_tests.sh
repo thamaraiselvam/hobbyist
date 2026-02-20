@@ -42,18 +42,35 @@ if [[ "${1:-}" != "--skip-install" ]]; then
   install_driver
 fi
 
-# ─── Step 2: Start Maestro driver and forward port ───────────────────────────
+# ─── Step 2: Start Maestro driver ────────────────────────────────────────────
+# NOTE: Do NOT run `adb forward tcp:7001 tcp:7001` here.
+# Maestro CLI uses dadb internally to create its own TCP tunnel to device:7001.
+# A pre-existing adb forward is not needed and would cause false positives in
+# the /proc/net/tcp readiness poll below (host port 7001 would appear bound
+# before the device gRPC server is actually ready).
+# This aligns with the CI pipeline which also omits adb forward for the same reason.
 
-log "Starting Maestro driver..."
+log "Starting Maestro gRPC driver..."
 adb shell am instrument -w \
   dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &
 DRIVER_PID=$!
 
-log "Forwarding port 7001..."
-adb forward tcp:7001 tcp:7001
-
-# Give the driver a moment to initialise
-sleep 2
+# Poll /proc/net/tcp on the device instead of a blind sleep.
+# Port 7001 = 0x1B59 in hex. This is a true positive: it only succeeds once
+# the gRPC server has actually bound to device:7001.
+log "Polling device port 7001 via /proc/net/tcp (up to 60s)..."
+READY=0
+for i in $(seq 1 30); do
+  if adb shell grep -q 1B59 /proc/net/tcp /proc/net/tcp6 2>/dev/null; then
+    log "Maestro gRPC server ready on device after $((i * 2))s"
+    READY=1
+    break
+  fi
+  sleep 2
+done
+if [ "$READY" -eq 0 ]; then
+  log "WARNING: Device port 7001 not seen within 60s — continuing anyway"
+fi
 
 # ─── Step 3: Pre-suite app setup ─────────────────────────────────────────────
 
@@ -63,11 +80,32 @@ adb shell pm clear "$APP_ID"
 log "Granting notification permission..."
 adb shell pm grant "$APP_ID" android.permission.POST_NOTIFICATIONS
 
+# Wait for the permission grant to be committed to Android's permission database
+# before starting the app. Without this, areNotificationsEnabled() in the app
+# may read stale state (not-granted) even though pm grant has returned, causing
+# requestPermissions() to fire the OS dialog during the notify toggle test.
+# This race is most visible on slow software-rendered emulators but can happen
+# on physical devices too if the app starts very quickly.
+log "Verifying notification permission is committed..."
+PERM_CONFIRMED=0
+for i in $(seq 1 10); do
+  if adb shell dumpsys package "$APP_ID" 2>/dev/null \
+      | grep -q "android.permission.POST_NOTIFICATIONS.*granted=true"; then
+    log "Permission confirmed after ${i}s"
+    PERM_CONFIRMED=1
+    break
+  fi
+  sleep 1
+done
+if [ "$PERM_CONFIRMED" -eq 0 ]; then
+  log "WARNING: Could not confirm permission grant — proceeding anyway"
+fi
+
 log "Launching app..."
 adb shell am start -n "$MAIN_ACTIVITY"
 
 # Wait for the app to reach the splash screen
-sleep 2
+sleep 3
 
 # ─── Step 4: Run the suite ───────────────────────────────────────────────────
 

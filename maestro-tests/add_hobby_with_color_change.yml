@@ -54,6 +54,9 @@ appId: tham.hobbyist.app
 - tapOn:
     id: "notify_toggle"
 
+# Wait for any OS notification permission dialog to animate in, then dismiss.
+- waitForAnimationToEnd
+
 # Grant notification permission if OS dialog appears
 - runFlow:
     when:
@@ -70,6 +73,13 @@ appId: tham.hobbyist.app
 # Dismiss time picker with OK
 - tapOn:
     text: OK
+
+# Safety-net: dismiss permission dialog if it appeared after time-picker closed.
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
 
 # Scroll down so the create button clears the visible viewport — notify
 # section expands the form and can push the button below the fold.
