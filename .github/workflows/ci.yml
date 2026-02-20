@@ -352,19 +352,30 @@ jobs:
           # ── Pre-suite app setup ─────────────────────────────────────────────
           echo "--- Setting up app state ---"
           adb shell pm clear "$APP_ID"
+
+          # Grant POST_NOTIFICATIONS (runtime, API 33+)
           adb shell pm grant "$APP_ID" android.permission.POST_NOTIFICATIONS
 
-          # Wait for the permission grant to be committed to Android's permission
-          # database before starting the app. On the software-rendered CI emulator,
-          # pm grant can return before the system has flushed the grant to disk.
-          # If the app starts too quickly, areNotificationsEnabled() reads stale
-          # state (not-granted) and calls requestPermissions(), showing the OS
-          # dialog mid-test. Polling dumpsys package eliminates this race condition.
-          echo "Verifying notification permission is committed..."
+          # Grant SCHEDULE_EXACT_ALARM via appops (special app access, API 31+).
+          # requestPermissions() in notification_service.dart calls
+          # requestExactAlarmsPermission() immediately after the POST_NOTIFICATIONS
+          # dialog. On API 33+ with targetSdk 36, requestExactAlarmsPermission()
+          # opens the system "Alarms & Reminders" settings screen — navigating away
+          # from the add hobby form — so create_hobby_button is never found.
+          # Pre-granting via appops makes canScheduleExactAlarms() return true and
+          # the system settings redirect never fires.
+          adb shell appops set "$APP_ID" SCHEDULE_EXACT_ALARM allow
+
+          # Wait for both grants to be committed to Android's permission database
+          # before starting the app. On the software-rendered CI emulator, pm grant
+          # can return before the system has flushed the grant to disk. If the app
+          # starts too quickly, areNotificationsEnabled() reads stale state
+          # (not-granted) and calls requestPermissions(), triggering both dialogs.
+          echo "Verifying POST_NOTIFICATIONS grant is committed..."
           PERM_CONFIRMED=0
           for i in $(seq 1 10); do
             if adb shell dumpsys package "$APP_ID" 2>/dev/null \
-                | grep -q "android.permission.POST_NOTIFICATIONS.*granted=true"; then
+                | grep -q "POST_NOTIFICATIONS.*granted=true"; then
               echo "Permission confirmed after ${i}s"
               PERM_CONFIRMED=1
               break

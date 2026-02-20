@@ -80,17 +80,25 @@ adb shell pm clear "$APP_ID"
 log "Granting notification permission..."
 adb shell pm grant "$APP_ID" android.permission.POST_NOTIFICATIONS
 
-# Wait for the permission grant to be committed to Android's permission database
-# before starting the app. Without this, areNotificationsEnabled() in the app
-# may read stale state (not-granted) even though pm grant has returned, causing
+# Grant SCHEDULE_EXACT_ALARM via appops (special app access, API 31+).
+# requestPermissions() in notification_service.dart calls
+# requestExactAlarmsPermission() immediately after the POST_NOTIFICATIONS dialog.
+# On API 33+ with targetSdk 36, requestExactAlarmsPermission() opens the system
+# "Alarms & Reminders" settings screen, navigating away from the add hobby form
+# so create_hobby_button is never found. Pre-granting makes
+# canScheduleExactAlarms() return true and the redirect never fires.
+log "Granting exact alarm permission..."
+adb shell appops set "$APP_ID" SCHEDULE_EXACT_ALARM allow
+
+# Wait for the POST_NOTIFICATIONS grant to be committed to Android's permission
+# database before starting the app. Without this, areNotificationsEnabled() may
+# read stale state (not-granted) even though pm grant has returned, causing
 # requestPermissions() to fire the OS dialog during the notify toggle test.
-# This race is most visible on slow software-rendered emulators but can happen
-# on physical devices too if the app starts very quickly.
 log "Verifying notification permission is committed..."
 PERM_CONFIRMED=0
 for i in $(seq 1 10); do
   if adb shell dumpsys package "$APP_ID" 2>/dev/null \
-      | grep -q "android.permission.POST_NOTIFICATIONS.*granted=true"; then
+      | grep -q "POST_NOTIFICATIONS.*granted=true"; then
     log "Permission confirmed after ${i}s"
     PERM_CONFIRMED=1
     break
