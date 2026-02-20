@@ -162,6 +162,31 @@ jobs:
           key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: pub-${{ runner.os }}-
 
+      # Cache Android SDK platform packages that Gradle downloads at build time.
+      # ubuntu-latest only pre-installs a subset of SDK platforms; missing ones
+      # (e.g. android-33 required by Firebase/Play deps) are fetched via
+      # sdkmanager during the build, adding ~30-60s on every cache-cold run.
+      # The platforms dir is stable for a given set of dependencies, so we key
+      # on the Gradle files that declare compileSdkVersion and dependencies.
+      - name: Cache Android SDK platforms
+        id: sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/lib/android/sdk/platforms
+          key: android-sdk-platforms-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle.properties') }}
+          restore-keys: android-sdk-platforms-${{ runner.os }}-
+
+      # Pre-install any SDK platforms that the build requires so Gradle does
+      # not pause mid-build to download and accept licences.
+      # compileSdkVersion 36 + Firebase deps pulling android-33.
+      - name: Pre-install required Android SDK platforms
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-33" \
+            "platforms;android-36" \
+            --sdk_root=$ANDROID_HOME 2>/dev/null || true
+
       # Cache the built APK so we can skip the ~2min Gradle build when
       # Flutter/Android sources haven't changed.
       - name: Cache debug APK
