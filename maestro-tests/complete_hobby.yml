@@ -26,8 +26,16 @@ appId: tham.hobbyist.app
 # Wait for animated checkbox to complete
 - waitForAnimationToEnd
 
-# Verify hobby moved to Completed section.
+# Scroll down to expose the Completed section.
+# After one task is marked done the "Completed Today" header appears below
+# the remaining In Progress tasks and can sit below the visible viewport.
+- scroll
+
+# Use extendedWaitUntil instead of assertVisible: the list re-render fires
+# in the same frame as setState() but Maestro may poll before it paints.
 # The header reads "Completed Today" when the selected day is today (anchored
-# regex — bare "Completed" won't match "Completed Today").
-- assertVisible:
-    text: "Completed.*"
+# regex — bare "Completed" would not match "Completed Today").
+- extendedWaitUntil:
+    visible:
+      text: "Completed.*"
+    timeout: 5000
