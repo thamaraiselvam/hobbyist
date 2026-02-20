@@ -217,10 +217,9 @@ jobs:
     name: Maestro E2E Tests
     runs-on: ubuntu-latest
     needs: build-android
-    # Skip on PRs — E2E adds ~15 min and emulator flakiness shouldn't gate fast
-    # PR feedback. Runs on push to main/develop (regression guard) and on
-    # workflow_dispatch (manual trigger for debugging).
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    # Temporarily run on PRs too while Maestro failures are being debugged.
+    # Revert to push/workflow_dispatch-only once stabilised.
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     # Non-blocking while the suite stabilises in CI. Remove continue-on-error
     # once the failure rate has been consistently low over a few weeks of runs.
     continue-on-error: true
