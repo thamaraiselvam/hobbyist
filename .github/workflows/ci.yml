@@ -386,6 +386,17 @@ jobs:
             echo "WARNING: Could not confirm permission grant — proceeding anyway"
           fi
 
+          # Suppress the in-app rating prompt that fires on the 1st completion.
+          # RatingService.isAvailable() returns false on emulators/debug builds,
+          # so the fallback openStoreListing() launches Chrome, navigating away
+          # from the app mid-test. Pre-seeding flutter.has_rated_app=true causes
+          # checkAndShowRatingPrompt() to return immediately (hasRated guard).
+          echo "--- Suppressing in-app rating prompt ---"
+          adb shell run-as "$APP_ID" mkdir -p "/data/data/$APP_ID/shared_prefs" || true
+          echo '<?xml version="1.0" encoding="utf-8"?><map><boolean name="flutter.has_rated_app" value="true" /></map>' \
+            | adb shell run-as "$APP_ID" sh -c "cat > /data/data/$APP_ID/shared_prefs/FlutterSharedPreferences.xml" \
+            || echo "WARNING: Could not pre-seed rating prefs (non-fatal — Maestro flow handles fallback)"
+
           adb shell am start -n "$APP_ID/.MainActivity"
           sleep 3
 

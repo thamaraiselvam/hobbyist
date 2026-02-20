@@ -109,6 +109,17 @@ if [ "$PERM_CONFIRMED" -eq 0 ]; then
   log "WARNING: Could not confirm permission grant — proceeding anyway"
 fi
 
+# Suppress the in-app rating prompt that fires on the 1st completion.
+# RatingService.isAvailable() returns false on emulators/debug builds, so the
+# fallback openStoreListing() launches Chrome, navigating away from the app
+# mid-test. Pre-seeding flutter.has_rated_app=true causes
+# checkAndShowRatingPrompt() to return immediately (hasRated guard).
+log "Suppressing in-app rating prompt..."
+adb shell run-as "$APP_ID" mkdir -p "/data/data/$APP_ID/shared_prefs" || true
+echo '<?xml version="1.0" encoding="utf-8"?><map><boolean name="flutter.has_rated_app" value="true" /></map>' \
+  | adb shell run-as "$APP_ID" sh -c "cat > /data/data/$APP_ID/shared_prefs/FlutterSharedPreferences.xml" \
+  || log "WARNING: Could not pre-seed rating prefs (non-fatal)"
+
 log "Launching app..."
 adb shell am start -n "$MAIN_ACTIVITY"
 

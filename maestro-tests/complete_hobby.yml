@@ -23,18 +23,35 @@ appId: tham.hobbyist.app
 - tapOn:
     id: "hobby_checkbox_.*"
 
-# Wait for animated checkbox to complete
+# Wait for animated checkbox to complete.
+# On the 1st completion, RatingService.checkAndShowRatingPrompt() fires.
+# In non-production environments (emulator / debug build) isAvailable()
+# returns false and the fallback openStoreListing() launches Chrome or
+# the Play Store. The completion itself already happened synchronously via
+# setState() before the async toggleCompletion chain ran, so pressing Back
+# restores the completed dashboard.
 - waitForAnimationToEnd
 
-# Scroll down to expose the Completed section.
-# After one task is marked done the "Completed Today" header appears below
-# the remaining In Progress tasks and can sit below the visible viewport.
-- scroll
+# Dismiss Chrome first-run screen if it appeared due to openStoreListing().
+- runFlow:
+    when:
+      visible: "Welcome to Chrome"
+    commands:
+      - pressKey: back
+      - waitForAnimationToEnd
 
-# Use extendedWaitUntil instead of assertVisible: the list re-render fires
-# in the same frame as setState() but Maestro may poll before it paints.
-# The header reads "Completed Today" when the selected day is today (anchored
-# regex — bare "Completed" would not match "Completed Today").
+# Dismiss Play Store if it opened directly instead of Chrome.
+- runFlow:
+    when:
+      visible: "Google Play"
+    commands:
+      - pressKey: back
+      - waitForAnimationToEnd
+
+# Verify hobby moved to Completed section.
+# 4 daily tasks comfortably fit the S24 Ultra viewport so no scroll is needed.
+# The header reads "Completed Today" when today is selected (anchored regex —
+# bare "Completed" would not match "Completed Today").
 - extendedWaitUntil:
     visible:
       text: "Completed.*"
