@@ -135,12 +135,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          cache: 'gradle'
+      # ubuntu-latest already has Java 17 pre-installed at $JAVA_HOME_17_X64.
+      # Using it directly saves ~15s vs downloading Zulu 17 via setup-java.
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -150,6 +146,15 @@ jobs:
           cache: true
           cache-key: flutter-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
 
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       - name: Cache pub dependencies
         uses: actions/cache@v4
         with:
@@ -157,12 +162,22 @@ jobs:
           key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: pub-${{ runner.os }}-
 
+      # Cache the built APK so we can skip the ~2min Gradle build when
+      # Flutter/Android sources haven't changed.
+      - name: Cache debug APK
+        id: apk-cache
+        uses: actions/cache@v4
+        with:
+          path: build/app/outputs/flutter-apk/hobbyist-debug.apk
+          key: apk-debug-${{ runner.os }}-${{ hashFiles('lib/**', 'pubspec.yaml', 'pubspec.lock', 'android/**') }}
+
       # google-services.json is gitignored. Write a placeholder so the Gradle
       # google-services plugin is satisfied at build time. Firebase will fail to
       # initialise at runtime, but the app handles this gracefully via try/catch
       # in main.dart and AuthService. Core hobby tracking (SQLite) works fine.
       # For a production release, replace this with a secret-injected real file.
       - name: Create placeholder google-services.json
+        if: steps.apk-cache.outputs.cache-hit != 'true'
         run: |
           cat > android/app/google-services.json << 'EOF'
           {
@@ -191,12 +206,17 @@ jobs:
           EOF
 
       - name: Install dependencies
+        if: steps.apk-cache.outputs.cache-hit != 'true'
         run: flutter pub get
 
       - name: Build debug APK
-        run: flutter build apk --debug --no-pub
+        if: steps.apk-cache.outputs.cache-hit != 'true'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_17_X64
+          flutter build apk --debug --no-pub
 
       - name: Rename APK
+        if: steps.apk-cache.outputs.cache-hit != 'true'
         run: mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/hobbyist-debug.apk
 
       - name: Upload debug APK
@@ -210,7 +230,7 @@ jobs:
     name: Maestro E2E Tests
     runs-on: ubuntu-latest
     needs: build-android
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 25
     steps:
       - name: Checkout code
