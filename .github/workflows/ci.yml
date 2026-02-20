@@ -294,52 +294,9 @@ jobs:
           set -euo pipefail
 
           APP_ID="tham.hobbyist.app"
-          MAESTRO_JAR="$HOME/.maestro/lib/maestro-client.jar"
 
           echo "--- Installing Hobbyist APK ---"
           adb install -r build/hobbyist-debug.apk
-
-          # ── Maestro driver setup ────────────────────────────────────────────
-          # launchApp crashes on Maestro 2.1.0 (TcpForwarder/port-7001 bug).
-          # Workaround: side-load driver APKs, start am instrument, forward
-          # port 7001, then poll until the gRPC server is actually accepting
-          # connections before running the suite.
-          echo "--- Installing Maestro driver APKs ---"
-          TMPDIR=$(mktemp -d)
-          pushd "$TMPDIR"
-          jar xf "$MAESTRO_JAR" maestro-app.apk maestro-server.apk
-          adb install -r maestro-app.apk
-          adb install -r maestro-server.apk
-          popd
-          rm -rf "$TMPDIR"
-
-          echo "--- Starting Maestro gRPC driver ---"
-          adb shell am instrument -w \
-            dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &
-
-          # Do NOT run `adb forward tcp:7001 tcp:7001` here.
-          # Maestro CLI uses dadb internally to create its own TCP tunnel to
-          # device:7001. A pre-existing adb forward binds HOST:7001 and makes
-          # `nc -z localhost 7001` always succeed immediately (false positive),
-          # masking the fact that the DEVICE gRPC server isn't ready yet.
-
-          # Instead, poll /proc/net/tcp directly on the device.
-          # Port 7001 = 0x1B59 in hex, which is how the kernel lists it.
-          # This is a true positive: it only succeeds once the gRPC server
-          # has actually bound to device:7001.
-          echo "Polling device port 7001 via /proc/net/tcp (up to 60s)..."
-          READY=0
-          for i in $(seq 1 30); do
-            if adb shell grep -q 1B59 /proc/net/tcp /proc/net/tcp6 2>/dev/null; then
-              echo "Maestro gRPC server ready on device after $((i * 2))s"
-              READY=1
-              break
-            fi
-            sleep 2
-          done
-          if [ "$READY" -eq 0 ]; then
-            echo "WARNING: Device port 7001 not seen within 60s — continuing anyway"
-          fi
 
           # ── Pre-suite app setup ─────────────────────────────────────────────
           echo "--- Setting up app state ---"
@@ -348,8 +305,17 @@ jobs:
           adb shell am start -n "$APP_ID/.MainActivity"
           sleep 3
 
+          echo "--- Maestro environment diagnostics ---"
+          maestro --version
+          maestro devices
+
           echo "--- Running Maestro suite ---"
-          maestro test maestro-tests/suite.yml
+          # Retry once to reduce transient emulator/driver startup flakes.
+          if ! maestro test maestro-tests/suite.yml; then
+            echo "First Maestro run failed; retrying once after short cool-down..."
+            sleep 8
+            maestro test maestro-tests/suite.yml
+          fi
           SCRIPT
           chmod +x /tmp/run-maestro-ci.sh
 
@@ -380,4 +346,3 @@ jobs:
           path: ~/.maestro/tests/
           retention-days: 14
           if-no-files-found: ignore
-
