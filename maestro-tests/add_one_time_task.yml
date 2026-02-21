@@ -11,6 +11,16 @@ appId: tham.hobbyist.app
 #   adb shell am start -n tham.hobbyist.app/.MainActivity
 # Onboarding must be complete (run onboarding.yml first).
 
+# Navigate back to dashboard (previous flow may leave app on Feedback or Settings screen)
+- pressKey: Back
+
+- waitForAnimationToEnd
+
+- tapOn:
+    id: "bottom_nav_home"
+
+- waitForAnimationToEnd
+
 - extendedWaitUntil:
     visible:
       text: "Hello.*"
