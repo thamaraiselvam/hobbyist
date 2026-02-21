@@ -26,6 +26,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   int _selectedColor = 0xFF590df2; // Default to first color
   TimeOfDay _notificationTime = const TimeOfDay(hour: 8, minute: 0);
   bool _notifyEnabled = false; // Default OFF
+  DateTime? _oneTimeReminderDateTime; // Full date+time for one-time task reminders
   // Color palette - 10 bright colors matching theme
   final List<int> _colorPalette = const [
     0xFF590df2, // Purple (theme primary)
@@ -72,13 +73,32 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
       // Load notification time if exists
       if (widget.hobby!.reminderTime != null &&
           widget.hobby!.reminderTime!.isNotEmpty) {
-        final timeParts = widget.hobby!.reminderTime!.split(':');
-        if (timeParts.length == 2) {
-          _notificationTime = TimeOfDay(
-            hour: int.tryParse(timeParts[0]) ?? 8,
-            minute: int.tryParse(timeParts[1]) ?? 0,
-          );
-          _notifyEnabled = true;
+        final rt = widget.hobby!.reminderTime!;
+        if (_repeatMode == 'one_time' && rt.contains(' ')) {
+          // One-time format: 'yyyy-MM-dd HH:mm'
+          final parts = rt.split(' ');
+          final dateParts = parts[0].split('-');
+          final timeParts = parts[1].split(':');
+          if (dateParts.length == 3 && timeParts.length == 2) {
+            _oneTimeReminderDateTime = DateTime(
+              int.tryParse(dateParts[0]) ?? DateTime.now().year,
+              int.tryParse(dateParts[1]) ?? 1,
+              int.tryParse(dateParts[2]) ?? 1,
+              int.tryParse(timeParts[0]) ?? 8,
+              int.tryParse(timeParts[1]) ?? 0,
+            );
+            _notifyEnabled = true;
+          }
+        } else {
+          // Recurring format: 'HH:mm'
+          final timeParts = rt.split(':');
+          if (timeParts.length == 2) {
+            _notificationTime = TimeOfDay(
+              hour: int.tryParse(timeParts[0]) ?? 8,
+              minute: int.tryParse(timeParts[1]) ?? 0,
+            );
+            _notifyEnabled = true;
+          }
         }
       }
 
@@ -95,10 +115,19 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   Future<void> _saveHobby() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Format notification time as HH:mm
-        final notificationTimeString = _notifyEnabled
-            ? '${_notificationTime.hour.toString().padLeft(2, '0')}:${_notificationTime.minute.toString().padLeft(2, '0')}'
-            : '';
+        // Format notification time: 'yyyy-MM-dd HH:mm' for one-time, 'HH:mm' for recurring
+        String notificationTimeString = '';
+        if (_notifyEnabled) {
+          if (_repeatMode == 'one_time' && _oneTimeReminderDateTime != null) {
+            final dt = _oneTimeReminderDateTime!;
+            notificationTimeString =
+                '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+                '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+          } else if (_repeatMode != 'one_time') {
+            notificationTimeString =
+                '${_notificationTime.hour.toString().padLeft(2, '0')}:${_notificationTime.minute.toString().padLeft(2, '0')}';
+          }
+        }
 
         // Get custom day based on repeat mode
         int? customDay;
@@ -207,6 +236,92 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
         _notificationTime = picked;
       });
     }
+  }
+
+  /// Date + time picker for one-time task reminders.
+  Future<void> _selectDateTime() async {
+    final now = DateTime.now();
+    final initialDate = _oneTimeReminderDateTime != null &&
+            _oneTimeReminderDateTime!.isAfter(now)
+        ? _oneTimeReminderDateTime!
+        : now.add(const Duration(days: 1));
+
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF590df2),
+              onPrimary: Colors.white,
+              surface: Color(0xFF221834),
+              onSurface: Colors.white,
+            ),
+            dialogTheme: const DialogThemeData(
+              backgroundColor: Color(0xFF221834),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate == null || !mounted) return;
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: _oneTimeReminderDateTime != null
+          ? TimeOfDay.fromDateTime(_oneTimeReminderDateTime!)
+          : const TimeOfDay(hour: 8, minute: 0),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF590df2),
+              onPrimary: Colors.white,
+              surface: Color(0xFF221834),
+              onSurface: Colors.white,
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: const Color(0xFF221834),
+              hourMinuteShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              dayPeriodShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime == null || !mounted) return;
+
+    setState(() {
+      _oneTimeReminderDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+    });
+  }
+
+  /// Format a DateTime for display in the one-time reminder picker.
+  String _formatOneTimeReminder(DateTime dt) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    final date = '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    final time = _formatTime(TimeOfDay(hour: dt.hour, minute: dt.minute));
+    return '$date at $time';
   }
 
   String _formatTime(TimeOfDay time) {
@@ -789,81 +904,167 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                   ),
                                   if (_notifyEnabled) ...[
                                     const SizedBox(height: 16),
-                                    // Notification time
-                                    Semantics(
-                                      identifier:
-                                          TestKeys.addHobbyReminderPicker,
-                                      child: InkWell(
-                                        key: const Key(
-                                          TestKeys.addHobbyReminderPicker,
-                                        ),
-                                        onTap: _selectTime,
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: const Color(
-                                              0xFF161022,
-                                            ).withValues(alpha: 0.4),
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.05,
-                                              ),
-                                            ),
+                                    // One-time: date + time picker; recurring: time-only picker
+                                    if (_repeatMode == 'one_time')
+                                      Semantics(
+                                        identifier:
+                                            TestKeys.addHobbyReminderPicker,
+                                        child: InkWell(
+                                          key: const Key(
+                                            TestKeys.addHobbyReminderPicker,
                                           ),
-                                          child: Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.alarm,
-                                                color: Color(0xFFa490cb),
-                                                size: 20,
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Text(
-                                                      'REMINDER TIME',
-                                                      style: TextStyle(
-                                                        color: Color(
-                                                          0xFFa490cb,
-                                                        ),
-                                                        fontSize: 10,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        letterSpacing: 1.2,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      _formatTime(
-                                                        _notificationTime,
-                                                      ),
-                                                      style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
+                                          onTap: _selectDateTime,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF161022,
+                                              ).withValues(alpha: 0.4),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.05,
                                                 ),
                                               ),
-                                              const Icon(
-                                                Icons.expand_more,
-                                                color: Color(0xFF6B6B6B),
-                                                size: 18,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.event_available,
+                                                  color: Color(0xFFFF8056),
+                                                  size: 20,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      const Text(
+                                                        'REMINDER DATE & TIME',
+                                                        style: TextStyle(
+                                                          color: Color(
+                                                            0xFFa490cb,
+                                                          ),
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          letterSpacing: 1.2,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        _oneTimeReminderDateTime !=
+                                                                null
+                                                            ? _formatOneTimeReminder(
+                                                                _oneTimeReminderDateTime!,
+                                                              )
+                                                            : 'Tap to set date & time',
+                                                        style: TextStyle(
+                                                          color: _oneTimeReminderDateTime !=
+                                                                  null
+                                                              ? Colors.white
+                                                              : const Color(
+                                                                  0xFFa490cb,
+                                                                ),
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Icon(
+                                                  Icons.expand_more,
+                                                  color: Color(0xFF6B6B6B),
+                                                  size: 18,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Semantics(
+                                        identifier:
+                                            TestKeys.addHobbyReminderPicker,
+                                        child: InkWell(
+                                          key: const Key(
+                                            TestKeys.addHobbyReminderPicker,
+                                          ),
+                                          onTap: _selectTime,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF161022,
+                                              ).withValues(alpha: 0.4),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.05,
+                                                ),
                                               ),
-                                            ],
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.alarm,
+                                                  color: Color(0xFFa490cb),
+                                                  size: 20,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      const Text(
+                                                        'REMINDER TIME',
+                                                        style: TextStyle(
+                                                          color: Color(
+                                                            0xFFa490cb,
+                                                          ),
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          letterSpacing: 1.2,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        _formatTime(
+                                                          _notificationTime,
+                                                        ),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Icon(
+                                                  Icons.expand_more,
+                                                  color: Color(0xFF6B6B6B),
+                                                  size: 18,
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
                                   ],
                                 ],
                               ),

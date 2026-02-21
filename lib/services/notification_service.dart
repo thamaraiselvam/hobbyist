@@ -243,6 +243,18 @@ class NotificationService {
         return false; // No reminder set
       }
 
+      // One-time tasks store full datetime ('yyyy-MM-dd HH:mm') — handled separately.
+      if (hobby.repeatMode == 'one_time') {
+        final canSchedule = await canScheduleExactAlarms();
+        if (!canSchedule) {
+          print('⚠️ Cannot schedule exact alarms. Permission not granted.');
+          return true;
+        }
+        await cancelNotification(hobby.id);
+        await _scheduleOneTimeNotification(hobby);
+        return true;
+      }
+
       final timeParts = hobby.reminderTime!.split(':');
       if (timeParts.length != 2) return false;
 
@@ -407,6 +419,76 @@ class NotificationService {
       scheduledDate,
       DateTimeComponents.dayOfMonthAndTime,
     );
+  }
+
+  /// Schedule a one-shot notification for a one-time task.
+  /// reminderTime format: 'yyyy-MM-dd HH:mm'
+  Future<void> _scheduleOneTimeNotification(Hobby hobby) async {
+    final rt = hobby.reminderTime;
+    if (rt == null || rt.isEmpty || !rt.contains(' ')) {
+      print('ℹ️ No valid date+time set for one-time task: ${hobby.name}');
+      return;
+    }
+
+    final parts = rt.split(' ');
+    final dateParts = parts[0].split('-');
+    final timeParts = parts[1].split(':');
+    if (dateParts.length != 3 || timeParts.length != 2) return;
+
+    final year = int.tryParse(dateParts[0]);
+    final month = int.tryParse(dateParts[1]);
+    final day = int.tryParse(dateParts[2]);
+    final hour = int.tryParse(timeParts[0]);
+    final minute = int.tryParse(timeParts[1]);
+    if (year == null || month == null || day == null ||
+        hour == null || minute == null) return;
+
+    final scheduledDate = tz.TZDateTime(tz.local, year, month, day, hour, minute);
+    if (scheduledDate.isBefore(tz.TZDateTime.now(tz.local))) {
+      print('⚠️ One-time reminder is in the past, skipping: ${hobby.name}');
+      return;
+    }
+
+    print('📅 One-time notification for "${hobby.name}" at $scheduledDate');
+
+    final androidDetails = AndroidNotificationDetails(
+      'hobby_reminders',
+      'Hobby Reminders',
+      channelDescription: 'Notifications for hobby reminders and streaks',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      enableVibration: true,
+      playSound: true,
+      styleInformation: const BigTextStyleInformation(
+        'Your one-time task is due now!',
+      ),
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    try {
+      await _notifications.zonedSchedule(
+        hobby.id.hashCode,
+        hobby.name,
+        'Your one-time task is due now!',
+        scheduledDate,
+        NotificationDetails(android: androidDetails, iOS: iosDetails),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        // No matchDateTimeComponents = fires exactly once
+        payload: hobby.id,
+      );
+      print('✅ One-time notification scheduled at $scheduledDate');
+    } catch (e) {
+      print('❌ Error scheduling one-time notification: $e');
+      rethrow;
+    }
   }
 
   /// Common notification scheduling logic
