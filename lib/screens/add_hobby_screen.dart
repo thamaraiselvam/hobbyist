@@ -806,10 +806,10 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    Column(
+                                    const Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      children: const [
+                                      children: [
                                         Text(
                                           'One-time Task',
                                           style: TextStyle(
