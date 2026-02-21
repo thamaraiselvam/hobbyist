@@ -50,7 +50,9 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: AddHobbyScreen()));
 
       final button = find.widgetWithText(ElevatedButton, 'Create Activity');
-      await tester.tap(button);
+      // Scroll button into view before tapping (screen may be smaller than widget)
+      await tester.ensureVisible(button);
+      await tester.tap(button, warnIfMissed: false);
       await tester.pump();
 
       expect(find.text('Please enter a hobby name'), findsOneWidget);

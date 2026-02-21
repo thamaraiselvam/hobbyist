@@ -92,7 +92,8 @@ void main() async {
         ),
       );
 
-      await tester.pumpAndSettle();
+      // Use pump with duration instead of pumpAndSettle to avoid pending timer issues
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('PREFERENCES'), findsOneWidget);
     });
 
