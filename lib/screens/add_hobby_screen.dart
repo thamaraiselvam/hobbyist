@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
 import '../services/notification_service.dart';
@@ -42,8 +43,10 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   ];
 
   final List<String> _weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  int _selectedWeekDay = 0; // Single day for weekly (0=Monday)
+  List<int> _selectedWeekDays = [0]; // Multi-select days for weekly (0=Monday)
   int _selectedMonthDay = 1; // Day of month for monthly (1-31)
+
+  static const String _lastColorKey = 'last_selected_color';
 
   List<HobbyData> _filteredHobbies = DefaultHobbies.hobbies;
   bool _showSuggestions = false;
@@ -61,15 +64,17 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
       }
       _selectedColor = widget.hobby!.color;
 
-      // Load custom day if exists
-      if (widget.hobby!.customDay != null) {
-        if (widget.hobby!.repeatMode == 'weekly') {
-          _selectedWeekDay = widget.hobby!.customDay!;
-        } else if (widget.hobby!.repeatMode == 'monthly') {
-          _selectedMonthDay = widget.hobby!.customDay!;
-        }
+      // Load custom day(s) if exists
+      if (widget.hobby!.repeatMode == 'weekly') {
+        _selectedWeekDays = widget.hobby!.effectiveWeekDays.isNotEmpty
+            ? List<int>.from(widget.hobby!.effectiveWeekDays)
+            : [0];
+      } else if (widget.hobby!.repeatMode == 'monthly' &&
+          widget.hobby!.customDay != null) {
+        _selectedMonthDay = widget.hobby!.customDay!;
       }
 
+      _loadLastColor(); // no-op for edits; color already set from hobby
       // Load notification time if exists
       if (widget.hobby!.reminderTime != null &&
           widget.hobby!.reminderTime!.isNotEmpty) {
@@ -102,7 +107,25 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
         }
       }
 
+    } else {
+      // New hobby — load last used color
+      _loadLastColor();
     }
+  }
+
+  /// Loads the last used palette color from SharedPreferences.
+  /// Falls back silently to the current [_selectedColor] (first palette color).
+  Future<void> _loadLastColor() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getInt(_lastColorKey);
+    if (saved != null && _colorPalette.contains(saved) && mounted) {
+      setState(() => _selectedColor = saved);
+    }
+  }
+
+  Future<void> _saveLastColor(int colorValue) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lastColorKey, colorValue);
   }
 
   @override
@@ -129,10 +152,13 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
           }
         }
 
-        // Get custom day based on repeat mode
+        // Get custom day(s) based on repeat mode
         int? customDay;
+        List<int>? customDays;
         if (_repeatMode == 'weekly') {
-          customDay = _selectedWeekDay;
+          final days = _selectedWeekDays.isNotEmpty ? _selectedWeekDays : [0];
+          customDays = List<int>.from(days)..sort();
+          customDay = customDays.first; // kept for notification scheduling
         } else if (_repeatMode == 'monthly') {
           customDay = _selectedMonthDay;
         }
@@ -146,6 +172,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             color: _selectedColor,
             reminderTime: notificationTimeString,
             customDay: customDay,
+            customDays: customDays,
             isOneTime: _repeatMode == 'one_time',
           );
           await _service.updateHobby(updatedHobby);
@@ -172,6 +199,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             color: _selectedColor,
             reminderTime: notificationTimeString,
             customDay: customDay,
+            customDays: customDays,
             isOneTime: _repeatMode == 'one_time',
           );
           await _service.addHobby(hobby);
@@ -584,13 +612,13 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                   const SizedBox(height: 20),
                                   // Conditional frequency selector based on mode
                                   if (_repeatMode == 'weekly') ...[
-                                    // Week days selector (single selection)
+                                    // Week days multi-select
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: List.generate(7, (index) {
                                         final isSelected =
-                                            _selectedWeekDay == index;
+                                            _selectedWeekDays.contains(index);
                                         return GestureDetector(
                                           key: Key(
                                             TestKeys.addHobbyWeekdayButton(
@@ -599,7 +627,13 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                           ),
                                           onTap: () {
                                             setState(() {
-                                              _selectedWeekDay = index;
+                                              if (isSelected &&
+                                                  _selectedWeekDays.length >
+                                                      1) {
+                                                _selectedWeekDays.remove(index);
+                                              } else if (!isSelected) {
+                                                _selectedWeekDays.add(index);
+                                              }
                                             });
                                           },
                                           child: Container(
@@ -621,10 +655,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             child: Center(
                                               child: Text(
                                                 _weekDays[index],
-                                                style: TextStyle(
-                                                  color: isSelected
-                                                      ? Colors.white
-                                                      : Colors.white,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w700,
                                                 ),
@@ -1214,9 +1246,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
       child: GestureDetector(
         key: Key(TestKeys.addHobbyColorButton(index)),
         onTap: () {
-          setState(() {
-            _selectedColor = colorValue;
-          });
+          setState(() => _selectedColor = colorValue);
+          _saveLastColor(colorValue);
         },
         child: Container(
           width: 28,

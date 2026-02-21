@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print, use_build_context_synchronously, unused_element, body_might_complete_normally_catch_error
+// ignore_for_file: avoid_print, use_build_context_synchronously, body_might_complete_normally_catch_error
 import 'package:flutter/material.dart';
 import '../constants/test_keys.dart';
 import 'package:intl/intl.dart';
@@ -26,15 +26,15 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   final HobbyService _service = HobbyService();
   final SoundService _soundService = SoundService();
   final QuoteService _quoteService = QuoteService();
-  final ScrollController _dayScrollController = ScrollController();
-  List<Hobby> _hobbies = [];
+
   List<Hobby> _allHobbies = [];
   bool _loading = true;
   int _selectedIndex = 0;
   String _currentQuote = '';
-  DateTime _selectedDate = DateTime.now();
-  bool _hasAnimatedToToday = false; // Track if we've done initial animation
   bool _pullToRefreshEnabled = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -42,15 +42,6 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     _loadQuote();
     _loadHobbies();
     _loadSettings();
-    // Animate from start to today after build (only once on first load)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted && !_hasAnimatedToToday) {
-          _hasAnimatedToToday = true;
-          _animateToToday();
-        }
-      });
-    });
   }
 
   Future<void> _loadSettings() async {
@@ -63,250 +54,306 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     }
   }
 
-  @override
-  void dispose() {
-    _dayScrollController.dispose();
-    super.dispose();
-  }
-
-  DateTime _getStartOfWeek() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    // 1=Monday, 7=Sunday. We want Monday to be start.
-    return today.subtract(Duration(days: today.weekday - 1));
-  }
-
-  void _animateToToday() async {
-    if (!mounted || !_dayScrollController.hasClients) return;
-
-    try {
-      // Calculate centered position for today
-      final screenWidth = MediaQuery.of(context).size.width;
-      const itemWidth = 56.0; // 48px pill + 8px margin
-      const pillWidth = 48.0; // Actual pill width
-      final todayIndex =
-          DateTime.now().weekday - 1; // Index based on current weekday (0-6)
-      const listPadding = 16.0; // ListView horizontal padding
-
-      // Position of today's item (from start of list)
-      final todayPosition = todayIndex * itemWidth;
-
-      // Center calculation:
-      // We want the pill center at screen center
-      // Scroll position to get left edge of pill to center: todayPosition - (screenWidth / 2)
-      // Then move back by half the pill width: + (pillWidth / 2)
-      // Account for the list padding: + listPadding
-      final centeredPosition =
-          todayPosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
-
-      final maxScroll = _dayScrollController.position.maxScrollExtent;
-      final targetPosition = centeredPosition.clamp(0.0, maxScroll);
-
-      // Animate to today
-      await _dayScrollController.animateTo(
-        targetPosition,
-        duration: const Duration(milliseconds: 1000),
-        curve: Curves.easeInOutCubic,
-      );
-    } catch (e) {
-      print('Animation error: $e');
-    }
-  }
-
-  void _animateToSelectedDate() async {
-    if (!mounted || !_dayScrollController.hasClients) return;
-
-    try {
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      // Calculate how many days from the start of the week
-      final startOfWeek = _getStartOfWeek();
-      final daysDifference = _selectedDate.difference(startOfWeek).inDays;
-
-      // Calculate centered position
-      final screenWidth = MediaQuery.of(context).size.width;
-      const itemWidth = 56.0; // 48px pill + 8px margin
-      const pillWidth = 48.0; // Actual pill width
-      const listPadding = 16.0; // ListView horizontal padding
-
-      final datePosition = daysDifference * itemWidth;
-      final centeredPosition =
-          datePosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
-
-      final maxScroll = _dayScrollController.position.maxScrollExtent;
-      final targetPosition = centeredPosition.clamp(0.0, maxScroll);
-
-      // Animate to selected date
-      await _dayScrollController.animateTo(
-        targetPosition,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOutCubic,
-      );
-    } catch (e) {
-      print('Animation error: $e');
-    }
-  }
-
   Future<void> _loadQuote() async {
-    setState(() {
-      _currentQuote = _quoteService.getRandomQuote();
-    });
+    setState(() => _currentQuote = _quoteService.getRandomQuote());
   }
 
-  Future<void> _loadHobbies({bool preserveScrollPosition = true}) async {
-    // Only preserve scroll position if we're on home screen (index 0) and requested
-    final shouldPreserveScroll =
-        preserveScrollPosition &&
-        _selectedIndex == 0 &&
-        _dayScrollController.hasClients;
-    final currentScrollOffset = shouldPreserveScroll
-        ? _dayScrollController.offset
-        : null;
-
+  Future<void> _loadHobbies() async {
     setState(() => _loading = true);
     final allHobbies = await _service.loadHobbies();
-    // Filter out one-time tasks that have been completed at any point
-    final hobbies = allHobbies.where((h) {
-      if (!h.isOneTime) return true;
-      return !h.completions.values.any((c) => c.completed);
-    }).toList();
     setState(() {
       _allHobbies = allHobbies;
-      _hobbies = hobbies;
       _loading = false;
     });
-
-    // Restore scroll position after rebuild if it was saved
-    if (currentScrollOffset != null && _dayScrollController.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _dayScrollController.hasClients) {
-          _dayScrollController.jumpTo(currentScrollOffset);
-        }
-      });
-    } else if (_selectedIndex == 0 && !shouldPreserveScroll) {
-      // If we're on home screen but didn't preserve scroll, animate to today
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _animateToSelectedDate();
-      });
-    }
   }
 
   Future<void> _refreshFromOtherScreen() async {
-    // Reset to today when refreshing from other screens
-    setState(() {
-      _selectedDate = DateTime.now();
-    });
-    await _loadHobbies(preserveScrollPosition: false);
+    await _loadHobbies();
   }
 
-  Future<void> _refreshToToday() async {
-    // Reset to today
-    setState(() {
-      _selectedDate = DateTime.now();
-    });
+  // ── Helpers ─────────────────────────────────────────────────────────
 
-    // Load hobbies without preserving scroll position
-    await _loadHobbies(preserveScrollPosition: false);
+  String get _todayKey => DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    // Animate to today after loading
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _dayScrollController.hasClients) {
-        // Use the same logic as _animateToSelectedDate for consistency
-        final screenWidth = MediaQuery.of(context).size.width;
-        const itemWidth = 56.0; // 48px pill + 8px margin
-        const pillWidth = 48.0; // Actual pill width
-        const listPadding = 16.0; // ListView horizontal padding
-        final todayIndex = DateTime.now().weekday - 1; // Index is 0-6
+  bool _isHobbyAvailableForDate(Hobby hobby, DateTime date) {
+    switch (hobby.repeatMode.toLowerCase()) {
+      case 'daily':
+        return true;
+      case 'weekly':
+        final days = hobby.effectiveWeekDays;
+        if (days.isEmpty) return true;
+        final weekday = date.weekday; // 1=Mon … 7=Sun
+        final dayIndex = weekday == 7 ? 6 : weekday - 1;
+        return days.contains(dayIndex);
+      case 'monthly':
+        if (hobby.customDay == null) return true;
+        return date.day == hobby.customDay;
+      case 'one_time':
+        return true;
+      default:
+        return true;
+    }
+  }
 
-        final datePosition = todayIndex * itemWidth;
-        final centeredPosition =
-            datePosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
-
-        final maxScroll = _dayScrollController.position.maxScrollExtent;
-        final targetPosition = centeredPosition.clamp(0.0, maxScroll);
-
-        _dayScrollController.animateTo(
-          targetPosition,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
+  /// True if the hobby has any occurrence within the next 1–7 days.
+  bool _hasOccurrenceInNext7Days(Hobby hobby) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    for (int i = 1; i <= 7; i++) {
+      if (_isHobbyAvailableForDate(hobby, today.add(Duration(days: i)))) {
+        return true;
       }
-    });
+    }
+    return false;
   }
+
+  // ── Derived sections ─────────────────────────────────────────────────
+
+  /// Tasks scheduled for today that are not yet completed.
+  List<Hobby> get _pendingTasks {
+    final today = DateTime.now();
+    final tasks = _allHobbies.where((h) {
+      if (!_isHobbyAvailableForDate(h, today)) return false;
+      if (h.isOneTime) return !h.completions.values.any((c) => c.completed);
+      return h.completions[_todayKey]?.completed != true;
+    }).toList()
+      ..sort(_sortByReminderTime);
+    return tasks;
+  }
+
+  /// Non-daily tasks with an occurrence in the next 1–7 days that have not
+  /// been completed early today.
+  List<Hobby> get _upcomingTasks {
+    final today = DateTime.now();
+    final tasks = _allHobbies.where((h) {
+      if (h.isOneTime) return false;
+      if (h.repeatMode.toLowerCase() == 'daily') return false;
+      if (_isHobbyAvailableForDate(h, today)) return false; // in Today section
+      if (h.completions[_todayKey]?.completed == true) return false; // completed early
+      return _hasOccurrenceInNext7Days(h);
+    }).toList()
+      ..sort(_sortByNextOccurrence);
+    return tasks;
+  }
+
+  /// Hobbies with at least one completion in the last 7 days, sorted by
+  /// most-recent completion descending.
+  List<Hobby> get _completedTasks {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final sevenDaysAgo = today.subtract(const Duration(days: 6));
+
+    bool inWindow(String dateKey) {
+      final parts = dateKey.split('-');
+      if (parts.length != 3) return false;
+      final d = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      return !d.isBefore(sevenDaysAgo) && !d.isAfter(today);
+    }
+
+    final tasks = _allHobbies.where((h) {
+      return h.completions.entries.any(
+        (e) => e.value.completed && inWindow(e.key),
+      );
+    }).toList()
+      ..sort(_sortByRecentCompletion);
+    return tasks;
+  }
+
+  // ── Sort helpers ─────────────────────────────────────────────────────
+
+  int _sortByReminderTime(Hobby a, Hobby b) {
+    if (a.reminderTime == null && b.reminderTime == null) return 0;
+    if (a.reminderTime == null) return 1;
+    if (b.reminderTime == null) return -1;
+    return a.reminderTime!.compareTo(b.reminderTime!);
+  }
+
+  int _sortByNextOccurrence(Hobby a, Hobby b) {
+    final aDate = _getNextOccurrence(a);
+    final bDate = _getNextOccurrence(b);
+    if (aDate == null && bDate == null) return 0;
+    if (aDate == null) return 1;
+    if (bDate == null) return -1;
+    return aDate.compareTo(bDate);
+  }
+
+  int _sortByRecentCompletion(Hobby a, Hobby b) {
+    final aTime = _mostRecentCompletionInWindow(a);
+    final bTime = _mostRecentCompletionInWindow(b);
+    if (aTime == null && bTime == null) return 0;
+    if (aTime == null) return 1;
+    if (bTime == null) return -1;
+    return bTime.compareTo(aTime); // Latest first
+  }
+
+  /// Most-recent completedAt timestamp within the last-7-days window.
+  DateTime? _mostRecentCompletionInWindow(Hobby hobby) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final sevenDaysAgo = today.subtract(const Duration(days: 6));
+    DateTime? best;
+    for (final entry in hobby.completions.entries) {
+      if (!entry.value.completed) continue;
+      final parts = entry.key.split('-');
+      if (parts.length != 3) continue;
+      final d = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      if (d.isBefore(sevenDaysAgo) || d.isAfter(today)) continue;
+      final ts = entry.value.completedAt ?? d;
+      if (best == null || ts.isAfter(best)) best = ts;
+    }
+    return best;
+  }
+
+  /// Human-readable label for the most-recent completion within last 7 days.
+  String? _completionDateLabel(Hobby hobby) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final sevenDaysAgo = today.subtract(const Duration(days: 6));
+    String? bestKey;
+    for (final entry in hobby.completions.entries) {
+      if (!entry.value.completed) continue;
+      final parts = entry.key.split('-');
+      if (parts.length != 3) continue;
+      final d = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      if (d.isBefore(sevenDaysAgo) || d.isAfter(today)) continue;
+      if (bestKey == null || entry.key.compareTo(bestKey) > 0) {
+        bestKey = entry.key;
+      }
+    }
+    if (bestKey == null) return null;
+    final parts = bestKey.split('-');
+    final d = DateTime(
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+      int.parse(parts[2]),
+    );
+    final diff = today.difference(d).inDays;
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    return DateFormat('MMM d').format(d);
+  }
+
+  /// Next occurrence of a hobby within the next 7 days (tomorrow onward).
+  DateTime? _getNextOccurrence(Hobby hobby) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    for (int i = 1; i <= 7; i++) {
+      final d = today.add(Duration(days: i));
+      if (_isHobbyAvailableForDate(hobby, d)) return d;
+    }
+    return null;
+  }
+
+  // ── Metrics ──────────────────────────────────────────────────────────
+
+  int get _scheduledTodayCount {
+    final today = DateTime.now();
+    return _allHobbies.where((h) {
+      if (h.isOneTime) return false;
+      return _isHobbyAvailableForDate(h, today);
+    }).length;
+  }
+
+  int get _completedTodayCount {
+    final today = DateTime.now();
+    return _allHobbies.where((h) {
+      if (h.isOneTime) return false;
+      if (!_isHobbyAvailableForDate(h, today)) return false;
+      return h.completions[_todayKey]?.completed == true;
+    }).length;
+  }
+
+  int get _todayCompletionPercent {
+    if (_scheduledTodayCount == 0) return 0;
+    return (_completedTodayCount / _scheduledTodayCount * 100)
+        .round()
+        .clamp(0, 100);
+  }
+
+  Map<String, dynamic> get _globalStreakData {
+    if (_allHobbies.isEmpty) return {'streak': 0, 'todayCompleted': false};
+    final today = DateTime.now();
+    final todayKey = DateFormat('yyyy-MM-dd').format(today);
+    final bool todayCompleted = _allHobbies.any(
+      (h) => h.completions[todayKey]?.completed == true,
+    );
+    int streak = 0;
+    for (int i = 0; i < 365; i++) {
+      final date = today.subtract(Duration(days: i));
+      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+      final bool any =
+          _allHobbies.any((h) => h.completions[dateKey]?.completed == true);
+      if (any) {
+        streak++;
+      } else if (i > 0) {
+        break;
+      }
+    }
+    return {'streak': streak, 'todayCompleted': todayCompleted};
+  }
+
+  // ── Toggle ───────────────────────────────────────────────────────────
 
   Future<void> _toggleToday(Hobby hobby) async {
-    // Prevent completing tasks in the future
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    final selectedDateOnly = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-    );
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    bool isCurrentlyCompleted;
+    String toggleDate;
 
-    if (selectedDateOnly.isAfter(todayDate)) {
-      // Show message that future tasks cannot be completed
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Cannot complete tasks for future dates',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Color(0xFFD84A4A), // Readable red
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
+    if (hobby.isOneTime) {
+      isCurrentlyCompleted =
+          hobby.completions.values.any((c) => c.completed);
+      if (isCurrentlyCompleted) {
+        // Find the date it was originally completed to toggle it off.
+        final entry = hobby.completions.entries.firstWhere(
+          (e) => e.value.completed,
+          orElse: () =>
+              MapEntry(today, HobbyCompletion(completed: false)),
+        );
+        toggleDate = entry.key;
+      } else {
+        toggleDate = today;
+      }
+    } else {
+      isCurrentlyCompleted =
+          hobby.completions[today]?.completed ?? false;
+      toggleDate = today;
     }
 
-    final selectedDay = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    final isCompleted = hobby.completions[selectedDay]?.completed ?? false;
-
-    // Update UI immediately for responsive feel
-    final updatedCompletions = Map<String, HobbyCompletion>.from(
-      hobby.completions,
-    );
-    updatedCompletions[selectedDay] = HobbyCompletion(
-      completed: !isCompleted,
-      completedAt: !isCompleted ? DateTime.now() : null,
+    final updatedCompletions =
+        Map<String, HobbyCompletion>.from(hobby.completions);
+    updatedCompletions[toggleDate] = HobbyCompletion(
+      completed: !isCurrentlyCompleted,
+      completedAt: !isCurrentlyCompleted ? DateTime.now() : null,
     );
 
-    // Create updated hobby with new completions
     final updatedHobby = hobby.copyWith(completions: updatedCompletions);
-
-    // Recalculate best streak immediately with new data
-    final calculatedBestStreak = updatedHobby.calculateBestStreakFromHistory();
-    final newBestStreak = calculatedBestStreak > updatedHobby.currentStreak
-        ? calculatedBestStreak
+    final calculatedBest = updatedHobby.calculateBestStreakFromHistory();
+    final newBest = calculatedBest > updatedHobby.currentStreak
+        ? calculatedBest
         : updatedHobby.currentStreak;
+    final finalHobby = updatedHobby.copyWith(bestStreak: newBest);
 
-    // Update hobby with new best streak
-    final finalHobby = updatedHobby.copyWith(bestStreak: newBestStreak);
-
-    // Update UI immediately with recalculated best streak.
-    // For one-time tasks being completed, remove from list instantly so
-    // the home screen updates without waiting for the async backend sync.
     setState(() {
-      final index = _hobbies.indexWhere((h) => h.id == hobby.id);
-      if (index != -1) {
-        if (hobby.isOneTime && !isCompleted) {
-          // One-time task just completed → remove from pending list immediately
-          _hobbies.removeAt(index);
-        } else {
-          _hobbies[index] = finalHobby;
-        }
-      }
+      final idx = _allHobbies.indexWhere((h) => h.id == hobby.id);
+      if (idx != -1) _allHobbies[idx] = finalHobby;
     });
 
-    // Play completion sound when marking as complete
-    if (!isCompleted) {
-      _soundService.playCompletionSound();
-    }
+    if (!isCurrentlyCompleted) _soundService.playCompletionSound();
 
-    // Sync to backend asynchronously (fire and forget - no UI updates)
-    _service.toggleCompletion(hobby.id, selectedDay).catchError((error) {
+    _service.toggleCompletion(hobby.id, toggleDate).catchError((error) {
       print('⚠️ Error syncing completion: $error');
-      // Only show error if it's a real database error, not a Future error
       if (mounted && error.toString().contains('Database')) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -314,7 +361,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               'Failed to sync completion',
               style: TextStyle(color: Colors.white),
             ),
-            backgroundColor: Color(0xFFD84A4A), // Readable red
+            backgroundColor: Color(0xFFD84A4A),
             duration: Duration(seconds: 1),
           ),
         );
@@ -322,85 +369,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     });
   }
 
-  // Check if a hobby should be shown on the selected date
-  bool _isHobbyAvailableForDate(Hobby hobby, DateTime date) {
-    switch (hobby.repeatMode.toLowerCase()) {
-      case 'daily':
-        return true; // Daily tasks are always available
-
-      case 'weekly':
-        // For weekly tasks, check if customDay matches the weekday
-        // customDay: 0=Monday, 1=Tuesday, ..., 6=Sunday
-        if (hobby.customDay == null) return true; // Show if no specific day set
-        final weekday = date.weekday; // 1=Monday, 2=Tuesday, ..., 7=Sunday
-        // Convert weekday to 0-indexed (0=Monday)
-        final dayIndex = weekday == 7 ? 6 : weekday - 1;
-        return hobby.customDay == dayIndex;
-
-      case 'monthly':
-        // For monthly tasks, check if customDay matches the day of month
-        if (hobby.customDay == null) return true; // Show if no specific day set
-        return date.day == hobby.customDay;
-
-      case 'one_time':
-        return true; // Always available until completed (filtered out from _hobbies once done)
-
-      default:
-        return true; // Show by default for unknown repeat modes
-    }
-  }
-
-  int get completedToday {
-    final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return _hobbies
-        .where(
-          (h) =>
-              !h.isOneTime &&
-              _isHobbyAvailableForDate(h, _selectedDate) &&
-              h.completions[today]?.completed == true,
-        )
-        .length;
-  }
-
-  int get totalTasksForSelectedDate {
-    return _hobbies
-        .where(
-          (h) => !h.isOneTime && _isHobbyAvailableForDate(h, _selectedDate),
-        )
-        .length;
-  }
-
-  double get progressPercentage {
-    final totalTasks = totalTasksForSelectedDate;
-    if (totalTasks == 0) return 0.0;
-    final completed = completedToday;
-    return (completed / totalTasks * 100).toDouble();
-  }
-
-  /// Regular (recurring) hobbies pending for the selected date.
-  List<Hobby> get inProgressTasks {
-    final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return _hobbies
-        .where(
-          (h) =>
-              !h.isOneTime &&
-              _isHobbyAvailableForDate(h, _selectedDate) &&
-              h.completions[today]?.completed != true,
-        )
-        .toList();
-  }
-
-  /// Pending one-time tasks (not date-filtered — they show until completed).
-  List<Hobby> get pendingOneTimeTasks {
-    return _hobbies.where((h) => h.isOneTime).toList();
-  }
-
-  @override
-  bool get wantKeepAlive => true;
+  // ── Build ─────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    super.build(context);
     return IndexedStack(
       index: _selectedIndex,
       children: [
@@ -412,7 +385,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           onRefresh: _refreshFromOtherScreen,
         ),
         AnalyticsScreen(
-          hobbies: _hobbies,
+          hobbies: _allHobbies,
           onBack: () => setState(() => _selectedIndex = 0),
           onNavigate: (index) => setState(() => _selectedIndex = index),
           onRefresh: _refreshFromOtherScreen,
@@ -435,24 +408,23 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(),
-                  _buildDaySelector(),
                   Expanded(
                     child: _pullToRefreshEnabled
                         ? RefreshIndicator(
-                            onRefresh: _refreshToToday,
+                            onRefresh: _loadHobbies,
                             color: const Color(0xFF6C3FFF),
                             backgroundColor: const Color(0xFF2A2139),
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
+                                horizontal: 16,
                               ),
                               child: _buildScrollContent(),
                             ),
                           )
                         : SingleChildScrollView(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: _buildScrollContent(),
                           ),
                   ),
@@ -463,503 +435,380 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     );
   }
 
-  /// Builds the scrollable body content for the home screen.
-  /// Regular hobbies are date-filtered (day scroll applies to them).
-  /// One-time tasks appear below, independent of the selected date.
-  /// Completed tasks are never shown here.
+  // ── Header ────────────────────────────────────────────────────────────
+
+  Widget _buildHeader() {
+    final streakData = _globalStreakData;
+    final globalStreak = streakData['streak'] as int;
+    final todayCompleted = streakData['todayCompleted'] as bool;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FutureBuilder<String?>(
+            future: _service.getSetting('userName'),
+            builder: (context, snapshot) {
+              final userName = snapshot.data ?? 'Tham';
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hello, $userName!',
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    DateFormat('EEEE, MMM dd').format(DateTime.now()),
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          if (_allHobbies.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildMetricsTiles(globalStreak, todayCompleted),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricsTiles(int globalStreak, bool todayCompleted) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildMetricTile(
+            icon: Icons.today_outlined,
+            iconColor: const Color(0xFF10B981),
+            label: 'Today',
+            value: '$_todayCompletionPercent%',
+            valueColor: const Color(0xFF10B981),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Semantics(
+            identifier: TestKeys.streakBadge,
+            child: GestureDetector(
+              key: const Key(TestKeys.streakBadge),
+              onTap: () => setState(() => _selectedIndex = 2),
+              child: _buildMetricTile(
+                icon: Icons.local_fire_department,
+                iconColor: todayCompleted
+                    ? const Color(0xFFFF6B35)
+                    : Colors.grey.withValues(alpha: 0.5),
+                label: 'Streak',
+                value: '$globalStreak',
+                valueColor: todayCompleted
+                    ? const Color(0xFFFF6B35)
+                    : Colors.grey.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricTile({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required Color valueColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2238),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: iconColor, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Scroll content ────────────────────────────────────────────────────
+
   Widget _buildScrollContent() {
-    final regularPending = inProgressTasks;
-    final oneTimePending = pendingOneTimeTasks;
-    final hasRegularHobbies = _hobbies.any((h) => !h.isOneTime);
+    if (_allHobbies.isEmpty) return _buildWelcomeState();
+
+    final pending = _pendingTasks;
+    final upcoming = _upcomingTasks;
+    final completed = _completedTasks;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 4),
-
-        // ── Welcome state: nothing at all ─────────────────────────────
-        if (_hobbies.isEmpty) ...[
-          const SizedBox(height: 80),
-          const Center(
-            child: Column(
-              children: [
-                Icon(Icons.task_alt, size: 80, color: Colors.white24),
-                SizedBox(height: 16),
-                Text(
-                  'Welcome to Hobbyist! 👋',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'No hobbies yet',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Tap the + button below to create your first hobby\nand start building your habit streak!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white38, fontSize: 14),
-                ),
-              ],
-            ),
+        const SizedBox(height: 8),
+        _buildTimelineSection(
+          title: "Today's Tasks",
+          count: pending.length,
+          dotColor: const Color(0xFF6C3FFF),
+          isLast: false,
+          emptyChild: _buildSectionEmpty(
+            icon: Icons.celebration,
+            color: const Color(0xFF10B981),
+            message: 'All done for today!',
           ),
-          const SizedBox(height: 120),
-        ] else ...[
-
-          // ── Regular hobbies (date-filtered) ───────────────────────
-          if (hasRegularHobbies) ...[
-            if (totalTasksForSelectedDate == 0) ...[
-              // No regular tasks scheduled for this day
-              const SizedBox(height: 32),
-              Center(
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.event_available,
-                      size: 60,
-                      color: Colors.white24,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _isToday() ? 'No tasks for today' : 'No tasks for this day',
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _isToday()
-                          ? 'Enjoy your free day!'
-                          : 'No hobbies scheduled for this day',
-                      style: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-            ] else if (regularPending.isNotEmpty) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _isFutureDate()
-                        ? 'Upcoming'
-                        : (_isToday() ? 'In Progress' : 'Not Completed'),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    '${regularPending.length} Pending',
-                    style: const TextStyle(
-                      color: Color(0xFF8B5CF6),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ...regularPending.map((h) => _buildTaskCard(h, false)),
-              const SizedBox(height: 12),
-            ] else ...[
-              // All regular tasks for this day are done
-              const SizedBox(height: 24),
-              const Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.celebration,
-                      size: 48,
-                      color: Color(0xFF10B981),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'All done for today!',
-                      style: TextStyle(
-                        color: Color(0xFF10B981),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ],
-
-          // ── One-time tasks (no date filter) ───────────────────────
-          if (oneTimePending.isNotEmpty) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'One-time Tasks',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+          children: pending.map((h) => _buildTaskCard(h)).toList(),
+        ),
+        _buildTimelineSection(
+          title: 'Upcoming (Next 7 Days)',
+          count: upcoming.length,
+          dotColor: const Color(0xFF0EA5E9),
+          isLast: false,
+          emptyChild: _buildSectionEmpty(
+            icon: Icons.calendar_today_outlined,
+            color: const Color(0xFF0EA5E9),
+            message: 'No upcoming tasks',
+          ),
+          children: upcoming
+              .map((h) => _buildTaskCard(h, isUpcoming: true))
+              .toList(),
+        ),
+        _buildTimelineSection(
+          title: 'Completed (Last 7 Days)',
+          count: completed.length,
+          dotColor: const Color(0xFF10B981),
+          isLast: true,
+          emptyChild: _buildSectionEmpty(
+            icon: Icons.history,
+            color: const Color(0xFF94A3B8),
+            message: 'Your progress will appear here',
+          ),
+          children: completed
+              .map(
+                (h) => TweenAnimationBuilder<double>(
+                  key: ValueKey('${h.id}_completed'),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOut,
+                  builder: (context, opacity, child) =>
+                      Opacity(opacity: opacity, child: child),
+                  child: _buildTaskCard(
+                    h,
+                    isCompleted: true,
+                    completionDateLabel: _completionDateLabel(h),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF8056).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.check_circle_outline,
-                        color: Color(0xFFFF8056),
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${oneTimePending.length}',
-                        style: const TextStyle(
-                          color: Color(0xFFFF8056),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ...oneTimePending.map((h) => _buildTaskCard(h, false)),
-            const SizedBox(height: 12),
-          ],
-        ],
-
+              )
+              .toList(),
+        ),
         _buildQuoteSection(),
         const SizedBox(height: 16),
       ],
     );
   }
 
-  Widget _buildHeader() {
-    // Calculate global streak (any task completed counts)
-    Map<String, dynamic> calculateGlobalStreak() {
-      int streak = 0;
-      bool todayCompleted = false;
-      final today = DateTime.now();
-      final todayKey = DateFormat('yyyy-MM-dd').format(today);
-
-      // Check if today has any completions
-      for (var hobby in _hobbies) {
-        if (hobby.completions[todayKey]?.completed == true) {
-          todayCompleted = true;
-          break;
-        }
-      }
-
-      // Count consecutive days starting from today
-      for (int i = 0; i < 365; i++) {
-        final date = today.subtract(Duration(days: i));
-        final dateKey = DateFormat('yyyy-MM-dd').format(date);
-
-        bool anyTaskCompleted = false;
-        for (var hobby in _hobbies) {
-          if (hobby.completions[dateKey]?.completed == true) {
-            anyTaskCompleted = true;
-            break;
-          }
-        }
-
-        if (anyTaskCompleted) {
-          streak++;
-        } else if (i > 0) {
-          // Don't break on today if it's not completed yet
-          break;
-        }
-      }
-
-      return {'streak': streak, 'todayCompleted': todayCompleted};
-    }
-
-    final streakData = _hobbies.isEmpty
-        ? {'streak': 0, 'todayCompleted': false}
-        : calculateGlobalStreak();
-    final globalStreak = streakData['streak'] as int;
-    final todayCompleted = streakData['todayCompleted'] as bool;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildTimelineSection({
+    required String title,
+    required int count,
+    required Color dotColor,
+    required bool isLast,
+    required List<Widget> children,
+    Widget? emptyChild,
+  }) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FutureBuilder<String?>(
-                      future: _service.getSetting('userName'),
-                      builder: (context, snapshot) {
-                        final userName = snapshot.data ?? 'Tham';
-                        return Text(
-                          'Hello, $userName!',
-                          style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
+          // Timeline column
+          SizedBox(
+            width: 28,
+            child: Column(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  margin: const EdgeInsets.only(top: 5),
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: dotColor.withValues(alpha: 0.45),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Center(
+                      child: Container(
+                        width: 2,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              dotColor.withValues(alpha: 0.5),
+                              dotColor.withValues(alpha: 0.08),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      DateFormat('EEEE, MMM dd').format(_selectedDate),
-                      style: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              // Show streak when there are hobbies (even if 0)
-              if (_hobbies.isNotEmpty)
-                GestureDetector(
-                  key: const Key(TestKeys.streakBadge),
-                  onTap: () {
-                    setState(() => _selectedIndex = 2); // Navigate to analytics
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2A2238),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.local_fire_department,
-                          color: todayCompleted
-                              ? const Color(0xFFFF6B35)
-                              : Colors.grey.withValues(alpha: 0.5),
-                          size: 28,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '$globalStreak',
-                          style: TextStyle(
-                            color: todayCompleted
-                                ? Colors.white
-                                : Colors.grey.withValues(alpha: 0.5),
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-            ],
-          ),
-          // Progress text below header
-          if (_hobbies.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$completedToday of $totalTasksForSelectedDate tasks',
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  '${progressPercentage.toInt()}%',
-                  style: const TextStyle(
-                    color: Color(0xFF6C3FFF),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ],
             ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDaySelector() {
-    return SizedBox(
-      height: 60,
-      child: ListView.builder(
-        controller: _dayScrollController,
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 7, // Current week (7 days)
-        physics: const BouncingScrollPhysics(),
-        cacheExtent: 500, // Cache items for smooth scrolling
-        itemBuilder: (context, index) {
-          // Calculate date: index 0 = Monday, ..., index 6 = Sunday
-          final startOfWeek = _getStartOfWeek();
-          final date = startOfWeek.add(Duration(days: index));
-          final dateStr = DateFormat('yyyy-MM-dd').format(date);
-          final selectedStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-          final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-          final isSelected = dateStr == selectedStr;
-          final isToday = dateStr == todayStr;
-
-          return GestureDetector(
-            key: Key(TestKeys.dayPill(dateStr)),
-            onTap: () {
-              setState(() {
-                _selectedDate = date;
-              });
-              // Scroll to selected date after a brief delay
-              Future.delayed(const Duration(milliseconds: 100), () {
-                _animateToSelectedDate();
-              });
-            },
-            child: Container(
-              width: 48,
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFF6C3FFF)
-                    : const Color(0xFF2A2238),
-                borderRadius: BorderRadius.circular(24),
-                border: isToday && !isSelected
-                    ? Border.all(color: const Color(0xFF6C3FFF), width: 1.5)
-                    : null,
-              ),
+          ),
+          // Content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 10),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    DateFormat('EEE').format(date),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: isSelected ? Colors.white : Colors.white54,
-                      letterSpacing: 0.2,
-                    ),
+                  // Section header
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: dotColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$count',
+                          style: TextStyle(
+                            color: dotColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    DateFormat('d').format(date),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : Colors.white70,
-                    ),
-                  ),
+                  const SizedBox(height: 8),
+                  if (children.isEmpty && emptyChild != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: emptyChild,
+                    )
+                  else
+                    ...children,
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildOverallProgress() {
-    // Hide progress section if there are no hobbies (first-time user)
-    if (_hobbies.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    // Determine the title based on selected date
-    final isToday = _isToday();
-    final progressTitle = isToday
-        ? 'Today\'s Progress'
-        : DateFormat('EEEE, MMM dd').format(_selectedDate);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                progressTitle,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                '${progressPercentage.toInt()}%',
-                style: const TextStyle(
-                  color: Color(0xFF6C3FFF),
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+  Widget _buildSectionEmpty({
+    required IconData icon,
+    required Color color,
+    required String message,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: 8),
+        Text(
+          message,
+          style: TextStyle(
+            color: color,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progressPercentage / 100,
-              minHeight: 12,
-              backgroundColor: const Color(0xFF2A2738),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF6C3FFF),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWelcomeState() {
+    return const SizedBox(
+      height: 400,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.task_alt, size: 80, color: Colors.white24),
+            SizedBox(height: 16),
+            Text(
+              'Welcome to Hobbyist! 👋',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            '$completedToday of $totalTasksForSelectedDate tasks completed ${isToday ? "today" : "on this day"}',
-            style: const TextStyle(
-              color: Colors.white38,
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
+            SizedBox(height: 12),
+            Text(
+              'No hobbies yet',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+            SizedBox(height: 8),
+            Text(
+              'Tap the + button below to create your first hobby\nand start building your habit streak!',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white38, fontSize: 14),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildQuoteSection() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+      margin: const EdgeInsets.symmetric(vertical: 12),
       width: double.infinity,
       child: Text(
         _currentQuote,
@@ -976,66 +825,110 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     );
   }
 
-  Widget _buildTaskCard(Hobby hobby, bool isCompleted) {
-    // Check if selected date is in the future
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    final selectedDateOnly = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-    );
-    final isFutureDate = selectedDateOnly.isAfter(todayDate);
+  // ── Task card ─────────────────────────────────────────────────────────
+
+  Widget _buildTaskCard(
+    Hobby hobby, {
+    bool isCompleted = false,
+    bool isUpcoming = false,
+    String? completionDateLabel,
+  }) {
+    final nextDate = isUpcoming ? _getNextOccurrence(hobby) : null;
 
     return AnimatedContainer(
       key: Key(TestKeys.taskCard(hobby.id)),
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: const Color(0xFF161616),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0x0DFFFFFF)),
       ),
       child: Opacity(
-        opacity: isFutureDate ? 0.4 : 1.0, // Dim future tasks
+        opacity: isCompleted ? 0.55 : 1.0,
         child: Row(
           children: [
-            // Checkbox with hobby color
+            // Checkbox
             Semantics(
               identifier: TestKeys.taskCheckbox(hobby.id),
-              child: Builder(
-                builder: (context) => AnimatedCheckbox(
-                  key: Key(TestKeys.taskCheckbox(hobby.id)),
-                  isChecked: isCompleted,
-                  onTap: isFutureDate
-                      ? null
-                      : () =>
-                            _toggleToday(hobby), // Disable tap for future dates
-                  size: 24,
-                  color: Color(hobby.color),
-                ),
+              child: AnimatedCheckbox(
+                key: Key(TestKeys.taskCheckbox(hobby.id)),
+                isChecked: isCompleted,
+                onTap: () => _toggleToday(hobby),
+                size: 24,
+                color: Color(hobby.color),
               ),
             ),
             const SizedBox(width: 10),
-            // Name and notes
+            // Name, notes, badges
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    hobby.name,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.bold,
-                      decoration: isCompleted
-                          ? TextDecoration.lineThrough
-                          : null,
-                      decorationColor: Colors.white38,
-                      decorationThickness: 1.5,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          hobby.name,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
+                            decorationColor: Colors.white38,
+                            decorationThickness: 1.5,
+                          ),
+                        ),
+                      ),
+                      // Next-occurrence chip for upcoming tasks
+                      if (isUpcoming && nextDate != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0EA5E9).withValues(
+                              alpha: 0.15,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            DateFormat('MMM d').format(nextDate),
+                            style: const TextStyle(
+                              color: Color(0xFF0EA5E9),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      // Completion date chip for completed tasks
+                      if (isCompleted && completionDateLabel != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(
+                              alpha: 0.15,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            completionDateLabel,
+                            style: const TextStyle(
+                              color: Color(0xFF10B981),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Row(
@@ -1057,76 +950,25 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Streak badges: only for recurring hobbies
+                      // Streak badges — only on pending recurring tasks
                       if (!hobby.isOneTime &&
-                          (hobby.currentStreak > 0 || hobby.bestStreak > 0)) ...[
+                          !isCompleted &&
+                          !isUpcoming &&
+                          (hobby.currentStreak > 0 ||
+                              hobby.bestStreak > 0)) ...[
                         const SizedBox(width: 8),
-                        // Current streak
                         if (hobby.currentStreak > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFFFF6B35,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '${hobby.currentStreak}',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w900,
-                                    color: Color(0xFFFF6B35),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(
-                                  Icons.local_fire_department,
-                                  color: Color(0xFFFF6B35),
-                                  size: 18,
-                                ),
-                              ],
-                            ),
+                          _buildStreakBadge(
+                            '${hobby.currentStreak}',
+                            Icons.local_fire_department,
+                            const Color(0xFFFF6B35),
                           ),
-                        // Best streak
                         if (hobby.bestStreak > 0) ...[
                           const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFFFFD700,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '${hobby.bestStreak}',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w900,
-                                    color: Color(0xFFFFD700),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(
-                                  Icons.emoji_events,
-                                  color: Color(0xFFFFD700),
-                                  size: 18,
-                                ),
-                              ],
-                            ),
+                          _buildStreakBadge(
+                            '${hobby.bestStreak}',
+                            Icons.emoji_events,
+                            const Color(0xFFFFD700),
                           ),
                         ],
                       ],
@@ -1135,8 +977,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                 ],
               ),
             ),
-            const SizedBox(width: 16),
-            PopupMenuButton(
+            const SizedBox(width: 8),
+            // Context menu
+            PopupMenuButton<String>(
               key: Key(TestKeys.hobbyMenu(hobby.id)),
               padding: EdgeInsets.zero,
               icon: const Icon(
@@ -1153,11 +996,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.edit_outlined,
-                        color: Colors.white70,
-                        size: 18,
-                      ),
+                      Icon(Icons.edit_outlined, color: Colors.white70, size: 18),
                       SizedBox(width: 10),
                       Text(
                         'Edit',
@@ -1193,69 +1032,60 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                       direction: AxisDirection.left,
                     ),
                   );
-                  // Reload hobbies and wait for widget rebuild
                   await _loadHobbies();
-                  // Wait for build to complete
-                  await Future.delayed(const Duration(milliseconds: 100));
-                  // Now scroll to the selected date
-                  _animateToSelectedDate();
                 } else if (value == 'delete') {
-                  // Show confirmation dialog
                   final confirmed = await showDialog<bool>(
                     context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        backgroundColor: const Color(0xFF2A2738),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                    builder: (BuildContext ctx) => AlertDialog(
+                      backgroundColor: const Color(0xFF2A2738),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: const Text(
+                        'Delete Hobby?',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
-                        title: const Text(
-                          'Delete Hobby?',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      content: Text(
+                        'Are you sure you want to delete "${hobby.name}"? '
+                        'This action cannot be undone and will remove all '
+                        'completion history.',
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 14,
                         ),
-                        content: Text(
-                          'Are you sure you want to delete "${hobby.name}"? This action cannot be undone and will remove all completion history.',
-                          style: const TextStyle(
-                            color: Color(0xFF94A3B8),
-                            fontSize: 14,
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(
-                                color: Color(0xFF94A3B8),
-                                fontSize: 16,
-                              ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 16,
                             ),
                           ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text(
-                              'Delete',
-                              style: TextStyle(
-                                color: Colors.redAccent,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ],
-                      );
-                    },
+                        ),
+                      ],
+                    ),
                   );
-
-                  // Only delete if confirmed
                   if (confirmed == true) {
                     try {
                       final hobbyName = hobby.name;
                       await _service.deleteHobby(hobby.id);
-
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -1267,13 +1097,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           ),
                         );
                       }
-
-                      // Reload hobbies and wait for widget rebuild
                       await _loadHobbies();
-                      // Wait for build to complete
-                      await Future.delayed(const Duration(milliseconds: 100));
-                      // Now scroll to the selected date
-                      _animateToSelectedDate();
                     } catch (e) {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -1296,6 +1120,33 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       ),
     );
   }
+
+  Widget _buildStreakBadge(String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(icon, color: color, size: 18),
+        ],
+      ),
+    );
+  }
+
+  // ── Bottom nav ────────────────────────────────────────────────────────
 
   Widget _buildBottomNav() {
     return Container(
@@ -1340,12 +1191,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               direction: AxisDirection.up,
             ),
           );
-          // Reload hobbies and wait for widget rebuild
           await _loadHobbies();
-          // Wait for build to complete
-          await Future.delayed(const Duration(milliseconds: 100));
-          // Now scroll to the selected date
-          _animateToSelectedDate();
         },
         child: Container(
           width: 60,
@@ -1380,17 +1226,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           identifier: TestKeys.navItem(index),
           child: InkWell(
             key: Key(TestKeys.navItem(index)),
-            onTap: () {
-              setState(() => _selectedIndex = index);
-              // When returning to home screen (index 0), scroll to selected date
-              if (index == 0) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && _dayScrollController.hasClients) {
-                    _animateToSelectedDate();
-                  }
-                });
-              }
-            },
+            onTap: () => setState(() => _selectedIndex = index),
             borderRadius: BorderRadius.circular(24),
             child: Container(
               padding: const EdgeInsets.all(12),
@@ -1402,7 +1238,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                   : null,
               child: Icon(
                 icon,
-                color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
+                color: isSelected
+                    ? const Color(0xFF1E1733)
+                    : Colors.white38,
                 size: 26,
               ),
             ),
@@ -1412,29 +1250,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     );
   }
 
-  IconData _getIconForHobby(Hobby hobby) {
-    final name = hobby.name.toLowerCase();
-    if (name.contains('paint') ||
-        name.contains('draw') ||
-        name.contains('art')) {
-      return Icons.palette;
-    } else if (name.contains('piano') ||
-        name.contains('music') ||
-        name.contains('guitar')) {
-      return Icons.piano;
-    } else if (name.contains('read') || name.contains('book')) {
-      return Icons.menu_book;
-    } else if (name.contains('exercise') ||
-        name.contains('workout') ||
-        name.contains('yoga')) {
-      return Icons.fitness_center;
-    } else if (name.contains('code') || name.contains('program')) {
-      return Icons.code;
-    } else if (name.contains('write') || name.contains('journal')) {
-      return Icons.edit;
-    }
-    return Icons.check_circle;
-  }
+  // ── Utilities ──────────────────────────────────────────────────────────
 
   String _getFrequencyText(String repeatMode) {
     switch (repeatMode.toLowerCase()) {
@@ -1450,21 +1266,5 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         return 'Daily goal';
     }
   }
-
-  bool _isToday() {
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final selected = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return today == selected;
-  }
-
-  bool _isFutureDate() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final selected = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-    );
-    return selected.isAfter(today);
-  }
 }
+

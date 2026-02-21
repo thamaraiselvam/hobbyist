@@ -61,8 +61,10 @@ appId: tham.hobbyist.app
     id: "create_hobby_button"
 
 # Verify we returned to the dashboard.
-# Weekly hobbies only appear in the daily task list on their scheduled weekday,
-# so we assert the dashboard is visible rather than the hobby name.
+# A weekly hobby appears in "Today's Tasks" only on its scheduled weekday.
+# If the next occurrence is within 7 days it also appears in
+# "Upcoming (Next 7 Days)" — but this depends on the current day of week.
+# Rather than assert the hobby name (fragile), we assert the dashboard header.
 - extendedWaitUntil:
     visible:
       text: "Hello.*"

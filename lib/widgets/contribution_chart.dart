@@ -117,6 +117,7 @@ class ContributionChart extends StatelessWidget {
   int _getCompletionCount(String date) {
     int count = 0;
     for (final hobby in hobbies) {
+      if (hobby.isOneTime) continue; // one-time tasks don't affect the calendar
       if (hobby.completions[date]?.completed == true) count++;
     }
     return count;

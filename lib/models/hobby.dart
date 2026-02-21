@@ -7,7 +7,8 @@ class Hobby {
   final Map<String, HobbyCompletion> completions; // date -> completion info
   final DateTime? createdAt;
   final String? reminderTime; // Time in HH:mm format (e.g., "09:00")
-  final int? customDay; // For weekly: 0-6 (Mon-Sun), For monthly: 1-31
+  final int? customDay; // For weekly (legacy/single): 0-6 (Mon-Sun). For monthly: 1-31
+  final List<int>? customDays; // For weekly multi-select: list of 0-6 values
   final int bestStreak; // Max historical streak (unbounded per FR-014)
   final bool isOneTime; // If true, task disappears after first completion
 
@@ -21,9 +22,18 @@ class Hobby {
     this.createdAt,
     this.reminderTime,
     this.customDay,
+    this.customDays,
     this.bestStreak = 0,
     this.isOneTime = false,
   }) : completions = completions ?? {};
+
+  /// For weekly tasks: the effective set of selected weekdays (0=Mon … 6=Sun).
+  /// Falls back to [customDay] for hobbies saved before multi-select was added.
+  List<int> get effectiveWeekDays {
+    if (customDays != null && customDays!.isNotEmpty) return customDays!;
+    if (customDay != null) return [customDay!];
+    return [];
+  }
 
   int get currentStreak {
     int streak = 0;
@@ -116,6 +126,8 @@ class Hobby {
     'completions': completions.map((k, v) => MapEntry(k, v.toJson())),
     'createdAt': createdAt?.toIso8601String(),
     'reminderTime': reminderTime,
+    'customDay': customDay,
+    'customDays': customDays,
     'bestStreak': bestStreak,
     'isOneTime': isOneTime,
   };
@@ -135,6 +147,10 @@ class Hobby {
         ? DateTime.parse(json['createdAt'])
         : null,
     reminderTime: json['reminderTime'],
+    customDay: json['customDay'] as int?,
+    customDays: (json['customDays'] as List<dynamic>?)
+        ?.map((e) => e as int)
+        .toList(),
     bestStreak: json['bestStreak'] ?? 0,
     isOneTime: json['isOneTime'] as bool? ?? false,
   );
@@ -148,6 +164,7 @@ class Hobby {
     DateTime? createdAt,
     String? reminderTime,
     int? customDay,
+    List<int>? customDays,
     int? bestStreak,
     bool? isOneTime,
   }) => Hobby(
@@ -160,6 +177,7 @@ class Hobby {
     createdAt: createdAt ?? this.createdAt,
     reminderTime: reminderTime ?? this.reminderTime,
     customDay: customDay ?? this.customDay,
+    customDays: customDays ?? this.customDays,
     bestStreak: bestStreak ?? this.bestStreak,
     isOneTime: isOneTime ?? this.isOneTime,
   );

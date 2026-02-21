@@ -47,13 +47,13 @@ appId: tham.hobbyist.app
 - assertVisible:
     text: 7-Day Performance
 
-# Scroll down to see contribution grid
+# Scroll down to see Activity Heatmap
 - swipe:
     direction: UP
     duration: 500
 
 - assertVisible:
-    text: Last 365 days
+    text: "Activity Heatmap"
 
 # Return to dashboard
 - tapOn:

@@ -2,7 +2,9 @@ appId: tham.hobbyist.app
 ---
 # Add One-Time Task Flow
 # Tests that a one-time task can be created using the "One-time" frequency button.
-# Once completed, the task should disappear permanently from the home screen.
+# The task appears in "Today's Tasks" until completed. Once completed it moves
+# to "Completed (Last 7 Days)" where it stays visible (dimmed, strikethrough)
+# for 7 days, then is no longer shown on the home screen.
 #
 # Keys used: add_hobby_fab, hobby_name_input, one_time_frequency_button,
 #            color_palette_button_2, create_hobby_button, hobby_checkbox_.*

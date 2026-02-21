@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/hobby.dart';
 import '../services/analytics_service.dart';
 import '../services/hobby_service.dart';
+import '../utils/discipline_score.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -507,6 +508,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             const SizedBox(height: 24),
                             _buildStatsCards(),
                             const SizedBox(height: 24),
+                            _buildDisciplineSection(),
+                            const SizedBox(height: 24),
                             _buildBarChart(),
                             const SizedBox(height: 32),
                             _buildActivityMap(),
@@ -524,6 +527,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         children: [
                           const SizedBox(height: 24),
                           _buildStatsCards(),
+                          const SizedBox(height: 24),
+                          _buildDisciplineSection(),
                           const SizedBox(height: 24),
                           _buildBarChart(),
                           const SizedBox(height: 32),
@@ -556,6 +561,129 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           letterSpacing: 0.5,
         ),
       ),
+    );
+  }
+
+  Widget _buildDisciplineSection() {
+    final score = DisciplineScore.calculate(widget.hobbies);
+    final planned = DisciplineScore.plannedCount(widget.hobbies);
+    final completed = DisciplineScore.completedCount(widget.hobbies);
+    final pct = planned == 0
+        ? 0
+        : (completed / planned * 100).round().clamp(0, 100);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161616),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0x0DFFFFFF)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.track_changes_outlined,
+                  color: Color(0xFF6C3FFF),
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'OVERALL DISCIPLINE SCORE',
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'All-time',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '$score',
+                  style: const TextStyle(
+                    color: Color(0xFF6C3FFF),
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    '%',
+                    style: TextStyle(
+                      color: Color(0xFF6C3FFF),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _disciplineStat('Planned', '$planned'),
+                    const SizedBox(height: 4),
+                    _disciplineStat('Completed', '$completed'),
+                    const SizedBox(height: 4),
+                    _disciplineStat('Rate', '$pct%'),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: score / 100,
+                minHeight: 6,
+                backgroundColor: const Color(0xFF2A2238),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  Color(0xFF6C3FFF),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _disciplineStat(String label, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label: ',
+          style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1267,18 +1395,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$contributionCount contribution${contributionCount != 1 ? 's' : ''}',
-                style: const TextStyle(
+              const Text(
+                'Activity Heatmap',
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: -0.5,
                 ),
               ),
-              const Text(
-                'Last 365 days',
-                style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+              Text(
+                '$contributionCount completions',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF94A3B8),
+                ),
               ),
             ],
           ),
@@ -1431,11 +1562,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Last 90 days',
-            style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-          ),
           const SizedBox(height: 16),
           // Show calendar for each hobby
           ...widget.hobbies.map(
@@ -1449,30 +1575,135 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildHobbyCompletionRow(Hobby hobby) {
-    // Show last 90 days (more granular than 12 weeks)
-    const int daysToShow = 90;
+  /// Returns calendar period data depending on recurrence type.
+  /// Daily → 90 individual days.
+  /// Weekly → 90 weeks (one cell per week's scheduled occurrence).
+  /// Monthly → 90 months (one cell per month's scheduled occurrence).
+  /// One-time → null (no calendar shown).
+  List<Map<String, dynamic>>? _buildCalendarData(Hobby hobby) {
+    if (hobby.isOneTime) return null;
     final today = DateTime.now();
-    final startDate = today.subtract(const Duration(days: daysToShow - 1));
+    final todayDate = DateTime(today.year, today.month, today.day);
+    const int periods = 90;
 
-    // Build completion data for this hobby
-    List<Map<String, dynamic>> dayData = [];
-    for (int i = 0; i < daysToShow; i++) {
-      final date = startDate.add(Duration(days: i));
-      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+    switch (hobby.repeatMode.toLowerCase()) {
+      case 'daily':
+        return List.generate(periods, (i) {
+          final date = todayDate.subtract(Duration(days: periods - 1 - i));
+          final dateKey = DateFormat('yyyy-MM-dd').format(date);
+          return {
+            'date': date,
+            'isScheduled': true,
+            'isCompleted': hobby.completions[dateKey]?.completed == true,
+          };
+        });
 
-      // For daily tasks, always show completion status
-      // For weekly/monthly, check if scheduled
-      bool isScheduled = _isHobbyAvailableForDate(hobby, date);
-      bool isCompleted = hobby.completions[dateKey]?.completed == true;
+      case 'weekly':
+        final List<Map<String, dynamic>> data = [];
+        for (int weekIndex = periods - 1; weekIndex >= 0; weekIndex--) {
+          // Monday of the week that was weekIndex weeks ago
+          final daysToMonday = todayDate.weekday - 1 + weekIndex * 7;
+          final weekStart = todayDate.subtract(Duration(days: daysToMonday));
+          bool anyScheduled = false;
+          bool anyCompleted = false;
+          for (int d = 0; d < 7; d++) {
+            final date = weekStart.add(Duration(days: d));
+            if (date.isAfter(todayDate)) continue;
+            if (_isHobbyAvailableForDate(hobby, date)) {
+              anyScheduled = true;
+              final dateKey = DateFormat('yyyy-MM-dd').format(date);
+              if (hobby.completions[dateKey]?.completed == true) {
+                anyCompleted = true;
+              }
+            }
+          }
+          if (anyScheduled) {
+            data.add({'date': weekStart, 'isScheduled': true, 'isCompleted': anyCompleted});
+          }
+        }
+        return data.reversed.toList();
 
-      dayData.add({
-        'date': date,
-        'dateKey': dateKey,
-        'isScheduled': isScheduled,
-        'isCompleted': isCompleted,
-      });
+      case 'monthly':
+        final List<Map<String, dynamic>> data = [];
+        for (int monthsAgo = periods - 1; monthsAgo >= 0; monthsAgo--) {
+          int month = today.month - monthsAgo;
+          int year = today.year;
+          while (month <= 0) {
+            month += 12;
+            year--;
+          }
+          final targetDay = hobby.customDay ?? 1;
+          final daysInMonth = DateTime(year, month + 1, 0).day;
+          final actualDay = targetDay.clamp(1, daysInMonth);
+          final scheduledDate = DateTime(year, month, actualDay);
+          if (scheduledDate.isAfter(todayDate)) continue;
+          final dateKey = DateFormat('yyyy-MM-dd').format(scheduledDate);
+          data.add({
+            'date': scheduledDate,
+            'isScheduled': true,
+            'isCompleted': hobby.completions[dateKey]?.completed == true,
+          });
+        }
+        return data;
+
+      default:
+        return null;
     }
+  }
+
+  String _calendarPeriodLabel(Hobby hobby) {
+    switch (hobby.repeatMode.toLowerCase()) {
+      case 'daily':
+        return 'Last 90 days';
+      case 'weekly':
+        return 'Last 90 weeks';
+      case 'monthly':
+        return 'Last 90 months';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildHobbyCompletionRow(Hobby hobby) {
+    // One-time tasks have no repeating calendar
+    if (hobby.isOneTime) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161616),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0x0DFFFFFF)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hobby.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'One-time task',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF71717A)),
+                  ),
+                ],
+              ),
+            ),
+            if (hobby.completions.values.any((c) => c.completed))
+              const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 18),
+          ],
+        ),
+      );
+    }
+
+    final dayData = _buildCalendarData(hobby) ?? [];
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1583,10 +1814,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ],
           ),
           const SizedBox(height: 4),
-          // Show period
-          const Text(
-            'Last 90 days',
-            style: TextStyle(fontSize: 10, color: Color(0xFF71717A)),
+          // Dynamic period label
+          Text(
+            _calendarPeriodLabel(hobby),
+            style: const TextStyle(fontSize: 10, color: Color(0xFF71717A)),
           ),
           const SizedBox(height: 8),
           // Compact calendar grid
@@ -1640,22 +1871,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   bool _isHobbyAvailableForDate(Hobby hobby, DateTime date) {
-    final weekday = date.weekday; // 1 = Monday, 7 = Sunday
-
     switch (hobby.repeatMode.toLowerCase()) {
       case 'daily':
         return true;
       case 'weekly':
-        if (hobby.customDay != null) {
-          // customDay: 0 = Monday, 6 = Sunday (convert to match weekday)
-          return (hobby.customDay! + 1) == weekday;
-        }
-        return false;
+        final days = hobby.effectiveWeekDays;
+        if (days.isEmpty) return true;
+        final weekday = date.weekday; // 1=Mon … 7=Sun
+        final dayIndex = weekday == 7 ? 6 : weekday - 1; // 0=Mon … 6=Sun
+        return days.contains(dayIndex);
       case 'monthly':
-        if (hobby.customDay != null) {
-          return date.day == hobby.customDay;
-        }
-        return false;
+        if (hobby.customDay == null) return true;
+        return date.day == hobby.customDay;
       default:
         return true;
     }
