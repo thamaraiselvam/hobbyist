@@ -12,10 +12,12 @@ appId: tham.hobbyist.app
 #   adb shell am start -n tham.hobbyist.app/.MainActivity
 # Onboarding must be complete (run onboarding.yml first).
 
+- launchApp
+
 - extendedWaitUntil:
     visible:
       text: "Hello.*"
-    timeout: 5000
+    timeout: 10000
 
 - tapOn:
     id: "add_hobby_fab"
