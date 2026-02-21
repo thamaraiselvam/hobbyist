@@ -536,49 +536,50 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         color: const Color(0xFF2A2238),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.0, end: score / 100.0),
-        duration: const Duration(milliseconds: 1200),
-        curve: Curves.easeOutCubic,
-        builder: (context, progress, _) {
-          final displayScore = (score * progress).round();
-          return SizedBox(
-            height: 80,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CustomPaint(
-                  painter: _DisciplineGaugePainter(progress: progress),
-                  child: const SizedBox.expand(),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: score / 100.0),
+            duration: const Duration(milliseconds: 1200),
+            curve: Curves.easeOutCubic,
+            builder: (context, progress, _) {
+              final displayScore = (score * progress).round();
+              return SizedBox(
+                height: 62,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
+                    CustomPaint(
+                      painter: _DisciplineGaugePainter(progress: progress),
+                      child: const SizedBox.expand(),
+                    ),
                     Text(
-                      '$displayScore',
+                      '$displayScore%',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         height: 1.0,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'SCORE',
-                      style: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 8,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
                   ],
                 ),
-              ],
+              );
+            },
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Discipline Score',
+            style: TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
             ),
-          );
-        },
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -605,7 +606,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
             label,
             style: const TextStyle(
               color: Colors.white38,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -614,7 +615,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
             value,
             style: TextStyle(
               color: valueColor,
-              fontSize: 22,
+              fontSize: 26,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -640,7 +641,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           title: "Today's Tasks",
           count: pending.length,
           dotColor: const Color(0xFF6C3FFF),
-          isLast: upcoming.isEmpty && completed.isEmpty,
+          isLast: false,
           emptyChild: _buildSectionEmpty(
             icon: Icons.celebration,
             color: const Color(0xFF10B981),
@@ -648,40 +649,48 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           ),
           children: pending.map((h) => _buildTaskCard(h)).toList(),
         ),
-        if (upcoming.isNotEmpty)
-          _buildTimelineSection(
-            title: 'Upcoming (Next 7 Days)',
-            count: upcoming.length,
-            dotColor: const Color(0xFF0EA5E9),
-            isLast: completed.isEmpty,
-            children: upcoming
-                .map((h) => _buildTaskCard(h, isUpcoming: true))
-                .toList(),
+        _buildTimelineSection(
+          title: 'Upcoming (Next 7 Days)',
+          count: upcoming.length,
+          dotColor: const Color(0xFF0EA5E9),
+          isLast: false,
+          emptyChild: _buildSectionEmpty(
+            icon: Icons.calendar_today_outlined,
+            color: const Color(0xFF0EA5E9),
+            message: 'No upcoming tasks',
           ),
-        if (completed.isNotEmpty)
-          _buildTimelineSection(
-            title: 'Completed (Last 7 Days)',
-            count: completed.length,
-            dotColor: const Color(0xFF10B981),
-            isLast: true,
-            children: completed
-                .map(
-                  (h) => TweenAnimationBuilder<double>(
-                    key: ValueKey('${h.id}_completed'),
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOut,
-                    builder: (context, opacity, child) =>
-                        Opacity(opacity: opacity, child: child),
-                    child: _buildTaskCard(
-                      h,
-                      isCompleted: true,
-                      completionDateLabel: _completionDateLabel(h),
-                    ),
+          children: upcoming
+              .map((h) => _buildTaskCard(h, isUpcoming: true))
+              .toList(),
+        ),
+        _buildTimelineSection(
+          title: 'Completed (Last 7 Days)',
+          count: completed.length,
+          dotColor: const Color(0xFF10B981),
+          isLast: true,
+          emptyChild: _buildSectionEmpty(
+            icon: Icons.history,
+            color: const Color(0xFF94A3B8),
+            message: 'Your progress will appear here',
+          ),
+          children: completed
+              .map(
+                (h) => TweenAnimationBuilder<double>(
+                  key: ValueKey('${h.id}_completed'),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOut,
+                  builder: (context, opacity, child) =>
+                      Opacity(opacity: opacity, child: child),
+                  child: _buildTaskCard(
+                    h,
+                    isCompleted: true,
+                    completionDateLabel: _completionDateLabel(h),
                   ),
-                )
-                .toList(),
-          ),
+                ),
+              )
+              .toList(),
+        ),
         _buildQuoteSection(),
         const SizedBox(height: 16),
       ],

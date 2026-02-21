@@ -528,6 +528,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           const SizedBox(height: 24),
                           _buildStatsCards(),
                           const SizedBox(height: 24),
+                          _buildDisciplineSection(),
+                          const SizedBox(height: 24),
                           _buildBarChart(),
                           const SizedBox(height: 32),
                           _buildActivityMap(),
