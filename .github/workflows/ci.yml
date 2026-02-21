@@ -46,7 +46,7 @@ jobs:
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
             git commit -m "style: auto-apply dart format [skip ci]"
-            git push
+            git push origin HEAD:${{ github.head_ref || github.ref_name }}
           else
             echo "No formatting changes needed."
           fi
