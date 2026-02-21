@@ -129,6 +129,7 @@ void main() async {
       expect(find.text('Daily'), findsWidgets);
       expect(find.text('Weekly'), findsWidgets);
       expect(find.text('Monthly'), findsWidgets);
+      expect(find.text('One-time'), findsWidgets);
     });
 
     testWidgets('should display hobby names', (WidgetTester tester) async {
@@ -224,6 +225,38 @@ void main() async {
 
       expect(find.byType(TasksListScreen), findsOneWidget);
       expect(find.text('Daily Task'), findsOneWidget);
+    });
+
+    testWidgets('should show One-time tab with one-time hobbies', (
+      WidgetTester tester,
+    ) async {
+      final oneTimeHobby = Hobby(
+        id: 'test-one-time',
+        name: 'One-Time Task',
+        notes: '',
+        repeatMode: 'one_time',
+        color: 0xFFFF8056,
+        completions: {},
+        createdAt: DateTime.now(),
+        isOneTime: true,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TasksListScreen(
+            hobbies: [...testHobbies, oneTimeHobby],
+            onBack: () {},
+            onNavigate: (_) {},
+            onRefresh: () async {},
+          ),
+        ),
+      );
+
+      // One-time tab label should be present
+      expect(find.text('One-time'), findsWidgets);
+      // All tab (default) shows recurring hobbies only
+      expect(find.text('Daily Task'), findsOneWidget);
+      expect(find.text('Weekly Task'), findsOneWidget);
+      expect(find.text('Monthly Task'), findsOneWidget);
     });
   });
 }

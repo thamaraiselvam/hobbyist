@@ -26,8 +26,6 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   int _selectedColor = 0xFF590df2; // Default to first color
   TimeOfDay _notificationTime = const TimeOfDay(hour: 8, minute: 0);
   bool _notifyEnabled = false; // Default OFF
-  bool _isOneTime = false; // If true, task disappears after first completion
-
   // Color palette - 10 bright colors matching theme
   final List<int> _colorPalette = const [
     0xFF590df2, // Purple (theme primary)
@@ -56,6 +54,10 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
       _nameController.text = widget.hobby!.name;
       _notesController.text = widget.hobby!.notes;
       _repeatMode = widget.hobby!.repeatMode;
+      // Backward compat: legacy one-time hobbies stored with isOneTime=true but repeatMode!='one_time'
+      if (widget.hobby!.isOneTime && _repeatMode != 'one_time') {
+        _repeatMode = 'one_time';
+      }
       _selectedColor = widget.hobby!.color;
 
       // Load custom day if exists
@@ -80,8 +82,6 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
         }
       }
 
-      // Load one-time flag if exists
-      _isOneTime = widget.hobby!.isOneTime;
     }
   }
 
@@ -117,7 +117,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             color: _selectedColor,
             reminderTime: notificationTimeString,
             customDay: customDay,
-            isOneTime: _isOneTime,
+            isOneTime: _repeatMode == 'one_time',
           );
           await _service.updateHobby(updatedHobby);
 
@@ -143,7 +143,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             color: _selectedColor,
             reminderTime: notificationTimeString,
             customDay: customDay,
-            isOneTime: _isOneTime,
+            isOneTime: _repeatMode == 'one_time',
           );
           await _service.addHobby(hobby);
 
@@ -459,6 +459,10 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                           'monthly',
                                           'Monthly',
                                         ),
+                                        _buildFrequencyButton(
+                                          'one_time',
+                                          'One-time',
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -634,6 +638,34 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                           ),
                                         ),
                                       ],
+                                    ),
+                                  ] else if (_repeatMode == 'one_time') ...[
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                          0xFF161022,
+                                        ).withValues(alpha: 0.4),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.check_circle_outline,
+                                            color: Color(0xFFFF8056),
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text(
+                                            'Occurs only once',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                   const SizedBox(height: 20),
@@ -835,91 +867,6 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                   ],
                                 ],
                               ),
-                            ),
-                            const SizedBox(height: 20),
-                            const Divider(color: Color(0xFF382a54), height: 1),
-                            const SizedBox(height: 20),
-                            // One-time task toggle
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 32,
-                                      height: 32,
-                                      decoration: BoxDecoration(
-                                        color: const Color(
-                                          0xFFFF8056,
-                                        ).withValues(alpha: 0.1),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.looks_one_outlined,
-                                        color: Color(0xFFFF8056),
-                                        size: 18,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'One-time Task',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          'Disappears after completion',
-                                          style: TextStyle(
-                                            color: Color(0xFF8A7BA8),
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                Switch(
-                                  key: const Key(
-                                    TestKeys.addHobbyOneTimeToggle,
-                                  ),
-                                  value: _isOneTime,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _isOneTime = value;
-                                    });
-                                  },
-                                  thumbColor:
-                                      WidgetStateProperty.resolveWith<Color?>((
-                                        states,
-                                      ) {
-                                        if (states.contains(
-                                          WidgetState.selected,
-                                        )) {
-                                          return const Color(0xFFFF8056);
-                                        }
-                                        return null;
-                                      }),
-                                  trackColor:
-                                      WidgetStateProperty.resolveWith<Color?>((
-                                        states,
-                                      ) {
-                                        if (states.contains(
-                                          WidgetState.selected,
-                                        )) {
-                                          return const Color(
-                                            0xFFFF8056,
-                                          ).withValues(alpha: 0.5);
-                                        }
-                                        return null;
-                                      }),
-                                ),
-                              ],
                             ),
                             const SizedBox(height: 24),
                             // Color Palette section

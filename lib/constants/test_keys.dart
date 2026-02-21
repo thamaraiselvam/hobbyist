@@ -25,11 +25,10 @@ class TestKeys {
   // ─── ADD HOBBY SCREEN ────────────────────────────────────────────────────
   static const String addHobbyNameInput = 'hobby_name_input';
   static const String addHobbyNotifyToggle = 'notify_toggle';
-  static const String addHobbyOneTimeToggle = 'one_time_toggle';
   static const String addHobbyReminderPicker = 'reminder_time_picker';
   static const String addHobbySubmitButton = 'create_hobby_button';
 
-  /// mode: 'daily' | 'weekly' | 'monthly' → e.g. 'daily_frequency_button'
+  /// mode: 'daily' | 'weekly' | 'monthly' | 'one_time' → e.g. 'daily_frequency_button'
   static String addHobbyFrequencyButton(String mode) =>
       '${mode}_frequency_button';
 

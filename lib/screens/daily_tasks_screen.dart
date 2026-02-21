@@ -28,6 +28,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   final QuoteService _quoteService = QuoteService();
   final ScrollController _dayScrollController = ScrollController();
   List<Hobby> _hobbies = [];
+  List<Hobby> _allHobbies = [];
   bool _loading = true;
   int _selectedIndex = 0;
   String _currentQuote = '';
@@ -170,6 +171,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       return !h.completions.values.any((c) => c.completed);
     }).toList();
     setState(() {
+      _allHobbies = allHobbies;
       _hobbies = hobbies;
       _loading = false;
     });
@@ -333,6 +335,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         if (hobby.customDay == null) return true; // Show if no specific day set
         return date.day == hobby.customDay;
 
+      case 'one_time':
+        return true; // Always available until completed (filtered out from _hobbies once done)
+
       default:
         return true; // Show by default for unknown repeat modes
     }
@@ -395,7 +400,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       children: [
         _buildTasksScreen(),
         TasksListScreen(
-          hobbies: _hobbies,
+          hobbies: _allHobbies,
           onBack: () => setState(() => _selectedIndex = 0),
           onNavigate: (index) => setState(() => _selectedIndex = index),
           onRefresh: _refreshFromOtherScreen,
@@ -1554,6 +1559,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         return '1 time a week';
       case 'monthly':
         return 'Monthly goal';
+      case 'one_time':
+        return 'One-time task';
       default:
         return 'Daily goal';
     }

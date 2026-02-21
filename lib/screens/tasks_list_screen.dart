@@ -36,7 +36,7 @@ class _TasksListScreenState extends State<TasksListScreen>
   void initState() {
     super.initState();
     _hobbies = widget.hobbies;
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
         setState(() {
@@ -80,16 +80,18 @@ class _TasksListScreenState extends State<TasksListScreen>
 
   List<Hobby> _getFilteredHobbies() {
     switch (_selectedTab) {
-      case 0: // All
-        return _hobbies;
+      case 0: // All (recurring only - one-time has its own tab)
+        return _hobbies.where((h) => !h.isOneTime).toList();
       case 1: // Daily
         return _hobbies.where((h) => h.repeatMode == 'daily').toList();
       case 2: // Weekly
         return _hobbies.where((h) => h.repeatMode == 'weekly').toList();
       case 3: // Monthly
         return _hobbies.where((h) => h.repeatMode == 'monthly').toList();
+      case 4: // One-time
+        return _hobbies.where((h) => h.isOneTime).toList();
       default:
-        return _hobbies;
+        return _hobbies.where((h) => !h.isOneTime).toList();
     }
   }
 
@@ -101,6 +103,8 @@ class _TasksListScreenState extends State<TasksListScreen>
         return 'Weekly';
       case 'monthly':
         return 'Monthly';
+      case 'one_time':
+        return 'One-time';
       default:
         return 'Custom';
     }
@@ -189,6 +193,8 @@ class _TasksListScreenState extends State<TasksListScreen>
         return 'weekly';
       case 3:
         return 'monthly';
+      case 4:
+        return 'one-time';
       default:
         return '';
     }
@@ -241,6 +247,7 @@ class _TasksListScreenState extends State<TasksListScreen>
           Tab(text: 'Daily'),
           Tab(text: 'Weekly'),
           Tab(text: 'Monthly'),
+          Tab(text: 'One-time'),
         ],
       ),
     );
@@ -256,6 +263,8 @@ class _TasksListScreenState extends State<TasksListScreen>
         return const Color(0xFF10B981); // Weekly - Green
       case 3:
         return const Color(0xFFF59E0B); // Monthly - Amber
+      case 4:
+        return const Color(0xFFFF8056);
       default:
         return const Color(0xFF6C3FFF);
     }
@@ -315,7 +324,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                           ),
                         ),
                         // Current streak
-                        if (hobby.currentStreak > 0) ...[
+                        if (!hobby.isOneTime && hobby.currentStreak > 0) ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -350,7 +359,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                           ),
                         ],
                         // Best streak
-                        if (hobby.bestStreak > 0) ...[
+                        if (!hobby.isOneTime && hobby.bestStreak > 0) ...[
                           const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -383,6 +392,42 @@ class _TasksListScreenState extends State<TasksListScreen>
                               ],
                             ),
                           ),
+                        ],
+                        if (hobby.isOneTime) ...[
+                          const SizedBox(width: 8),
+                          Builder(builder: (context) {
+                            final isDone = hobby.completions.values.any((c) => c.completed);
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isDone
+                                    ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                                    : const Color(0xFFFF8056).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+                                    color: isDone ? const Color(0xFF10B981) : const Color(0xFFFF8056),
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isDone ? 'Done' : 'Pending',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDone
+                                          ? const Color(0xFF10B981)
+                                          : const Color(0xFFFF8056),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
                         ],
                       ],
                     ),
@@ -539,7 +584,7 @@ class _TasksListScreenState extends State<TasksListScreen>
             ],
           ),
           // Stats row
-          if (totalCompletions > 0) ...[
+          if (totalCompletions > 0 && !hobby.isOneTime) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(8),

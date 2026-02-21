@@ -66,6 +66,7 @@ void main() {
       expect(find.text('Daily'), findsOneWidget);
       expect(find.text('Weekly'), findsOneWidget);
       expect(find.text('Monthly'), findsOneWidget);
+      expect(find.text('One-time'), findsOneWidget);
     });
 
     testWidgets('should display color selection', (WidgetTester tester) async {
