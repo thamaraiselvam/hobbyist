@@ -36,20 +36,8 @@ jobs:
       - name: Run Flutter Analyze
         run: flutter analyze --no-pub
 
-      - name: Apply Dart formatting
-        run: dart format .
-
-      - name: Commit formatting fixes (if any)
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [ -n "$(git status --porcelain)" ]; then
-            git add -A
-            git commit -m "style: auto-apply dart format [skip ci]"
-            git push origin HEAD:${{ github.head_ref || github.ref_name }}
-          else
-            echo "No formatting changes needed."
-          fi
+      - name: Check Dart formatting
+        run: dart format --set-exit-if-changed .
 
       - name: Check for secrets in code
         run: |
