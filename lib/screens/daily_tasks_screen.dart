@@ -13,6 +13,7 @@ import 'analytics_screen.dart';
 import 'settings_screen.dart';
 import 'tasks_list_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/home_widget_service.dart';
 
 class DailyTasksScreen extends StatefulWidget {
   const DailyTasksScreen({super.key});
@@ -65,6 +66,24 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       _allHobbies = allHobbies;
       _loading = false;
     });
+    _pushHomeWidget();
+  }
+
+  /// Pushes current streak state to the Android home-screen widget.
+  void _pushHomeWidget() {
+    final now = DateTime.now();
+    final todayIndex = now.weekday - 1; // 0 = Mon, 6 = Sun
+    final weekStart = now.subtract(Duration(days: todayIndex));
+    final fmt = DateFormat('yyyy-MM-dd');
+    final completedDays = List.generate(7, (i) {
+      final key = fmt.format(weekStart.add(Duration(days: i)));
+      return _allHobbies.any((h) => h.completions[key]?.completed == true);
+    });
+    HomeWidgetService.push(
+      streak: _globalStreakData['streak'] as int,
+      completedDaysInWeek: completedDays,
+      currentDayIndex: todayIndex,
+    );
   }
 
   Future<void> _refreshFromOtherScreen() async {
@@ -349,6 +368,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       final idx = _allHobbies.indexWhere((h) => h.id == hobby.id);
       if (idx != -1) _allHobbies[idx] = finalHobby;
     });
+    _pushHomeWidget();
 
     if (!isCurrentlyCompleted) _soundService.playCompletionSound();
 
