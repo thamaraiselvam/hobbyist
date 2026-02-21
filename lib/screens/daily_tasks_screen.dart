@@ -283,11 +283,18 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     // Update hobby with new best streak
     final finalHobby = updatedHobby.copyWith(bestStreak: newBestStreak);
 
-    // Update UI immediately with recalculated best streak
+    // Update UI immediately with recalculated best streak.
+    // For one-time tasks being completed, remove from list instantly so
+    // the home screen updates without waiting for the async backend sync.
     setState(() {
       final index = _hobbies.indexWhere((h) => h.id == hobby.id);
       if (index != -1) {
-        _hobbies[index] = finalHobby;
+        if (hobby.isOneTime && !isCompleted) {
+          // One-time task just completed → remove from pending list immediately
+          _hobbies.removeAt(index);
+        } else {
+          _hobbies[index] = finalHobby;
+        }
       }
     });
 
