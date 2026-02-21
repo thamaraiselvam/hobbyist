@@ -70,20 +70,27 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   }
 
   /// Pushes current streak state to the Android home-screen widget.
+  /// Pushes current streak state to the Android home-screen widget.
+  ///
+  /// Uses a rolling 7-day window: index 0 = 6 days ago, index 6 = today.
+  /// Fire-and-forget — the userName is loaded async and errors are swallowed
+  /// in [HomeWidgetService] so this never blocks the UI.
   void _pushHomeWidget() {
     final now = DateTime.now();
-    final todayIndex = now.weekday - 1; // 0 = Mon, 6 = Sun
-    final weekStart = now.subtract(Duration(days: todayIndex));
     final fmt = DateFormat('yyyy-MM-dd');
+    // Rolling window: index 0 = 6 days ago … index 6 = today
     final completedDays = List.generate(7, (i) {
-      final key = fmt.format(weekStart.add(Duration(days: i)));
+      final key = fmt.format(now.subtract(Duration(days: 6 - i)));
       return _allHobbies.any((h) => h.completions[key]?.completed == true);
     });
-    HomeWidgetService.push(
-      streak: _globalStreakData['streak'] as int,
-      completedDaysInWeek: completedDays,
-      currentDayIndex: todayIndex,
-    );
+    _service.getSetting('userName').then((name) {
+      HomeWidgetService.push(
+        streak: _globalStreakData['streak'] as int,
+        completedDaysInWeek: completedDays,
+        hasHobbies: _allHobbies.isNotEmpty,
+        userName: name ?? '',
+      );
+    });
   }
 
   Future<void> _refreshFromOtherScreen() async {

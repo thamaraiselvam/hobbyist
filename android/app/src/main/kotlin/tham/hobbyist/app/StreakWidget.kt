@@ -8,19 +8,31 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.widget.RemoteViews
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 /**
- * Android home-screen widget that displays the user's current streak and a
- * 7-day week indicator.
+ * Android home-screen widget displaying the user's current streak and a
+ * **rolling 7-day window** anchored on today.
  *
- * Data is written by [HomeWidgetService] (Dart) via the home_widget plugin's
- * SharedPreferences file ("HomeWidgetPlugin").  This provider reads that file
- * on every update and rebuilds the RemoteViews accordingly.
+ * Data is written by HomeWidgetService (Dart) via the home_widget plugin's
+ * SharedPreferences file ("HomeWidgetPlugin").  This provider reads that
+ * store on every update and rebuilds RemoteViews accordingly.
  *
- * Keys written by Dart:
- *   streak_current     – Int,    global streak day count
- *   streak_days        – String, 7 chars "1100100" (Mon→Sun, '1' = completed)
- *   streak_today_index – Int,    0 = Monday … 6 = Sunday
+ * SharedPreferences keys (written by Dart):
+ *   streak_current      – Int,    global consecutive-day streak count
+ *   streak_days         – String, 7-char bitmask "1101100"
+ *                         index 0 = 6 days ago … index 6 = today
+ *   streak_has_hobbies  – Int,    1 = user has hobbies, 0 = fresh install
+ *   streak_user_name    – String, display name (empty = not set)
+ *
+ * Day circle states:
+ *   widget_day_done        – solid green, past completed
+ *   widget_day_done_today  – bright green + border, today completed
+ *   widget_day_today       – solid orange, today pending (fire emoji)
+ *   widget_day_missed      – dull red, past missed (hobbies exist)
+ *   widget_day_pending     – muted grey, fresh-install or future slot
  */
 class StreakWidget : AppWidgetProvider() {
 
@@ -47,6 +59,9 @@ class StreakWidget : AppWidgetProvider() {
             R.id.day_circle_6,
         )
 
+        // Single-char abbreviations indexed by Calendar.DAY_OF_WEEK (1=Sun … 7=Sat)
+        private val DAY_ABBR_BY_DOW = arrayOf("", "S", "M", "T", "W", "T", "F", "S")
+
         fun updateWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -58,11 +73,12 @@ class StreakWidget : AppWidgetProvider() {
             )
             val streak     = prefs.getInt("streak_current", 0)
             val daysStr    = prefs.getString("streak_days", "0000000") ?: "0000000"
-            val todayIndex = prefs.getInt("streak_today_index", 0).coerceIn(0, 6)
+            val hasHobbies = prefs.getInt("streak_has_hobbies", 0) == 1
+            val userName   = prefs.getString("streak_user_name", "") ?: ""
 
             val views = RemoteViews(context.packageName, R.layout.streak_widget)
 
-            // ── Tap anywhere → open app ───────────────────────────────────
+            // ── Tap widget → open app ─────────────────────────────────────
             val launchIntent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
@@ -71,43 +87,57 @@ class StreakWidget : AppWidgetProvider() {
             else
                 PendingIntent.FLAG_UPDATE_CURRENT
 
-            val pendingIntent = PendingIntent.getActivity(context, 0, launchIntent, piFlags)
-            views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+            views.setOnClickPendingIntent(
+                R.id.widget_root,
+                PendingIntent.getActivity(context, 0, launchIntent, piFlags),
+            )
 
-            // ── Header: streak pill ───────────────────────────────────────
+            // ── Header ────────────────────────────────────────────────────
             views.setTextViewText(R.id.streak_pill, "🔥 $streak")
-            views.setTextViewText(R.id.widget_subtitle, subtitleFor(streak))
+            views.setTextViewText(R.id.widget_subtitle, subtitleFor(streak, userName, hasHobbies))
 
-            // ── CTA button ────────────────────────────────────────────────
+            // ── CTA ───────────────────────────────────────────────────────
             views.setTextViewText(R.id.cta_button, "⚡  ${ctaFor(streak)}")
 
-            // ── Week indicator ────────────────────────────────────────────
+            // ── Rolling 7-day window (index 6 = today) ────────────────────
             val days = daysStr.padEnd(7, '0')
+            val sdf  = SimpleDateFormat("EEE", Locale.ENGLISH)
+
             for (i in 0..6) {
                 val completed = days.getOrElse(i) { '0' } == '1'
-                val isToday   = i == todayIndex
-                val isFuture  = i > todayIndex
+                val isToday   = i == 6      // rolling window always has today at index 6
+                val isMissed  = !isToday && !completed && hasHobbies
+
+                // Rolling day label: compute weekday of (today - (6 - i))
+                val cal = Calendar.getInstance()
+                cal.add(Calendar.DAY_OF_YEAR, -(6 - i))
+                val label = sdf.format(cal.time)[0].uppercaseChar().toString()
+                views.setTextViewText(DAY_LABEL_IDS[i], label)
+
+                // Label brightness: today = full white, past = dimmer
+                views.setTextColor(
+                    DAY_LABEL_IDS[i],
+                    if (isToday) Color.WHITE else Color.argb(100, 255, 255, 255),
+                )
 
                 // Circle background
                 val circleDrawable = when {
-                    completed && isToday -> R.drawable.widget_day_done_today
-                    completed            -> R.drawable.widget_day_done
+                    isToday && completed -> R.drawable.widget_day_done_today
                     isToday              -> R.drawable.widget_day_today
-                    isFuture             -> R.drawable.widget_day_future
-                    else                 -> R.drawable.widget_day_missed
+                    completed            -> R.drawable.widget_day_done
+                    isMissed             -> R.drawable.widget_day_missed
+                    else                 -> R.drawable.widget_day_pending
                 }
                 views.setInt(DAY_CIRCLE_IDS[i], "setBackgroundResource", circleDrawable)
 
-                // Circle text: checkmark on completed days, empty otherwise
-                views.setTextViewText(DAY_CIRCLE_IDS[i], if (completed) "✓" else "")
-
-                // Label brightness: full white for today, dim for others
-                val labelColor = when {
-                    isToday  -> Color.WHITE
-                    isFuture -> Color.argb(50,  255, 255, 255)
-                    else     -> Color.argb(100, 255, 255, 255)
+                // Circle text symbol
+                val symbol = when {
+                    completed            -> "✓"
+                    isToday              -> "🔥"
+                    isMissed             -> "✗"
+                    else                 -> ""
                 }
-                views.setTextColor(DAY_LABEL_IDS[i], labelColor)
+                views.setTextViewText(DAY_CIRCLE_IDS[i], symbol)
             }
 
             appWidgetManager.updateAppWidget(widgetId, views)
@@ -115,20 +145,13 @@ class StreakWidget : AppWidgetProvider() {
 
         // ── Copy helpers ──────────────────────────────────────────────────
 
-        private fun subtitleFor(streak: Int): String = when {
-            streak == 0  -> "Your journey starts now"
-            streak == 1  -> "Great start — day 1 done!"
-            streak < 7   -> "Building momentum…"
-            streak < 30  -> "You're on a roll!"
-            else         -> "You're unstoppable!"
+        private fun subtitleFor(streak: Int, userName: String, hasHobbies: Boolean): String {
+            if (userName.isNotBlank()) return "Keep it up, $userName"
+            if (!hasHobbies) return "Create your first task to start your streak"
+            return "Keep going — you're building a great habit"
         }
 
-        private fun ctaFor(streak: Int): String = when {
-            streak == 0 -> "Start your streak today"
-            streak < 3  -> "Keep the momentum going"
-            streak < 7  -> "Stay consistent"
-            streak < 30 -> "You're doing great!"
-            else        -> "Legendary streak — keep going"
-        }
+        private fun ctaFor(streak: Int): String =
+            if (streak == 0) "Start your streak today" else "Stay Consistent"
     }
 }
