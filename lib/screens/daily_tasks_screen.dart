@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print, use_build_context_synchronously
+// ignore_for_file: avoid_print, use_build_context_synchronously, body_might_complete_normally_catch_error
 import 'package:flutter/material.dart';
 import '../constants/test_keys.dart';
 import 'package:intl/intl.dart';
