@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import '../services/analytics_service.dart';
+import '../constants/test_keys.dart';
 
 class LandingScreen extends StatefulWidget {
   final VoidCallback onGetStarted;
@@ -132,7 +133,7 @@ class _LandingScreenState extends State<LandingScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF590df2).withOpacity(0.2),
+              color: const Color(0xFF590df2).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -193,30 +194,34 @@ class _LandingScreenState extends State<LandingScreen> {
           SizedBox(
             width: double.infinity,
             height: 56,
-            child: ElevatedButton(
-              onPressed: widget.onGetStarted,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black87,
-                elevation: 8,
-                shadowColor: Colors.white.withOpacity(0.3),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.cloud_off, size: 20, color: Colors.black87),
-                  SizedBox(width: 10),
-                  Text(
-                    'Continue Offline',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: Semantics(
+              identifier: TestKeys.landingContinueButton,
+              child: ElevatedButton(
+                key: const Key(TestKeys.landingContinueButton),
+                onPressed: widget.onGetStarted,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
+                  elevation: 8,
+                  shadowColor: Colors.white.withValues(alpha: 0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.cloud_off, size: 20, color: Colors.black87),
+                    SizedBox(width: 10),
+                    Text(
+                      'Continue Offline',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

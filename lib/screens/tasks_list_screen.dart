@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/test_keys.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
 import '../utils/page_transitions.dart';
@@ -324,7 +325,8 @@ class _TasksListScreenState extends State<TasksListScreen>
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B35).withOpacity(0.1),
+                              color: const Color(0xFFFF6B35)
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -357,7 +359,8 @@ class _TasksListScreenState extends State<TasksListScreen>
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700).withOpacity(0.1),
+                              color: const Color(0xFFFFD700)
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -487,23 +490,25 @@ class _TasksListScreenState extends State<TasksListScreen>
                       try {
                         final hobbyName = hobby.name;
                         await _service.deleteHobby(hobby.id);
-                        
+
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('🗑️ Hobby "$hobbyName" deleted successfully'),
+                              content: Text(
+                                  '🗑️ Hobby "$hobbyName" deleted successfully'),
                               backgroundColor: Colors.orange,
                               duration: const Duration(seconds: 2),
                             ),
                           );
                         }
-                        
+
                         _loadHobbies();
                       } catch (e) {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('❌ Error deleting hobby: ${e.toString()}'),
+                              content: Text(
+                                  '❌ Error deleting hobby: ${e.toString()}'),
                               backgroundColor: Colors.red,
                               duration: const Duration(seconds: 4),
                             ),
@@ -522,7 +527,7 @@ class _TasksListScreenState extends State<TasksListScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF6C3FFF).withOpacity(0.1),
+                color: const Color(0xFF6C3FFF).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -664,7 +669,7 @@ class _TasksListScreenState extends State<TasksListScreen>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6C3FFF).withOpacity(0.4),
+              color: const Color(0xFF6C3FFF).withValues(alpha: 0.4),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -684,21 +689,25 @@ class _TasksListScreenState extends State<TasksListScreen>
     return Expanded(
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: () => widget.onNavigate(index),
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: isSelected
-                ? BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  )
-                : null,
-            child: Icon(
-              icon,
-              color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
-              size: 26,
+        child: Semantics(
+          identifier: TestKeys.navItem(index),
+          child: InkWell(
+            key: Key(TestKeys.navItem(index)),
+            onTap: () => widget.onNavigate(index),
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: isSelected
+                  ? BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                    )
+                  : null,
+              child: Icon(
+                icon,
+                color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
+                size: 26,
+              ),
             ),
           ),
         ),

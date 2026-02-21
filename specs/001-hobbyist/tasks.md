@@ -136,7 +136,6 @@ description: "Implementation task breakdown for Hobbyist"
 **Purpose**: Hardening, perf, accessibility, and end-to-end validation.
 
 - [ ] T055 [P] Run the offline smoke test and update any stale steps in specs/001-hobbyist/quickstart.md
-- [ ] T056 Run integration tests and fix only failures caused by this feature slice in integration_test/complete_app_flow_test.dart
 - [ ] T057 [P] Verify analytics events emitted match the contract (no hobby names/notes) in lib/services/analytics_service.dart
 - [ ] T058 [P] Add accessibility labels for key controls (toggle complete, add hobby, settings toggles) in lib/screens/daily_tasks_screen.dart
 - [ ] T059 [P] Add accessibility labels for analytics charts/heatmap widgets in lib/screens/analytics_screen.dart

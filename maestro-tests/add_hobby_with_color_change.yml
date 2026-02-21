@@ -1,0 +1,96 @@
+appId: tham.hobbyist.app
+---
+# Add Hobby Flow: Dashboard → Add Hobby Screen → Create Hobby
+# Keys used: TestKeys.addHobbyFab, addHobbyNameInput, addHobbyFrequencyButton,
+#             addHobbyColorButton, addHobbyNotifyToggle, addHobbyReminderPicker,
+#             addHobbySubmitButton
+
+# NOTE: launchApp has a known TcpForwarder issue on some emulators.
+# Before running, ensure app is launched and onboarding is complete:
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+# To avoid the OS notification permission dialog, pre-grant the permission:
+#   adb shell pm grant tham.hobbyist.app android.permission.POST_NOTIFICATIONS
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000
+
+# Tap the centre (+) FAB button
+- tapOn:
+    id: "add_hobby_fab"
+
+- assertVisible:
+    text: ADD NEW HOBBY TASK
+
+# Enter hobby name
+- tapOn:
+    id: "hobby_name_input"
+
+- inputText: "Read a book"
+
+# Dismiss keyboard before tapping frequency button — keyboard can cover
+# the lower half of the form on the CI emulator (1440×2560 @ 560dpi).
+- hideKeyboard
+
+- waitForAnimationToEnd
+
+# Select Daily frequency
+- tapOn:
+    id: "daily_frequency_button"
+
+- assertVisible:
+    text: Repeats every day
+
+# Select an initial colour (coral, index 2)
+- tapOn:
+    id: "color_palette_button_2"
+
+# Change colour selection to a different swatch (orange/gold, index 3)
+# This verifies the palette selection can be switched after an initial pick
+- tapOn:
+    id: "color_palette_button_3"
+
+# Enable notification reminder
+- tapOn:
+    id: "notify_toggle"
+
+# Wait for any OS notification permission dialog to animate in, then dismiss.
+- waitForAnimationToEnd
+
+# Grant notification permission if OS dialog appears
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+
+# Set reminder time (only visible when notify_toggle is on)
+- tapOn:
+    id: "reminder_time_picker"
+
+- waitForAnimationToEnd
+
+# Dismiss time picker with OK
+- tapOn:
+    text: OK
+
+# Safety-net: dismiss permission dialog if it appeared after time-picker closed.
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+
+# Scroll down so the create button clears the visible viewport — notify
+# section expands the form and can push the button below the fold.
+- scroll
+
+# Create the hobby
+- tapOn:
+    id: "create_hobby_button"
+
+# Verify hobby appears on dashboard
+- extendedWaitUntil:
+    visible:
+      text: Read a book
+    timeout: 5000

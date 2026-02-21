@@ -4,6 +4,7 @@ import '../models/hobby.dart';
 import '../services/hobby_service.dart';
 import '../services/notification_service.dart';
 import '../utils/default_hobbies.dart';
+import '../constants/test_keys.dart';
 
 class AddHobbyScreen extends StatefulWidget {
   final Hobby? hobby;
@@ -114,11 +115,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             customDay: customDay,
           );
           await _service.updateHobby(updatedHobby);
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('✅ Hobby "${_nameController.text}" updated successfully'),
+                content: Text(
+                    '✅ Hobby "${_nameController.text}" updated successfully'),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
               ),
@@ -137,11 +139,12 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             customDay: customDay,
           );
           await _service.addHobby(hobby);
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('✅ Hobby "${_nameController.text}" created successfully'),
+                content: Text(
+                    '✅ Hobby "${_nameController.text}" created successfully'),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
               ),
@@ -301,32 +304,37 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                TextFormField(
-                                  controller: _nameController,
-                                  style: const TextStyle(
-                                      color: Colors.white, fontSize: 16),
-                                  onChanged: _onSearchChanged,
-                                  decoration: InputDecoration(
-                                    hintText: 'e.g., Read book - 30 mins',
-                                    hintStyle: const TextStyle(
-                                      color: Color(0xFFa490cb),
-                                      fontSize: 16,
+                                Semantics(
+                                  identifier: TestKeys.addHobbyNameInput,
+                                  child: TextFormField(
+                                    key: const Key(TestKeys.addHobbyNameInput),
+                                    controller: _nameController,
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 16),
+                                    onChanged: _onSearchChanged,
+                                    decoration: InputDecoration(
+                                      hintText: 'e.g., Read book - 30 mins',
+                                      hintStyle: const TextStyle(
+                                        color: Color(0xFFa490cb),
+                                        fontSize: 16,
+                                      ),
+                                      filled: true,
+                                      fillColor: const Color(0xFF221834),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 24, vertical: 20),
                                     ),
-                                    filled: true,
-                                    fillColor: const Color(0xFF221834),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 24, vertical: 20),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter a hobby name';
+                                      }
+                                      return null;
+                                    },
                                   ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter a hobby name';
-                                    }
-                                    return null;
-                                  },
                                 ),
                                 // Suggestions list
                                 if (_showSuggestions) ...[
@@ -421,7 +429,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFF161022)
-                                          .withOpacity(0.4),
+                                          .withValues(alpha: 0.4),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
@@ -445,6 +453,9 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                         final isSelected =
                                             _selectedWeekDay == index;
                                         return GestureDetector(
+                                          key: Key(
+                                              TestKeys.addHobbyWeekdayButton(
+                                                  index)),
                                           onTap: () {
                                             setState(() {
                                               _selectedWeekDay = index;
@@ -461,8 +472,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                               border: Border.all(
                                                 color: isSelected
                                                     ? const Color(0xFF590df2)
-                                                    : Colors.white
-                                                        .withOpacity(0.05),
+                                                    : Colors.white.withValues(
+                                                        alpha: 0.05),
                                               ),
                                             ),
                                             child: Center(
@@ -487,7 +498,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF161022)
-                                            .withOpacity(0.4),
+                                            .withValues(alpha: 0.4),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: const Row(
@@ -536,11 +547,11 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                                 const Color(0xFF590df2),
                                             inactiveTrackColor:
                                                 const Color(0xFF590df2)
-                                                    .withOpacity(0.2),
+                                                    .withValues(alpha: 0.2),
                                             thumbColor: const Color(0xFF590df2),
                                             overlayColor:
                                                 const Color(0xFF590df2)
-                                                    .withOpacity(0.2),
+                                                    .withValues(alpha: 0.2),
                                             thumbShape:
                                                 const RoundSliderThumbShape(
                                                     enabledThumbRadius: 10),
@@ -601,7 +612,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             height: 32,
                                             decoration: BoxDecoration(
                                               color: const Color(0xFF590df2)
-                                                  .withOpacity(0.1),
+                                                  .withValues(alpha: 0.1),
                                               shape: BoxShape.circle,
                                             ),
                                             child: const Icon(
@@ -621,112 +632,142 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                           ),
                                         ],
                                       ),
-                                      Switch(
-                                        value: _notifyEnabled,
-                                        onChanged: (value) async {
-                                          if (value) {
-                                            // Request permission when turning on for the first time
-                                            // Check if already granted
-                                            final alreadyEnabled =
-                                                await _notificationService
-                                                    .areNotificationsEnabled();
-
-                                            if (!alreadyEnabled) {
-                                              // Request permissions
-                                              final granted =
+                                      Semantics(
+                                        identifier:
+                                            TestKeys.addHobbyNotifyToggle,
+                                        child: Switch(
+                                          key: const Key(
+                                              TestKeys.addHobbyNotifyToggle),
+                                          value: _notifyEnabled,
+                                          onChanged: (value) async {
+                                            if (value) {
+                                              // Request permission when turning on for the first time
+                                              // Check if already granted
+                                              final alreadyEnabled =
                                                   await _notificationService
-                                                      .requestPermissions();
+                                                      .areNotificationsEnabled();
 
-                                              if (!granted) {
-                                                // Permission denied, show message
-                                                if (mounted) {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text(
-                                                        'Notification permission denied. Please enable it in settings.',
-                                                        style: TextStyle(color: Colors.white),
+                                              if (!alreadyEnabled) {
+                                                // Request permissions
+                                                final granted =
+                                                    await _notificationService
+                                                        .requestPermissions();
+
+                                                if (!granted) {
+                                                  // Permission denied, show message
+                                                  if (mounted) {
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text(
+                                                          'Notification permission denied. Please enable it in settings.',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                        backgroundColor: Color(
+                                                            0xFFE88D39), // Readable orange
                                                       ),
-                                                      backgroundColor: Color(0xFFE88D39), // Readable orange
-                                                    ),
-                                                  );
+                                                    );
+                                                  }
+                                                  return; // Don't enable toggle
                                                 }
-                                                return; // Don't enable toggle
                                               }
                                             }
-                                          }
 
-                                          setState(() {
-                                            _notifyEnabled = value;
-                                          });
-                                        },
-                                        activeColor: const Color(0xFF590df2),
-                                        activeTrackColor:
-                                            const Color(0xFF590df2)
-                                                .withOpacity(0.5),
+                                            setState(() {
+                                              _notifyEnabled = value;
+                                            });
+                                          },
+                                          thumbColor: WidgetStateProperty
+                                              .resolveWith<Color?>((states) {
+                                            if (states.contains(
+                                                WidgetState.selected)) {
+                                              return const Color(0xFF590df2);
+                                            }
+                                            return null;
+                                          }),
+                                          trackColor: WidgetStateProperty
+                                              .resolveWith<Color?>((states) {
+                                            if (states.contains(
+                                                WidgetState.selected)) {
+                                              return const Color(0xFF590df2)
+                                                  .withValues(alpha: 0.5);
+                                            }
+                                            return null;
+                                          }),
+                                        ),
                                       ),
                                     ],
                                   ),
                                   if (_notifyEnabled) ...[
                                     const SizedBox(height: 16),
                                     // Notification time
-                                    InkWell(
-                                      onTap: _selectTime,
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF161022)
-                                              .withOpacity(0.4),
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          border: Border.all(
-                                              color: Colors.white
-                                                  .withOpacity(0.05)),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.alarm,
-                                              color: Color(0xFFa490cb),
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    'REMINDER TIME',
-                                                    style: TextStyle(
-                                                      color: Color(0xFFa490cb),
-                                                      fontSize: 10,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      letterSpacing: 1.2,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    _formatTime(
-                                                        _notificationTime),
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ],
+                                    Semantics(
+                                      identifier:
+                                          TestKeys.addHobbyReminderPicker,
+                                      child: InkWell(
+                                        key: const Key(
+                                            TestKeys.addHobbyReminderPicker),
+                                        onTap: _selectTime,
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF161022)
+                                                .withValues(alpha: 0.4),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            border: Border.all(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.05)),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.alarm,
+                                                color: Color(0xFFa490cb),
+                                                size: 20,
                                               ),
-                                            ),
-                                            const Icon(
-                                              Icons.expand_more,
-                                              color: Color(0xFF6B6B6B),
-                                              size: 18,
-                                            ),
-                                          ],
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'REMINDER TIME',
+                                                      style: TextStyle(
+                                                        color:
+                                                            Color(0xFFa490cb),
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        letterSpacing: 1.2,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      _formatTime(
+                                                          _notificationTime),
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const Icon(
+                                                Icons.expand_more,
+                                                color: Color(0xFF6B6B6B),
+                                                size: 18,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -755,35 +796,41 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                 Wrap(
                                   spacing: 12,
                                   runSpacing: 12,
-                                  children: _colorPalette.map((color) {
-                                    return _buildColorButton(color);
-                                  }).toList(),
+                                  children: List.generate(_colorPalette.length,
+                                      (index) {
+                                    return _buildColorButton(
+                                        _colorPalette[index], index);
+                                  }),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 32),
                             // Create button
-                            ElevatedButton(
-                              onPressed: _saveHobby,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF590df2),
-                                foregroundColor: Colors.white,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                            Semantics(
+                              identifier: TestKeys.addHobbySubmitButton,
+                              child: ElevatedButton(
+                                key: const Key(TestKeys.addHobbySubmitButton),
+                                onPressed: _saveHobby,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF590df2),
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 8,
+                                  shadowColor: const Color(0xFF590df2)
+                                      .withValues(alpha: 0.3),
                                 ),
-                                elevation: 8,
-                                shadowColor:
-                                    const Color(0xFF590df2).withOpacity(0.3),
-                              ),
-                              child: Text(
-                                widget.hobby != null
-                                    ? 'Update Activity'
-                                    : 'Create Activity',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
+                                child: Text(
+                                  widget.hobby != null
+                                      ? 'Update Activity'
+                                      : 'Create Activity',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                             ),
@@ -823,25 +870,29 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   Widget _buildFrequencyButton(String value, String label) {
     final isSelected = _repeatMode == value;
     return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _repeatMode = value;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF590df2) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+      child: Semantics(
+        identifier: TestKeys.addHobbyFrequencyButton(value),
+        child: GestureDetector(
+          key: Key(TestKeys.addHobbyFrequencyButton(value)),
+          onTap: () {
+            setState(() {
+              _repeatMode = value;
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF590df2) : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ),
@@ -849,33 +900,43 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
     );
   }
 
-  Widget _buildColorButton(int colorValue) {
+  Widget _buildColorButton(int colorValue, int index) {
     final isSelected = _selectedColor == colorValue;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedColor = colorValue;
-        });
-      },
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Color(colorValue),
-          border: Border.all(
-            color: isSelected ? Colors.white : Colors.transparent,
-            width: 2,
+    return Semantics(
+      identifier: TestKeys.addHobbyColorButton(index),
+      // label is required so Flutter keeps this semantics node in the
+      // accessibility tree. Without semantic content (no Text child),
+      // Flutter may prune the node and the resource-id is never surfaced
+      // to the Android accessibility service (and therefore Maestro).
+      label: TestKeys.addHobbyColorButton(index),
+      button: true,
+      child: GestureDetector(
+        key: Key(TestKeys.addHobbyColorButton(index)),
+        onTap: () {
+          setState(() {
+            _selectedColor = colorValue;
+          });
+        },
+        child: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color(colorValue),
+            border: Border.all(
+              color: isSelected ? Colors.white : Colors.transparent,
+              width: 2,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Color(colorValue).withValues(alpha: 0.4),
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : [],
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Color(colorValue).withOpacity(0.4),
-                    blurRadius: 6,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : [],
         ),
       ),
     );

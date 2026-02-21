@@ -234,7 +234,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✅ Created 15 predefined tasks!'),
-              
               duration: Duration(seconds: 2),
             ),
           );
@@ -278,7 +277,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✅ Added random completions to existing tasks!'),
-              
               duration: Duration(seconds: 2),
             ),
           );
@@ -323,9 +321,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              
-            ),
+            style: ElevatedButton.styleFrom(),
             child: const Text('Create'),
           ),
         ],
@@ -376,7 +372,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Created "create app" with 100 days streak!'),
-            
             duration: Duration(seconds: 3),
           ),
         );
@@ -407,8 +402,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Push notifications are disabled in Settings'),
-            backgroundColor: const Color(0xFFE88D39), // Readable orange
-              
+            backgroundColor: Color(0xFFE88D39), // Readable orange
           ),
         );
       }
@@ -423,8 +417,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Please enable notifications in System Settings'),
-              backgroundColor: const Color(0xFFE88D39), // Readable orange
-              
+              backgroundColor: Color(0xFFE88D39), // Readable orange
             ),
           );
         }
@@ -440,8 +433,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Please enable exact alarms in System Settings'),
-              backgroundColor: const Color(0xFFE88D39), // Readable orange
-              
+              backgroundColor: Color(0xFFE88D39), // Readable orange
             ),
           );
         }
@@ -455,7 +447,6 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Test notification sent!'),
-            
           ),
         );
       }
@@ -506,7 +497,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4ECDC4).withOpacity(0.2),
+                    color: const Color(0xFF4ECDC4).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -531,7 +522,12 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                   ),
                 ),
                 value: _pullToRefreshEnabled,
-                activeColor: const Color(0xFF6C3FFF),
+                thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return const Color(0xFF6C3FFF);
+                  }
+                  return null;
+                }),
                 onChanged: _togglePullToRefresh,
               ),
             ),
@@ -557,7 +553,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFB800).withOpacity(0.2),
+                        color: const Color(0xFFFFB800).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
@@ -592,7 +588,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6C3FFF).withOpacity(0.2),
+                        color: const Color(0xFF6C3FFF).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
@@ -638,7 +634,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF6B35).withOpacity(0.2),
+                        color: const Color(0xFFFF6B35).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
@@ -698,7 +694,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                 color: const Color(0xFF2A2238),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.red.withOpacity(0.3),
+                  color: Colors.red.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -706,7 +702,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.2),
+                    color: Colors.red.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(

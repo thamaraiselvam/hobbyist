@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously, unused_element, body_might_complete_normally_catch_error
 import 'package:flutter/material.dart';
+import '../constants/test_keys.dart';
 import 'package:intl/intl.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
@@ -693,7 +694,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                               horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF10B981)
-                                                .withOpacity(0.2),
+                                                .withValues(alpha: 0.2),
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                           ),
@@ -826,6 +827,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               // Show streak when there are hobbies (even if 0)
               if (_hobbies.isNotEmpty)
                 GestureDetector(
+                  key: const Key(TestKeys.streakBadge),
                   onTap: () {
                     setState(() => _selectedIndex = 2); // Navigate to analytics
                   },
@@ -843,7 +845,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           Icons.local_fire_department,
                           color: todayCompleted
                               ? const Color(0xFFFF6B35)
-                              : Colors.grey.withOpacity(0.5),
+                              : Colors.grey.withValues(alpha: 0.5),
                           size: 28,
                         ),
                         const SizedBox(width: 8),
@@ -852,7 +854,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           style: TextStyle(
                             color: todayCompleted
                                 ? Colors.white
-                                : Colors.grey.withOpacity(0.5),
+                                : Colors.grey.withValues(alpha: 0.5),
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
                           ),
@@ -915,6 +917,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           final isToday = dateStr == todayStr;
 
           return GestureDetector(
+            key: Key(TestKeys.dayPill(dateStr)),
             onTap: () {
               setState(() {
                 _selectedDate = date;
@@ -1058,6 +1061,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     final isFutureDate = selectedDateOnly.isAfter(todayDate);
 
     return AnimatedContainer(
+      key: Key(TestKeys.taskCard(hobby.id)),
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       margin: const EdgeInsets.only(bottom: 8),
@@ -1072,14 +1076,19 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         child: Row(
           children: [
             // Checkbox with hobby color
-            Builder(
-              builder: (context) => AnimatedCheckbox(
-                isChecked: isCompleted,
-                onTap: isFutureDate
-                    ? null
-                    : () => _toggleToday(hobby), // Disable tap for future dates
-                size: 24,
-                color: Color(hobby.color),
+            Semantics(
+              identifier: TestKeys.taskCheckbox(hobby.id),
+              child: Builder(
+                builder: (context) => AnimatedCheckbox(
+                  key: Key(TestKeys.taskCheckbox(hobby.id)),
+                  isChecked: isCompleted,
+                  onTap: isFutureDate
+                      ? null
+                      : () =>
+                          _toggleToday(hobby), // Disable tap for future dates
+                  size: 24,
+                  color: Color(hobby.color),
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -1130,7 +1139,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B35).withOpacity(0.1),
+                              color: const Color(0xFFFF6B35)
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1162,7 +1172,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700).withOpacity(0.1),
+                              color: const Color(0xFFFFD700)
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1194,6 +1205,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
             ),
             const SizedBox(width: 16),
             PopupMenuButton(
+              key: Key(TestKeys.hobbyMenu(hobby.id)),
               padding: EdgeInsets.zero,
               icon:
                   const Icon(Icons.more_vert, color: Colors.white38, size: 22),
@@ -1298,17 +1310,18 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                     try {
                       final hobbyName = hobby.name;
                       await _service.deleteHobby(hobby.id);
-                      
+
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('🗑️ Hobby "$hobbyName" deleted successfully'),
+                            content: Text(
+                                '🗑️ Hobby "$hobbyName" deleted successfully'),
                             backgroundColor: Colors.orange,
                             duration: const Duration(seconds: 2),
                           ),
                         );
                       }
-                      
+
                       // Reload hobbies and wait for widget rebuild
                       await _loadHobbies();
                       // Wait for build to complete
@@ -1319,7 +1332,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('❌ Error deleting hobby: ${e.toString()}'),
+                            content:
+                                Text('❌ Error deleting hobby: ${e.toString()}'),
                             backgroundColor: Colors.red,
                             duration: const Duration(seconds: 4),
                           ),
@@ -1369,45 +1383,49 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   }
 
   Widget _buildCreateButton() {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () async {
-        await Navigator.push(
-          context,
-          SlidePageRoute(
-            page: const AddHobbyScreen(),
-            direction: AxisDirection.up,
-          ),
-        );
-        // Reload hobbies and wait for widget rebuild
-        await _loadHobbies();
-        // Wait for build to complete
-        await Future.delayed(const Duration(milliseconds: 100));
-        // Now scroll to the selected date
-        _animateToSelectedDate();
-      },
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6C3FFF).withOpacity(0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
+    return Semantics(
+      identifier: TestKeys.addHobbyFab,
+      child: GestureDetector(
+        key: const Key(TestKeys.addHobbyFab),
+        behavior: HitTestBehavior.opaque,
+        onTap: () async {
+          await Navigator.push(
+            context,
+            SlidePageRoute(
+              page: const AddHobbyScreen(),
+              direction: AxisDirection.up,
             ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 30,
+          );
+          // Reload hobbies and wait for widget rebuild
+          await _loadHobbies();
+          // Wait for build to complete
+          await Future.delayed(const Duration(milliseconds: 100));
+          // Now scroll to the selected date
+          _animateToSelectedDate();
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C3FFF), Color(0xFF8B5FFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C3FFF).withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 30,
+          ),
         ),
       ),
     );
@@ -1418,31 +1436,35 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     return Expanded(
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            setState(() => _selectedIndex = index);
-            // When returning to home screen (index 0), scroll to selected date
-            if (index == 0) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && _dayScrollController.hasClients) {
-                  _animateToSelectedDate();
-                }
-              });
-            }
-          },
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: isSelected
-                ? BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  )
-                : null,
-            child: Icon(
-              icon,
-              color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
-              size: 26,
+        child: Semantics(
+          identifier: TestKeys.navItem(index),
+          child: InkWell(
+            key: Key(TestKeys.navItem(index)),
+            onTap: () {
+              setState(() => _selectedIndex = index);
+              // When returning to home screen (index 0), scroll to selected date
+              if (index == 0) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted && _dayScrollController.hasClients) {
+                    _animateToSelectedDate();
+                  }
+                });
+              }
+            },
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: isSelected
+                  ? BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                    )
+                  : null,
+              child: Icon(
+                icon,
+                color: isSelected ? const Color(0xFF1E1733) : Colors.white38,
+                size: 26,
+              ),
             ),
           ),
         ),

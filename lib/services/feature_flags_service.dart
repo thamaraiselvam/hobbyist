@@ -18,7 +18,8 @@ class FeatureFlagsService {
   final RemoteConfigService _remoteConfig;
   final AuthService _authService;
 
-  FeatureFlagsService.test({RemoteConfigService? remoteConfig, AuthService? authService})
+  FeatureFlagsService.test(
+      {RemoteConfigService? remoteConfig, AuthService? authService})
       : _remoteConfig = remoteConfig ?? RemoteConfigService(),
         _authService = authService ?? AuthService();
 

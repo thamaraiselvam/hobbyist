@@ -1,0 +1,80 @@
+appId: tham.hobbyist.app
+---
+# Settings & Feedback Flow: Dashboard → Settings → toggles → feedback
+# Keys used: TestKeys.navSettings ('bottom_nav_settings'),
+#             settingsPushNotifications, settingsSoundVibration,
+#             settingsSendFeedback, feedbackInput, feedbackEmailInput,
+#             feedbackSubmitButton
+#
+# Before running, ensure app is on the dashboard and notification permission is granted:
+#   adb shell pm grant tham.hobbyist.app android.permission.POST_NOTIFICATIONS
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000
+
+# Navigate to Settings
+- tapOn:
+    id: "bottom_nav_settings"
+
+- assertVisible:
+    text: Settings
+
+# Toggle Push Notifications
+- tapOn:
+    id: "push_notifications_toggle"
+
+# Grant notification permission if OS dialog appears
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Toggle Sound and Vibration
+- tapOn:
+    id: "completion_sound_toggle"
+
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Scroll down to reach feedback option
+- swipe:
+    direction: UP
+    duration: 500
+
+# Tap Send Feedback
+- tapOn:
+    id: "send_feedback_button"
+
+- assertVisible:
+    text: Send Feedback
+
+# Enter feedback text
+- tapOn:
+    id: "feedback_textarea"
+
+- inputText: "This is a great app! Love the hobby tracking feature."
+
+# Enter email
+- tapOn:
+    id: "email_input"
+
+- inputText: "user@example.com"
+
+# Dismiss keyboard — submit button is at the bottom of the column and is
+# covered by the open keyboard after email input.
+- hideKeyboard
+
+# Submit
+- tapOn:
+    id: "submit_feedback_button"
+
+# Verify submission snackbar appears (success or graceful failure)
+- assertVisible:
+    text: ".*feedback.*"

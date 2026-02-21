@@ -19,8 +19,7 @@ The pipeline will execute these jobs in order:
 1. ✅ Pre-checks (analyze & format)
 2. 🔒 Security Checks
 3. 🧪 Unit Tests
-4. 🧪 Integration Tests (note only)
-5. 📦 Build Android APK
+4. 📦 Build Android APK
 
 ### 4. Download APKs
 After successful build:

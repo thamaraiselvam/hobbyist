@@ -18,21 +18,38 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.41.1'
           channel: 'stable'
           cache: true
+          cache-key: flutter-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
 
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Verify Flutter installation
-        run: flutter doctor -v
 
       - name: Run Flutter Analyze
         run: flutter analyze --no-pub
 
       - name: Check Dart formatting
         run: dart format --set-exit-if-changed .
+
+      - name: Check for secrets in code
+        run: |
+          echo "Scanning for potential secrets..."
+          ! grep -r "api[_-]key\s*=\s*['\"][a-zA-Z0-9]\+" lib/ || (echo "Potential API key found!" && exit 1)
+          ! grep -r "password\s*=\s*['\"][^'\"]\+" lib/ || (echo "Potential password found!" && exit 1)
+          echo "No obvious secrets found."
+
+      - name: Check for TODO security issues
+        run: |
+          echo "Checking for security-related TODOs..."
+          grep -r "TODO.*security\|FIXME.*security\|XXX.*security" . || echo "No security TODOs found."
 
   security-checks:
     name: Security Checks
@@ -45,9 +62,17 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.41.1'
           channel: 'stable'
           cache: true
+          cache-key: flutter-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
 
       - name: Install dependencies
         run: flutter pub get
@@ -57,19 +82,6 @@ jobs:
           echo "Checking for known vulnerabilities in dependencies..."
           flutter pub outdated --json > outdated.json || true
           cat outdated.json
-
-      - name: Check for secrets in code
-        run: |
-          echo "Scanning for potential secrets..."
-          # Check for common secret patterns
-          ! grep -r "api[_-]key\s*=\s*['\"][a-zA-Z0-9]\+" lib/ || (echo "Potential API key found!" && exit 1)
-          ! grep -r "password\s*=\s*['\"][^'\"]\+" lib/ || (echo "Potential password found!" && exit 1)
-          echo "No obvious secrets found."
-
-      - name: Check for TODO security issues
-        run: |
-          echo "Checking for security-related TODOs..."
-          grep -r "TODO.*security\|FIXME.*security\|XXX.*security" . || echo "No security TODOs found."
 
   unit-tests:
     name: Unit Tests
@@ -82,18 +94,26 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.41.1'
           channel: 'stable'
           cache: true
+          cache-key: flutter-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Run unit tests
-        run: flutter test test/unit/ --coverage --concurrency=1
+        run: flutter test test/unit/ --coverage --concurrency=4
 
       - name: Run widget tests
-        run: flutter test test/widget/ --coverage --concurrency=1
+        run: flutter test test/widget/ --coverage --concurrency=4
 
       - name: Generate coverage report
         run: |
@@ -107,68 +127,122 @@ jobs:
           path: coverage/
           retention-days: 30
 
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: 'stable'
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build integration test APK
-        run: flutter build apk --debug --target=integration_test/app_test.dart
-
-      - name: Note about integration tests
-        run: |
-          echo "⚠️  Integration tests require an emulator or physical device."
-          echo "Skipping actual test execution in CI. Run locally with:"
-          echo "flutter test integration_test/"
-
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
-    needs: [security-checks, unit-tests]
+    needs: [prechecks, unit-tests]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          cache: 'gradle'
+      # ubuntu-latest already has Java 17 pre-installed at $JAVA_HOME_17_X64.
+      # Using it directly saves ~15s vs downloading Zulu 17 via setup-java.
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.41.1'
           channel: 'stable'
           cache: true
+          cache-key: flutter-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
+      # Cache Android SDK platform packages that Gradle downloads at build time.
+      # ubuntu-latest only pre-installs a subset of SDK platforms; missing ones
+      # (e.g. android-33 required by Firebase/Play deps) are fetched via
+      # sdkmanager during the build, adding ~30-60s on every cache-cold run.
+      # The platforms dir is stable for a given set of dependencies, so we key
+      # on the Gradle files that declare compileSdkVersion and dependencies.
+      - name: Cache Android SDK platforms
+        id: sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/lib/android/sdk/platforms
+          key: android-sdk-platforms-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle.properties') }}
+          restore-keys: android-sdk-platforms-${{ runner.os }}-
+
+      # Pre-install any SDK platforms that the build requires so Gradle does
+      # not pause mid-build to download and accept licences.
+      # compileSdkVersion 36 + Firebase deps pulling android-33.
+      - name: Pre-install required Android SDK platforms
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-33" \
+            "platforms;android-36" \
+            --sdk_root=$ANDROID_HOME 2>/dev/null || true
+
+      # Cache the built APK so we can skip the ~2min Gradle build when
+      # Flutter/Android sources haven't changed.
+      - name: Cache debug APK
+        id: apk-cache
+        uses: actions/cache@v4
+        with:
+          path: build/app/outputs/flutter-apk/hobbyist-debug.apk
+          key: apk-debug-${{ runner.os }}-${{ hashFiles('lib/**', 'pubspec.yaml', 'pubspec.lock', 'android/**') }}
+
+      # google-services.json is gitignored. Write a placeholder so the Gradle
+      # google-services plugin is satisfied at build time. Firebase will fail to
+      # initialise at runtime, but the app handles this gracefully via try/catch
+      # in main.dart and AuthService. Core hobby tracking (SQLite) works fine.
+      # For a production release, replace this with a secret-injected real file.
+      - name: Create placeholder google-services.json
+        if: steps.apk-cache.outputs.cache-hit != 'true'
+        run: |
+          cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "placeholder-project",
+              "storage_bucket": "placeholder-project.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": {
+                    "package_name": "tham.hobbyist.app"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [{ "current_key": "placeholder_api_key" }],
+                "services": {
+                  "appinvite_service": { "other_platform_oauth_client": [] }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
 
       - name: Install dependencies
+        if: steps.apk-cache.outputs.cache-hit != 'true'
         run: flutter pub get
 
       - name: Build debug APK
-        run: flutter build apk --debug
-
-      - name: Build release APK
-        run: flutter build apk --release
-
-      - name: Rename APKs
+        if: steps.apk-cache.outputs.cache-hit != 'true'
         run: |
-          mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/hobbyist-debug.apk
-          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/hobbyist-release.apk
+          export JAVA_HOME=$JAVA_HOME_17_X64
+          flutter build apk --debug --no-pub
+
+      - name: Rename APK
+        if: steps.apk-cache.outputs.cache-hit != 'true'
+        run: mv build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/hobbyist-debug.apk
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -177,86 +251,217 @@ jobs:
           path: build/app/outputs/flutter-apk/hobbyist-debug.apk
           retention-days: 30
 
-      - name: Upload release APK
+  maestro-e2e:
+    name: Maestro E2E Tests
+    runs-on: ubuntu-latest
+    needs: build-android
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # GitHub Actions ubuntu-latest runners support KVM since Jan 2024.
+      # This udev rule grants the runner user rw access to /dev/kvm, which
+      # reactivecircus/android-emulator-runner requires for hardware acceleration.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # ubuntu-latest has Java 17 pre-installed; no explicit Setup Java needed.
+      # jar xf and the Maestro CLI JVM both use the system JDK.
+
+      - name: Download debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: hobbyist-debug-apk
+          path: build/
+
+      - name: Cache Maestro CLI
+        id: maestro-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.maestro
+          key: maestro-${{ runner.os }}-0.39.x
+
+      - name: Install Maestro CLI
+        if: steps.maestro-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+
+      - name: Add Maestro to PATH
+        run: echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      # Cache the AVD to avoid a full 3-5 min emulator creation on each run.
+      # Key is stable per API level + arch + OS. Delete via GH Actions cache UI
+      # if the snapshot becomes stale or corrupted.
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          # Separate cache key to force recreation with S24 Ultra-like viewport.
+          key: avd-34-google_apis-x86_64-s24ultra-${{ runner.os }}
+
+      # On cache miss: boot the emulator once to create and persist the snapshot.
+      # Subsequent runs restore from cache and skip this step entirely.
+      - name: Create AVD snapshot (cache miss only)
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          # Match S24 Ultra viewport (1440x3120 @ ~560dpi) to reduce layout drift.
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -skin 1440x3120 -dpi-device 560
+          disable-animations: true
+          script: echo "AVD snapshot created for caching"
+
+      # Write the test script as a proper bash file before launching the
+      # emulator. The android-emulator-runner `script:` parameter runs under
+      # /usr/bin/sh (dash), which lacks pushd/popd and has limited error
+      # propagation. Using a pre-written bash script avoids those limitations
+      # and lets us use a readiness poll instead of a blind fixed sleep.
+      - name: Create Maestro CI test script
+        run: |
+          cat > /tmp/run-maestro-ci.sh << 'SCRIPT'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          APP_ID="tham.hobbyist.app"
+          MAESTRO_JAR="$HOME/.maestro/lib/maestro-client.jar"
+
+          echo "--- Installing Hobbyist APK ---"
+          adb install -r build/hobbyist-debug.apk
+
+          # ── Maestro driver setup ────────────────────────────────────────────
+          # launchApp crashes on Maestro 2.1.0 (TcpForwarder/port-7001 bug).
+          # Workaround: side-load driver APKs, start am instrument, forward
+          # port 7001, then poll until the gRPC server is actually accepting
+          # connections before running the suite.
+          echo "--- Installing Maestro driver APKs ---"
+          TMPDIR=$(mktemp -d)
+          pushd "$TMPDIR"
+          jar xf "$MAESTRO_JAR" maestro-app.apk maestro-server.apk
+          adb install -r maestro-app.apk
+          adb install -r maestro-server.apk
+          popd
+          rm -rf "$TMPDIR"
+
+          echo "--- Starting Maestro gRPC driver ---"
+          adb shell am instrument -w \
+            dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner &
+
+          # Do NOT run `adb forward tcp:7001 tcp:7001` here.
+          # Maestro CLI uses dadb internally to create its own TCP tunnel to
+          # device:7001. A pre-existing adb forward binds HOST:7001 and makes
+          # `nc -z localhost 7001` always succeed immediately (false positive),
+          # masking the fact that the DEVICE gRPC server isn't ready yet.
+
+          # Instead, poll /proc/net/tcp directly on the device.
+          # Port 7001 = 0x1B59 in hex, which is how the kernel lists it.
+          # This is a true positive: it only succeeds once the gRPC server
+          # has actually bound to device:7001.
+          echo "Polling device port 7001 via /proc/net/tcp (up to 60s)..."
+          READY=0
+          for i in $(seq 1 30); do
+            if adb shell grep -q 1B59 /proc/net/tcp /proc/net/tcp6 2>/dev/null; then
+              echo "Maestro gRPC server ready on device after $((i * 2))s"
+              READY=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$READY" -eq 0 ]; then
+            echo "WARNING: Device port 7001 not seen within 60s — continuing anyway"
+          fi
+
+          # ── Pre-suite app setup ─────────────────────────────────────────────
+          echo "--- Setting up app state ---"
+          adb shell pm clear "$APP_ID"
+
+          # Grant POST_NOTIFICATIONS (runtime, API 33+)
+          adb shell pm grant "$APP_ID" android.permission.POST_NOTIFICATIONS
+
+          # Grant SCHEDULE_EXACT_ALARM via appops (special app access, API 31+).
+          # requestPermissions() in notification_service.dart calls
+          # requestExactAlarmsPermission() immediately after the POST_NOTIFICATIONS
+          # dialog. On API 33+ with targetSdk 36, requestExactAlarmsPermission()
+          # opens the system "Alarms & Reminders" settings screen — navigating away
+          # from the add hobby form — so create_hobby_button is never found.
+          # Pre-granting via appops makes canScheduleExactAlarms() return true and
+          # the system settings redirect never fires.
+          adb shell appops set "$APP_ID" SCHEDULE_EXACT_ALARM allow
+
+          # Wait for both grants to be committed to Android's permission database
+          # before starting the app. On the software-rendered CI emulator, pm grant
+          # can return before the system has flushed the grant to disk. If the app
+          # starts too quickly, areNotificationsEnabled() reads stale state
+          # (not-granted) and calls requestPermissions(), triggering both dialogs.
+          echo "Verifying POST_NOTIFICATIONS grant is committed..."
+          PERM_CONFIRMED=0
+          for i in $(seq 1 10); do
+            if adb shell dumpsys package "$APP_ID" 2>/dev/null \
+                | grep -q "POST_NOTIFICATIONS.*granted=true"; then
+              echo "Permission confirmed after ${i}s"
+              PERM_CONFIRMED=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$PERM_CONFIRMED" -eq 0 ]; then
+            echo "WARNING: Could not confirm permission grant — proceeding anyway"
+          fi
+
+          # Suppress the in-app rating prompt that fires on the 1st completion.
+          # RatingService.isAvailable() returns false on emulators/debug builds,
+          # so the fallback openStoreListing() launches Chrome, navigating away
+          # from the app mid-test. Pre-seeding flutter.has_rated_app=true causes
+          # checkAndShowRatingPrompt() to return immediately (hasRated guard).
+          echo "--- Suppressing in-app rating prompt ---"
+          adb shell run-as "$APP_ID" mkdir -p "/data/data/$APP_ID/shared_prefs" || true
+          echo '<?xml version="1.0" encoding="utf-8"?><map><boolean name="flutter.has_rated_app" value="true" /></map>' \
+            | adb shell run-as "$APP_ID" sh -c "cat > /data/data/$APP_ID/shared_prefs/FlutterSharedPreferences.xml" \
+            || echo "WARNING: Could not pre-seed rating prefs (non-fatal — Maestro flow handles fallback)"
+
+          adb shell am start -n "$APP_ID/.MainActivity"
+          sleep 3
+
+          echo "--- Running Maestro suite ---"
+          maestro test maestro-tests/suite.yml
+          SCRIPT
+          chmod +x /tmp/run-maestro-ci.sh
+
+      - name: Run Maestro E2E suite
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          # google_apis image required — Firebase services need Google Play Services,
+          # which are absent from AOSP (default) images. API 34 is also required
+          # because POST_NOTIFICATIONS is a runtime permission only on API 33+.
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          # -no-snapshot-save: don't overwrite the cached AVD snapshot each run.
+          # Match S24 Ultra viewport (1440x3120 @ ~560dpi) to reduce layout drift.
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -skin 1440x3120 -dpi-device 560
+          disable-animations: true
+          emulator-boot-timeout: 300
+          script: bash /tmp/run-maestro-ci.sh
+
+      # Upload results even on failure so flaky runs can be diagnosed.
+      - name: Upload Maestro test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hobbyist-release-apk
-          path: build/app/outputs/flutter-apk/hobbyist-release.apk
-          retention-days: 30
-
-      - name: Get APK info
-        run: |
-          ls -lh build/app/outputs/flutter-apk/
-          echo "✅ Android APK builds completed successfully!"
-          echo "📦 Download the artifacts from the Actions tab."
-
-  # iOS build - disabled for now
-  # Uncomment and configure when ready to build iOS
-  # build-ios:
-  #   name: Build iOS IPA
-  #   runs-on: macos-latest
-  #   needs: [security-checks, unit-tests]
-  #   if: false  # Disabled - set to true when ready
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Setup Flutter
-  #       uses: subosito/flutter-action@v2
-  #       with:
-  #         flutter-version: '3.24.0'
-  #         channel: 'stable'
-  #         cache: true
-  #
-  #     - name: Install dependencies
-  #       run: flutter pub get
-  #
-  #     - name: Setup Xcode
-  #       uses: maxim-lobanov/setup-xcode@v1
-  #       with:
-  #         xcode-version: latest-stable
-  #
-  #     - name: Install CocoaPods
-  #       run: |
-  #         cd ios
-  #         pod install
-  #
-  #     - name: Build iOS (no codesign)
-  #       run: flutter build ios --release --no-codesign
-  #
-  #     - name: Create IPA
-  #       run: |
-  #         cd build/ios/iphoneos
-  #         mkdir Payload
-  #         cp -r Runner.app Payload/
-  #         zip -r hobbyist-release.ipa Payload/
-  #
-  #     - name: Upload IPA
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: hobbyist-ios-ipa
-  #         path: build/ios/iphoneos/hobbyist-release.ipa
-  #         retention-days: 30
-
-  summary:
-    name: Build Summary
-    runs-on: ubuntu-latest
-    needs: [prechecks, security-checks, unit-tests, integration-tests, build-android]
-    if: always()
-    steps:
-      - name: Check job statuses
-        run: |
-          echo "## 🎯 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Pre-checks | ${{ needs.prechecks.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Checks | ${{ needs.security-checks.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Integration Tests | ${{ needs.integration-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Android Build | ${{ needs.build-android.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Download Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Debug APK: Available in artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Release APK: Available in artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Coverage Report: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+          name: maestro-e2e-results
+          path: ~/.maestro/tests/
+          retention-days: 14
+          if-no-files-found: ignore

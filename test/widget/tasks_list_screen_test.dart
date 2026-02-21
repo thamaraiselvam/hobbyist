@@ -12,14 +12,18 @@ void main() async {
 
   setUpAll(() async {
     // Mock path_provider
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
       return '.';
     });
 
     // Mock shared_preferences
-    const MethodChannel('plugins.flutter.io/shared_preferences')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/shared_preferences'),
+            (MethodCall methodCall) async {
       if (methodCall.method == 'getAll') {
         return <String, Object>{};
       }
@@ -71,7 +75,8 @@ void main() async {
       ];
     });
 
-    testWidgets('should display tasks list screen', (WidgetTester tester) async {
+    testWidgets('should display tasks list screen',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: TasksListScreen(
@@ -86,11 +91,12 @@ void main() async {
       expect(find.byType(TasksListScreen), findsOneWidget);
     });
 
-    testWidgets('should display with empty hobbies list', (WidgetTester tester) async {
+    testWidgets('should display with empty hobbies list',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: TasksListScreen(
-            hobbies: [],
+            hobbies: const [],
             onBack: () {},
             onNavigate: (_) {},
             onRefresh: () async {},
@@ -101,7 +107,8 @@ void main() async {
       expect(find.byType(TasksListScreen), findsOneWidget);
     });
 
-    testWidgets('should display tabs for filtering', (WidgetTester tester) async {
+    testWidgets('should display tabs for filtering',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: TasksListScreen(
@@ -168,7 +175,8 @@ void main() async {
       expect(find.byType(TabBar), findsOneWidget);
     });
 
-    testWidgets('should respond to didUpdateWidget', (WidgetTester tester) async {
+    testWidgets('should respond to didUpdateWidget',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: TasksListScreen(

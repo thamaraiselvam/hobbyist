@@ -1,0 +1,80 @@
+appId: tham.hobbyist.app
+---
+# Add Hobby (Monthly, Change Day of Month)
+# Tests that a monthly hobby can be created with a specific day of month.
+# Keys used: add_hobby_fab, hobby_name_input, monthly_frequency_button,
+#            color_palette_button_7, create_hobby_button
+#
+# NOTE: The day-of-month Slider has no Key or Semantics identifier — it cannot
+# be targeted by id. A coordinate-based horizontal swipe is used to advance the
+# slider from the default (1st) toward a higher value. Adjust x/y percentages
+# if the layout differs on your device (the slider sits below "Day of month:"
+# and above the "1 / 15 / 31" labels in the frequency section).
+#
+# Before running:
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+# Onboarding must be complete (run onboarding.yml first).
+
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000
+
+- tapOn:
+    id: "add_hobby_fab"
+
+- assertVisible:
+    text: ADD NEW HOBBY TASK
+
+# Enter hobby name
+- tapOn:
+    id: "hobby_name_input"
+
+- inputText: "Monthly Budget Review"
+
+# Dismiss keyboard before tapping frequency button — keyboard can cover
+# the lower half of the form on the CI emulator (1440×2560 @ 560dpi).
+- hideKeyboard
+
+- waitForAnimationToEnd
+
+# Select Monthly frequency
+- tapOn:
+    id: "monthly_frequency_button"
+
+# Verify day-of-month section appears (default shows "Day of month: 1st")
+- assertVisible:
+    text: "Day of month:.*"
+
+# Swipe right across the slider track to advance the selected day.
+# Coordinates are approximate (15% → 55% of screen width at ~72% height).
+# Adjust if the slider is not hit or the value does not change.
+- swipe:
+    start: "15%, 72%"
+    end: "55%, 72%"
+    duration: 400
+
+# Day of month label should still be visible (value may have changed)
+- assertVisible:
+    text: "Day of month:.*"
+
+# Pick a color (pink, index 7)
+- tapOn:
+    id: "color_palette_button_7"
+
+# No notification for this test
+
+# Scroll down so the create button is in the visible viewport.
+- scroll
+
+# Create the hobby
+- tapOn:
+    id: "create_hobby_button"
+
+# Verify we returned to the dashboard.
+# Monthly hobbies only appear in the daily task list on their scheduled day,
+# so we assert the dashboard is visible rather than the hobby name.
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000

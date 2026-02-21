@@ -66,29 +66,30 @@ void main() async {
       SharedPreferences.setMockInitialValues({
         'hasCompletedOnboarding': true,
       });
-      
+
       mockHobbyService = MockHobbyService();
       mockAnalyticsService = MockAnalyticsService();
       mockQuoteService = MockQuoteService();
       mockSoundService = MockSoundService();
-      
+
       HobbyService.instance = mockHobbyService;
       AnalyticsService.instance = mockAnalyticsService;
       QuoteService.instance = mockQuoteService;
       SoundService.instance = mockSoundService;
-      
+
       when(mockHobbyService.loadHobbies()).thenAnswer((_) async => []);
       when(mockAnalyticsService.logAnalyticsViewed()).thenAnswer((_) async {});
       when(mockQuoteService.getRandomQuote()).thenReturn('Test Quote');
     });
 
-    testWidgets('should display daily tasks screen', (WidgetTester tester) async {
+    testWidgets('should display daily tasks screen',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: DailyTasksScreen(),
         ),
       );
-      
+
       // Wait for all initState timers and animations
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
 
@@ -101,7 +102,7 @@ void main() async {
           home: DailyTasksScreen(),
         ),
       );
-      
+
       // Wait for all initState timers and animations
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
 
@@ -130,4 +131,3 @@ void main() async {
     });
   });
 }
-

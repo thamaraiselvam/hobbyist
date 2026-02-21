@@ -9,8 +9,10 @@ void main() {
 
   setUpAll(() {
     // Mock path_provider
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
       return '.';
     });
 
@@ -42,7 +44,7 @@ void main() {
 
       final button = find.widgetWithText(ElevatedButton, 'Create Activity');
       expect(button, findsOneWidget);
-      
+
       // In the new UI, validation happens on press, button is always enabled
       final elevatedButton = tester.widget<ElevatedButton>(button);
       expect(elevatedButton.onPressed, isNotNull);
@@ -125,12 +127,14 @@ void main() {
 
       final cancelButton = find.widgetWithText(TextButton, 'Cancel').first;
       await tester.scrollUntilVisible(
-        cancelButton, 
+        cancelButton,
         100,
-        scrollable: find.descendant(
-          of: find.byType(AddHobbyScreen),
-          matching: find.byType(Scrollable),
-        ).first,
+        scrollable: find
+            .descendant(
+              of: find.byType(AddHobbyScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first,
       );
       await tester.tap(cancelButton);
       await tester.pumpAndSettle();

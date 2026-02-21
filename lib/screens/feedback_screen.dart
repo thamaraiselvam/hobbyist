@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/feedback_service.dart';
+import '../constants/test_keys.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -31,7 +32,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         const SnackBar(
           content: Text('Please enter your feedback'),
           backgroundColor: Color(0xFFD84A4A), // Readable red
-          
         ),
       );
       return;
@@ -55,8 +55,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Thank you for your feedback!'),
-              backgroundColor: const Color(0xFF4CAF78), // Readable green
-              
+              backgroundColor: Color(0xFF4CAF78), // Readable green
             ),
           );
           Navigator.pop(context);
@@ -65,7 +64,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             const SnackBar(
               content: Text('Failed to submit feedback. Please try again.'),
               backgroundColor: Color(0xFFD84A4A), // Readable red
-          
             ),
           );
         }
@@ -76,7 +74,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           SnackBar(
             content: Text('Error: ${e.toString()}'),
             backgroundColor: const Color(0xFFD84A4A), // Readable red
-            
           ),
         );
       }
@@ -130,26 +127,30 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFF382a54)),
                 ),
-                child: TextField(
-                  controller: _feedbackController,
-                  maxLines: 8,
-                  maxLength: 500,
-                  onChanged: (text) {
-                    setState(() {
-                      _remainingChars = 500 - text.length;
-                    });
-                  },
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText:
-                        'Share your feedback, suggestions, or report issues...',
-                    hintStyle: TextStyle(color: Colors.white38),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(16),
-                    counterText: '',
+                child: Semantics(
+                  identifier: TestKeys.feedbackInput,
+                  child: TextField(
+                    key: const Key(TestKeys.feedbackInput),
+                    controller: _feedbackController,
+                    maxLines: 8,
+                    maxLength: 500,
+                    onChanged: (text) {
+                      setState(() {
+                        _remainingChars = 500 - text.length;
+                      });
+                    },
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText:
+                          'Share your feedback, suggestions, or report issues...',
+                      hintStyle: TextStyle(color: Colors.white38),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(16),
+                      counterText: '',
+                    ),
                   ),
                 ),
               ),
@@ -181,20 +182,24 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFF382a54)),
                 ),
-                child: TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: 'your@email.com',
-                    hintStyle: TextStyle(color: Colors.white38),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                child: Semantics(
+                  identifier: TestKeys.feedbackEmailInput,
+                  child: TextField(
+                    key: const Key(TestKeys.feedbackEmailInput),
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'your@email.com',
+                      hintStyle: TextStyle(color: Colors.white38),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -209,36 +214,39 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ),
               const SizedBox(height: 32),
               // Submit button
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitFeedback,
-                style: ElevatedButton.styleFrom(
-                  
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor:
-                      const Color(0xFF6C3FFF).withOpacity(0.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+              Semantics(
+                identifier: TestKeys.feedbackSubmitButton,
+                child: ElevatedButton(
+                  key: const Key(TestKeys.feedbackSubmitButton),
+                  onPressed: _isSubmitting ? null : _submitFeedback,
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        const Color(0xFF6C3FFF).withValues(alpha: 0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  elevation: 0,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Submit Feedback',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Text(
-                        'Submit Feedback',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
             ],
           ),

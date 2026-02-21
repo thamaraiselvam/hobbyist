@@ -23,8 +23,14 @@ void main() {
       );
 
       expect(find.byType(SplashScreen), findsOneWidget);
-      expect(find.byType(FadeTransition), findsOneWidget);
-      
+      expect(
+        find.descendant(
+          of: find.byType(SplashScreen),
+          matching: find.byType(FadeTransition),
+        ),
+        findsOneWidget,
+      );
+
       await tester.pump(const Duration(seconds: 3));
     });
 
@@ -80,11 +86,14 @@ void main() {
       );
 
       final fadeTransition = tester.widget<FadeTransition>(
-        find.byType(FadeTransition),
+        find.descendant(
+          of: find.byType(SplashScreen),
+          matching: find.byType(FadeTransition),
+        ),
       );
 
       expect(fadeTransition.opacity, isNotNull);
-      
+
       // Drain the timer
       await tester.pump(const Duration(seconds: 3));
     });

@@ -12,7 +12,7 @@ Deliver an offline-first hobby tracking mobile app where users can create hobbie
 **Language/Version**: Flutter (Dart SDK `>=3.0.0 <4.0.0`)  
 **Primary Dependencies**: `sqflite`, `flutter_local_notifications`, `timezone`, `firebase_core`, `firebase_analytics`, `firebase_crashlytics`, `firebase_performance`, `firebase_remote_config`, `firebase_auth`, `google_sign_in`, `shared_preferences`, `intl`, `audioplayers`  
 **Storage**: SQLite (`hobbyist.db`) via `sqflite` with DB schema version 3; limited onboarding/auth flags in `shared_preferences`  
-**Testing**: `flutter_test`, `integration_test`, `sqflite_common_ffi`  
+**Testing**: `flutter_test`, `sqflite_common_ffi`  
 **Target Platform**: iOS + Android (Android: `minSdkVersion 23`, `targetSdkVersion 36`; iOS: Flutter runner, app supports iOS 12+)  
 **Project Type**: Mobile (Flutter)  
 **Performance Goals**: 60 FPS interactions, cold start < 2s mid-range device, DB queries < 100ms typical case  
@@ -24,7 +24,7 @@ Deliver an offline-first hobby tracking mobile app where users can create hobbie
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 - **I. Minimalism & Purpose**: PASS — scope maps to core habit tracking flows already in repo; no additional dependencies introduced.
-- **II. Test-First (Non-negotiable)**: PASS (process) — implementation must add/adjust unit + integration tests for DB/services and critical flows; no feature work without tests.
+- **II. Test-First (Non-negotiable)**: PASS (process) — implementation must add/adjust unit + widget tests for DB/services and critical flows; no feature work without tests.
 - **III. Performance as a Feature**: PASS — DB indexes exist; `PerformanceService` traces DB queries; avoid expensive rebuilds/jank.
 - **IV. Privacy by Default**: PASS WITH ACTION — hobby/completion data remains local SQLite; Firebase usage must be transparent and user-controllable (see research/design decisions).
 - **V. Accessibility & Inclusivity**: PASS (requires verification) — ensure interactive controls have semantics labels and respect reduced motion.
@@ -79,7 +79,6 @@ lib/
 └── widgets/
 
 test/
-integration_test/
 android/
 ios/
 assets/

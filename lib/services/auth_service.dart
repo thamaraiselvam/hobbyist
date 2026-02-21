@@ -12,12 +12,20 @@ class AuthService {
   @visibleForTesting
   static set instance(AuthService value) => _instance = value;
 
-  final FirebaseAuth _auth;
+  final FirebaseAuth? _auth;
   final GoogleSignIn _googleSignIn;
   final HobbyService _hobbyService;
 
+  static FirebaseAuth? _createFirebaseAuth() {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
+
   AuthService._internal()
-      : _auth = FirebaseAuth.instance,
+      : _auth = _createFirebaseAuth(),
         _googleSignIn = GoogleSignIn(),
         _hobbyService = HobbyService();
 
@@ -31,12 +39,12 @@ class AuthService {
         _hobbyService = hobbyService;
 
   static FirebaseAuth? mockAuth;
-  FirebaseAuth get authInstance => _auth;
+  FirebaseAuth? get authInstance => _auth;
 
-  User? get currentUser => _auth.currentUser;
-  bool get isLoggedIn => _auth.currentUser != null;
-  String? get userEmail => _auth.currentUser?.email;
-  String? get userName => _auth.currentUser?.displayName;
+  User? get currentUser => _auth?.currentUser;
+  bool get isLoggedIn => _auth?.currentUser != null;
+  String? get userEmail => _auth?.currentUser?.email;
+  String? get userName => _auth?.currentUser?.displayName;
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
@@ -68,13 +76,13 @@ class AuthService {
       print('🔓 Signing in to Firebase...');
 
       // Sign in to Firebase with the Google credential
-      final userCredential = await _auth.signInWithCredential(credential);
+      final userCredential = await _auth?.signInWithCredential(credential);
 
-      print('✅ Firebase sign-in successful: ${userCredential.user?.email}');
+      print('✅ Firebase sign-in successful: ${userCredential?.user?.email}');
 
       // Save user data
-      if (userCredential.user != null) {
-        await _saveUserData(userCredential.user!);
+      if (userCredential?.user != null) {
+        await _saveUserData(userCredential!.user!);
         print('💾 User data saved');
       }
 
@@ -108,7 +116,7 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
-      await _auth.signOut();
+      await _auth?.signOut();
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('hasCompletedOnboarding');
@@ -125,7 +133,7 @@ class AuthService {
   Future<bool> isGoogleSignedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final authMethod = prefs.getString('authMethod');
-    return authMethod == 'google' && _auth.currentUser != null;
+    return authMethod == 'google' && _auth?.currentUser != null;
   }
 
   Future<void> saveOfflineUser(String name) async {

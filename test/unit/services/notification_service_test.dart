@@ -4,7 +4,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
 import 'package:hobbyist/models/hobby.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/services.dart';
@@ -27,40 +26,51 @@ void main() {
   late MockAndroidFlutterLocalNotificationsPlugin mockAndroid;
   late MockIOSFlutterLocalNotificationsPlugin mockIOS;
 
+  // Each test file gets a unique temp directory so concurrent test runs
+  // don't collide on the same hobbyist.db file path.
+  final testDir =
+      Directory.systemTemp.createTempSync('hobbyist_notification_test_');
+
   setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
 
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
-      return '.';
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
+      return testDir.path;
     });
   });
 
   setUp(() async {
-    final file = File('hobbyist.db');
+    // Close before deleting so sqflite's singleInstance pool releases the path.
+    await DatabaseHelper.instance.close();
+    final file = File('${testDir.path}/hobbyist.db');
     if (file.existsSync()) file.deleteSync();
-    DatabaseHelper.reset();
 
     mockNotifications = MockFlutterLocalNotificationsPlugin();
     mockAndroid = MockAndroidFlutterLocalNotificationsPlugin();
     mockIOS = MockIOSFlutterLocalNotificationsPlugin();
 
-    when(mockNotifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>())
+    when(mockNotifications.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>())
         .thenReturn(mockAndroid);
     // Clear existing stubs to avoid generic type conflicts
     reset(mockNotifications);
 
     when(mockNotifications.resolvePlatformSpecificImplementation())
         .thenAnswer((invocation) {
-          if (invocation.typeArguments.first == AndroidFlutterLocalNotificationsPlugin) {
-            return mockAndroid;
-          }
-          if (invocation.typeArguments.first == IOSFlutterLocalNotificationsPlugin) {
-            return mockIOS;
-          }
-          return null;
-        });
+      if (invocation.typeArguments.first ==
+          AndroidFlutterLocalNotificationsPlugin) {
+        return mockAndroid;
+      }
+      if (invocation.typeArguments.first ==
+          IOSFlutterLocalNotificationsPlugin) {
+        return mockIOS;
+      }
+      return null;
+    });
 
     service = NotificationService.test(notifications: mockNotifications);
   });
@@ -80,26 +90,32 @@ void main() {
 
     test('initialize', () async {
       when(mockNotifications.initialize(any,
-          onDidReceiveNotificationResponse: anyNamed('onDidReceiveNotificationResponse')))
+              onDidReceiveNotificationResponse:
+                  anyNamed('onDidReceiveNotificationResponse')))
           .thenAnswer((_) async => true);
-          
+
       await service.initialize();
       verify(mockNotifications.initialize(any,
-          onDidReceiveNotificationResponse: anyNamed('onDidReceiveNotificationResponse'))).called(1);
+              onDidReceiveNotificationResponse:
+                  anyNamed('onDidReceiveNotificationResponse')))
+          .called(1);
     });
 
     test('areNotificationsEnabled Android', () async {
       when(mockAndroid.areNotificationsEnabled()).thenAnswer((_) async => true);
       expect(await service.areNotificationsEnabled(), true);
 
-      when(mockAndroid.areNotificationsEnabled()).thenAnswer((_) async => false);
+      when(mockAndroid.areNotificationsEnabled())
+          .thenAnswer((_) async => false);
       expect(await service.areNotificationsEnabled(), false);
     });
 
     test('requestPermissions Android', () async {
-      when(mockAndroid.requestNotificationsPermission()).thenAnswer((_) async => true);
-      when(mockAndroid.requestExactAlarmsPermission()).thenAnswer((_) async => true);
-      
+      when(mockAndroid.requestNotificationsPermission())
+          .thenAnswer((_) async => true);
+      when(mockAndroid.requestExactAlarmsPermission())
+          .thenAnswer((_) async => true);
+
       expect(await service.requestPermissions(), true);
       verify(mockAndroid.requestNotificationsPermission()).called(1);
     });
@@ -107,11 +123,9 @@ void main() {
     test('scheduleNotification daily', () async {
       // Mock DB settings
       final db = await DatabaseHelper.instance.database;
-      await db.insert('settings', {
-        'key': 'push_notifications', 
-        'value': 'true', 
-        'updated_at': 0
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('settings',
+          {'key': 'push_notifications', 'value': 'true', 'updated_at': 0},
+          conflictAlgorithm: ConflictAlgorithm.replace);
 
       final hobby = Hobby(
         id: '1',
@@ -121,15 +135,21 @@ void main() {
         color: 0xFF000000,
       );
 
-      when(mockAndroid.canScheduleExactNotifications()).thenAnswer((_) async => true);
+      when(mockAndroid.canScheduleExactNotifications())
+          .thenAnswer((_) async => true);
 
       final result = await service.scheduleNotification(hobby);
       expect(result, true);
-      
+
       verify(mockNotifications.zonedSchedule(
-        any, any, any, any, any,
+        any,
+        any,
+        any,
+        any,
+        any,
         androidScheduleMode: anyNamed('androidScheduleMode'),
-        uiLocalNotificationDateInterpretation: anyNamed('uiLocalNotificationDateInterpretation'),
+        uiLocalNotificationDateInterpretation:
+            anyNamed('uiLocalNotificationDateInterpretation'),
         matchDateTimeComponents: DateTimeComponents.time,
         payload: anyNamed('payload'),
       )).called(1);
@@ -137,11 +157,9 @@ void main() {
 
     test('scheduleNotification weekly', () async {
       final db = await DatabaseHelper.instance.database;
-      await db.insert('settings', {
-        'key': 'push_notifications', 
-        'value': 'true', 
-        'updated_at': 0
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('settings',
+          {'key': 'push_notifications', 'value': 'true', 'updated_at': 0},
+          conflictAlgorithm: ConflictAlgorithm.replace);
 
       final hobby = Hobby(
         id: '1',
@@ -152,14 +170,20 @@ void main() {
         color: 0xFF000000,
       );
 
-      when(mockAndroid.canScheduleExactNotifications()).thenAnswer((_) async => true);
+      when(mockAndroid.canScheduleExactNotifications())
+          .thenAnswer((_) async => true);
 
       await service.scheduleNotification(hobby);
-      
+
       verify(mockNotifications.zonedSchedule(
-        any, any, any, any, any,
+        any,
+        any,
+        any,
+        any,
+        any,
         androidScheduleMode: anyNamed('androidScheduleMode'),
-        uiLocalNotificationDateInterpretation: anyNamed('uiLocalNotificationDateInterpretation'),
+        uiLocalNotificationDateInterpretation:
+            anyNamed('uiLocalNotificationDateInterpretation'),
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
         payload: anyNamed('payload'),
       )).called(1);
@@ -167,11 +191,9 @@ void main() {
 
     test('scheduleNotification monthly', () async {
       final db = await DatabaseHelper.instance.database;
-      await db.insert('settings', {
-        'key': 'push_notifications', 
-        'value': 'true', 
-        'updated_at': 0
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('settings',
+          {'key': 'push_notifications', 'value': 'true', 'updated_at': 0},
+          conflictAlgorithm: ConflictAlgorithm.replace);
 
       final hobby = Hobby(
         id: '1',
@@ -182,14 +204,20 @@ void main() {
         color: 0xFF000000,
       );
 
-      when(mockAndroid.canScheduleExactNotifications()).thenAnswer((_) async => true);
+      when(mockAndroid.canScheduleExactNotifications())
+          .thenAnswer((_) async => true);
 
       await service.scheduleNotification(hobby);
-      
+
       verify(mockNotifications.zonedSchedule(
-        any, any, any, any, any,
+        any,
+        any,
+        any,
+        any,
+        any,
         androidScheduleMode: anyNamed('androidScheduleMode'),
-        uiLocalNotificationDateInterpretation: anyNamed('uiLocalNotificationDateInterpretation'),
+        uiLocalNotificationDateInterpretation:
+            anyNamed('uiLocalNotificationDateInterpretation'),
         matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
         payload: anyNamed('payload'),
       )).called(1);
@@ -212,11 +240,9 @@ void main() {
 
     test('Behavior when settings disabled', () async {
       final db = await DatabaseHelper.instance.database;
-      await db.insert('settings', {
-        'key': 'push_notifications', 
-        'value': 'false', 
-        'updated_at': 0
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('settings',
+          {'key': 'push_notifications', 'value': 'false', 'updated_at': 0},
+          conflictAlgorithm: ConflictAlgorithm.replace);
 
       final hobby = Hobby(
         id: '1',
@@ -228,26 +254,25 @@ void main() {
 
       final result = await service.scheduleNotification(hobby);
       expect(result, false);
-      verifyNever(mockNotifications.zonedSchedule(any, any, any, any, any, 
+      verifyNever(mockNotifications.zonedSchedule(any, any, any, any, any,
           androidScheduleMode: anyNamed('androidScheduleMode'),
-          uiLocalNotificationDateInterpretation: anyNamed('uiLocalNotificationDateInterpretation')));
+          uiLocalNotificationDateInterpretation:
+              anyNamed('uiLocalNotificationDateInterpretation')));
     });
-    
+
     test('getTimezoneFromOffset coverage', () async {
-      // We can't easily change the device timezone in tests, 
+      // We can't easily change the device timezone in tests,
       // but we can test the internal mapping if we make it public or use a helper.
-      // Since it's private and used in initialize(), we hit the one for currently 
-      // detected timezone. To hit others, we'd need to mock DateTime.now() or 
+      // Since it's private and used in initialize(), we hit the one for currently
+      // detected timezone. To hit others, we'd need to mock DateTime.now() or
       // restructure. For now, 80%+ is the goal.
     });
 
     test('scheduleNotification when exact alarms not permitted', () async {
       final db = await DatabaseHelper.instance.database;
-      await db.insert('settings', {
-        'key': 'push_notifications', 
-        'value': 'true', 
-        'updated_at': 0
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('settings',
+          {'key': 'push_notifications', 'value': 'true', 'updated_at': 0},
+          conflictAlgorithm: ConflictAlgorithm.replace);
 
       final hobby = Hobby(
         id: '1',
@@ -257,17 +282,19 @@ void main() {
         color: 0xFF000000,
       );
 
-      when(mockAndroid.canScheduleExactNotifications()).thenAnswer((_) async => false);
+      when(mockAndroid.canScheduleExactNotifications())
+          .thenAnswer((_) async => false);
 
       final result = await service.scheduleNotification(hobby);
       expect(result, true); // Still returns true but skips scheduling
-      verifyNever(mockNotifications.zonedSchedule(any, any, any, any, any, 
+      verifyNever(mockNotifications.zonedSchedule(any, any, any, any, any,
           androidScheduleMode: anyNamed('androidScheduleMode'),
-          uiLocalNotificationDateInterpretation: anyNamed('uiLocalNotificationDateInterpretation')));
+          uiLocalNotificationDateInterpretation:
+              anyNamed('uiLocalNotificationDateInterpretation')));
     });
 
     test('initialize when check fails', () async {
-        // Mock a failure in timezone detection if possible
+      // Mock a failure in timezone detection if possible
     });
   });
 }

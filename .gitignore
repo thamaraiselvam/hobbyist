@@ -8,6 +8,7 @@ build/
 *.lock
 
 # Android
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 android/local.properties
 android/.gradle/
 android/captures/

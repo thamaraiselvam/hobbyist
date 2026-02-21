@@ -1,0 +1,58 @@
+appId: tham.hobbyist.app
+---
+# Complete Hobby Flow: Dashboard → tap daily hobby checkbox → verify completion
+# Keys used: TestKeys.taskCheckbox(hobby.id) = 'hobby_checkbox_<id>'
+#
+# NOTE: hobby.id is a timestamp generated at creation time.
+# This test uses regex 'hobby_checkbox_.*' to match the first available checkbox.
+# Daily hobbies always appear in the list regardless of day, so the first match
+# is expected to be a daily task. Requires hobbies to exist (run add_hobby flows first).
+#
+# The hobby is LEFT in the Completed state intentionally so that view_analytics.yml
+# can verify that completed data is reflected in the analytics screen.
+#
+# Before running, ensure app is on the dashboard:
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+
+- extendedWaitUntil:
+    visible:
+      text: "In Progress"
+    timeout: 5000
+
+# Tap the checkbox for the first available daily hobby
+- tapOn:
+    id: "hobby_checkbox_.*"
+
+# Wait for animated checkbox to complete.
+# On the 1st completion, RatingService.checkAndShowRatingPrompt() fires.
+# In non-production environments (emulator / debug build) isAvailable()
+# returns false and the fallback openStoreListing() launches Chrome or
+# the Play Store. The completion itself already happened synchronously via
+# setState() before the async toggleCompletion chain ran, so pressing Back
+# restores the completed dashboard.
+- waitForAnimationToEnd
+
+# Dismiss Chrome first-run screen if it appeared due to openStoreListing().
+- runFlow:
+    when:
+      visible: "Welcome to Chrome"
+    commands:
+      - pressKey: back
+      - waitForAnimationToEnd
+
+# Dismiss Play Store if it opened directly instead of Chrome.
+- runFlow:
+    when:
+      visible: "Google Play"
+    commands:
+      - pressKey: back
+      - waitForAnimationToEnd
+
+# Verify hobby moved to Completed section.
+# 4 daily tasks comfortably fit the S24 Ultra viewport so no scroll is needed.
+# The header reads "Completed Today" when today is selected (anchored regex —
+# bare "Completed" would not match "Completed Today").
+- extendedWaitUntil:
+    visible:
+      text: "Completed.*"
+    timeout: 5000

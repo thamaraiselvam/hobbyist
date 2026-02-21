@@ -33,7 +33,6 @@ Flutter (Dart SDK `>=3.0.0 <4.0.0`): Follow standard conventions
 ```text
 lib/
 test/
-integration_test/
 android/
 ios/
 assets/
@@ -47,7 +46,7 @@ specs/
 - `flutter analyze`
 - `flutter test`
 - `flutter test --coverage`
-- `flutter test integration_test`
+- `maestro test maestro-tests/suite.yml`
 - `flutter run`
 
 ### Repo Notes
