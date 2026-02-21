@@ -33,46 +33,42 @@ class Task {
     DateTime? completedAt,
     bool clearDueDate = false,
     bool clearCompletedAt = false,
-  }) =>
-      Task(
-        id: id,
-        title: title ?? this.title,
-        description: description ?? this.description,
-        dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
-        priority: priority ?? this.priority,
-        isCompleted: isCompleted ?? this.isCompleted,
-        createdAt: createdAt,
-        completedAt:
-            clearCompletedAt ? null : (completedAt ?? this.completedAt),
-      );
+  }) => Task(
+    id: id,
+    title: title ?? this.title,
+    description: description ?? this.description,
+    dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
+    priority: priority ?? this.priority,
+    isCompleted: isCompleted ?? this.isCompleted,
+    createdAt: createdAt,
+    completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
+  );
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'title': title,
-        'description': description,
-        'due_date': dueDate?.millisecondsSinceEpoch,
-        'priority': priority.name,
-        'is_completed': isCompleted ? 1 : 0,
-        'created_at': createdAt.millisecondsSinceEpoch,
-        'completed_at': completedAt?.millisecondsSinceEpoch,
-      };
+    'id': id,
+    'title': title,
+    'description': description,
+    'due_date': dueDate?.millisecondsSinceEpoch,
+    'priority': priority.name,
+    'is_completed': isCompleted ? 1 : 0,
+    'created_at': createdAt.millisecondsSinceEpoch,
+    'completed_at': completedAt?.millisecondsSinceEpoch,
+  };
 
   factory Task.fromMap(Map<String, dynamic> map) => Task(
-        id: map['id'] as String,
-        title: map['title'] as String,
-        description: (map['description'] as String?) ?? '',
-        dueDate: map['due_date'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['due_date'] as int)
-            : null,
-        priority: TaskPriority.fromString(
-            (map['priority'] as String?) ?? 'medium'),
-        isCompleted: (map['is_completed'] as int? ?? 0) == 1,
-        createdAt:
-            DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
-        completedAt: map['completed_at'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['completed_at'] as int)
-            : null,
-      );
+    id: map['id'] as String,
+    title: map['title'] as String,
+    description: (map['description'] as String?) ?? '',
+    dueDate: map['due_date'] != null
+        ? DateTime.fromMillisecondsSinceEpoch(map['due_date'] as int)
+        : null,
+    priority: TaskPriority.fromString((map['priority'] as String?) ?? 'medium'),
+    isCompleted: (map['is_completed'] as int? ?? 0) == 1,
+    createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
+    completedAt: map['completed_at'] != null
+        ? DateTime.fromMillisecondsSinceEpoch(map['completed_at'] as int)
+        : null,
+  );
 
   @override
   bool operator ==(Object other) =>

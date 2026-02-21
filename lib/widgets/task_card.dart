@@ -84,8 +84,9 @@ class TaskCard extends StatelessWidget {
                     color: task.isCompleted ? Colors.white38 : Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    decoration:
-                        task.isCompleted ? TextDecoration.lineThrough : null,
+                    decoration: task.isCompleted
+                        ? TextDecoration.lineThrough
+                        : null,
                     decorationColor: Colors.white38,
                     decorationThickness: 1.5,
                   ),
@@ -118,7 +119,9 @@ class TaskCard extends StatelessWidget {
                     // Priority badge
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: priorityColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
@@ -136,8 +139,10 @@ class TaskCard extends StatelessWidget {
                     // Due date
                     if (task.dueDate != null) ...[
                       const SizedBox(width: 8),
-                      _DueDateBadge(dueDate: task.dueDate!,
-                          isCompleted: task.isCompleted),
+                      _DueDateBadge(
+                        dueDate: task.dueDate!,
+                        isCompleted: task.isCompleted,
+                      ),
                     ],
                   ],
                 ),
@@ -150,8 +155,9 @@ class TaskCard extends StatelessWidget {
             padding: EdgeInsets.zero,
             icon: const Icon(Icons.more_vert, color: Colors.white38, size: 22),
             color: const Color(0xFF2A2738),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: 'edit',
@@ -159,8 +165,10 @@ class TaskCard extends StatelessWidget {
                   children: [
                     Icon(Icons.edit_outlined, color: Colors.white70, size: 18),
                     SizedBox(width: 10),
-                    Text('Edit',
-                        style: TextStyle(color: Colors.white, fontSize: 14)),
+                    Text(
+                      'Edit',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
                   ],
                 ),
               ),
@@ -168,12 +176,16 @@ class TaskCard extends StatelessWidget {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline,
-                        color: Colors.redAccent, size: 18),
+                    Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
+                      size: 18,
+                    ),
                     SizedBox(width: 10),
-                    Text('Delete',
-                        style:
-                            TextStyle(color: Colors.redAccent, fontSize: 14)),
+                    Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.redAccent, fontSize: 14),
+                    ),
                   ],
                 ),
               ),
