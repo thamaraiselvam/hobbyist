@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously, body_might_complete_normally_catch_error
+import 'dart:math' show pi;
 import 'package:flutter/material.dart';
 import '../constants/test_keys.dart';
 import 'package:intl/intl.dart';
@@ -501,15 +502,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(
-          child: _buildMetricTile(
-            icon: Icons.track_changes_outlined,
-            iconColor: const Color(0xFF6C3FFF),
-            label: 'Discipline',
-            value: '$_disciplineScore',
-            valueColor: const Color(0xFF6C3FFF),
-          ),
-        ),
+        Expanded(child: _buildDisciplineGaugeTile()),
         const SizedBox(width: 8),
         Expanded(
           child: Semantics(
@@ -532,6 +525,61 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDisciplineGaugeTile() {
+    final score = _disciplineScore;
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2238),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: score / 100.0),
+        duration: const Duration(milliseconds: 1200),
+        curve: Curves.easeOutCubic,
+        builder: (context, progress, _) {
+          final displayScore = (score * progress).round();
+          return SizedBox(
+            height: 80,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CustomPaint(
+                  painter: _DisciplineGaugePainter(progress: progress),
+                  child: const SizedBox.expand(),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$displayScore',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        height: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'SCORE',
+                      style: TextStyle(
+                        color: Color(0xFF94A3B8),
+                        fontSize: 8,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -602,7 +650,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         ),
         if (upcoming.isNotEmpty)
           _buildTimelineSection(
-            title: 'Upcoming (7 Days)',
+            title: 'Upcoming (Next 7 Days)',
             count: upcoming.length,
             dotColor: const Color(0xFF0EA5E9),
             isLast: completed.isEmpty,
@@ -612,7 +660,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           ),
         if (completed.isNotEmpty)
           _buildTimelineSection(
-            title: 'Completed (7 Days)',
+            title: 'Completed (Last 7 Days)',
             count: completed.length,
             dotColor: const Color(0xFF10B981),
             isLast: true,
@@ -851,7 +899,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         border: Border.all(color: const Color(0x0DFFFFFF)),
       ),
       child: Opacity(
-        opacity: (isCompleted || isUpcoming) ? 0.55 : 1.0,
+        opacity: isCompleted ? 0.55 : 1.0,
         child: Row(
           children: [
             // Checkbox
@@ -1270,4 +1318,56 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         return 'Daily goal';
     }
   }
+}
+
+/// CustomPainter that draws an animated arc gauge.
+/// Start angle is at 12 o'clock (-π/2).
+class _DisciplineGaugePainter extends CustomPainter {
+  const _DisciplineGaugePainter({required this.progress});
+
+  /// Value between 0.0 and 1.0.
+  final double progress;
+
+  static const double _strokeWidth = 13.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.shortestSide / 2) - _strokeWidth / 2;
+    const startAngle = -pi / 2; // 12 o'clock
+    const fullSweep = 2 * pi;
+
+    // Background track
+    final bgPaint = Paint()
+      ..color = Colors.white10
+      ..strokeWidth = _strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle,
+      fullSweep,
+      false,
+      bgPaint,
+    );
+
+    // Foreground progress arc
+    if (progress > 0) {
+      final sweepAngle = progress * fullSweep;
+      final rect = Rect.fromCircle(center: center, radius: radius);
+      final fgPaint = Paint()
+        ..shader = SweepGradient(
+          startAngle: startAngle,
+          endAngle: startAngle + fullSweep,
+          colors: const [Color(0xFF00F2A6), Color(0xFF00C185)],
+        ).createShader(rect)
+        ..strokeWidth = _strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(rect, startAngle, sweepAngle, false, fgPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DisciplineGaugePainter old) => old.progress != progress;
 }
