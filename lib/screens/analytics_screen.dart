@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/hobby.dart';
 import '../services/analytics_service.dart';
 import '../services/hobby_service.dart';
+import '../utils/discipline_score.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -507,6 +508,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             const SizedBox(height: 24),
                             _buildStatsCards(),
                             const SizedBox(height: 24),
+                            _buildDisciplineSection(),
+                            const SizedBox(height: 24),
                             _buildBarChart(),
                             const SizedBox(height: 32),
                             _buildActivityMap(),
@@ -556,6 +559,129 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           letterSpacing: 0.5,
         ),
       ),
+    );
+  }
+
+  Widget _buildDisciplineSection() {
+    final score = DisciplineScore.calculate(widget.hobbies);
+    final planned = DisciplineScore.plannedCount(widget.hobbies);
+    final completed = DisciplineScore.completedCount(widget.hobbies);
+    final pct = planned == 0
+        ? 0
+        : (completed / planned * 100).round().clamp(0, 100);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161616),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0x0DFFFFFF)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.track_changes_outlined,
+                  color: Color(0xFF6C3FFF),
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'OVERALL DISCIPLINE SCORE',
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '10-day window',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '$score',
+                  style: const TextStyle(
+                    color: Color(0xFF6C3FFF),
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    '%',
+                    style: TextStyle(
+                      color: Color(0xFF6C3FFF),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _disciplineStat('Planned', '$planned'),
+                    const SizedBox(height: 4),
+                    _disciplineStat('Completed', '$completed'),
+                    const SizedBox(height: 4),
+                    _disciplineStat('Rate', '$pct%'),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: score / 100,
+                minHeight: 6,
+                backgroundColor: const Color(0xFF2A2238),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  Color(0xFF6C3FFF),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _disciplineStat(String label, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label: ',
+          style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 

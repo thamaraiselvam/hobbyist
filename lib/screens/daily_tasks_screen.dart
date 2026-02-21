@@ -81,10 +81,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       case 'daily':
         return true;
       case 'weekly':
-        if (hobby.customDay == null) return true;
+        final days = hobby.effectiveWeekDays;
+        if (days.isEmpty) return true;
         final weekday = date.weekday; // 1=Mon … 7=Sun
         final dayIndex = weekday == 7 ? 6 : weekday - 1;
-        return hobby.customDay == dayIndex;
+        return days.contains(dayIndex);
       case 'monthly':
         if (hobby.customDay == null) return true;
         return date.day == hobby.customDay;
@@ -93,6 +94,18 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       default:
         return true;
     }
+  }
+
+  /// True if the hobby has any occurrence within the next 1–7 days.
+  bool _hasOccurrenceInNext7Days(Hobby hobby) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    for (int i = 1; i <= 7; i++) {
+      if (_isHobbyAvailableForDate(hobby, today.add(Duration(days: i)))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // ── Derived sections ─────────────────────────────────────────────────
@@ -109,27 +122,45 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     return tasks;
   }
 
-  /// Non-daily tasks whose next occurrence is after today.
+  /// Non-daily tasks with an occurrence in the next 1–7 days that have not
+  /// been completed early today.
   List<Hobby> get _upcomingTasks {
     final today = DateTime.now();
     final tasks = _allHobbies.where((h) {
       if (h.isOneTime) return false;
       if (h.repeatMode.toLowerCase() == 'daily') return false;
-      return !_isHobbyAvailableForDate(h, today);
+      if (_isHobbyAvailableForDate(h, today)) return false; // in Today section
+      if (h.completions[_todayKey]?.completed == true) return false; // completed early
+      return _hasOccurrenceInNext7Days(h);
     }).toList()
       ..sort(_sortByNextOccurrence);
     return tasks;
   }
 
-  /// Tasks completed today, plus one-time tasks ever completed.
+  /// Hobbies with at least one completion in the last 7 days, sorted by
+  /// most-recent completion descending.
   List<Hobby> get _completedTasks {
-    final today = DateTime.now();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final sevenDaysAgo = today.subtract(const Duration(days: 6));
+
+    bool inWindow(String dateKey) {
+      final parts = dateKey.split('-');
+      if (parts.length != 3) return false;
+      final d = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      return !d.isBefore(sevenDaysAgo) && !d.isAfter(today);
+    }
+
     final tasks = _allHobbies.where((h) {
-      if (h.isOneTime) return h.completions.values.any((c) => c.completed);
-      if (!_isHobbyAvailableForDate(h, today)) return false;
-      return h.completions[_todayKey]?.completed == true;
+      return h.completions.entries.any(
+        (e) => e.value.completed && inWindow(e.key),
+      );
     }).toList()
-      ..sort(_sortByCompletedAt);
+      ..sort(_sortByRecentCompletion);
     return tasks;
   }
 
@@ -151,60 +182,79 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     return aDate.compareTo(bDate);
   }
 
-  int _sortByCompletedAt(Hobby a, Hobby b) {
-    final aTime = _getLastCompletionTime(a);
-    final bTime = _getLastCompletionTime(b);
+  int _sortByRecentCompletion(Hobby a, Hobby b) {
+    final aTime = _mostRecentCompletionInWindow(a);
+    final bTime = _mostRecentCompletionInWindow(b);
     if (aTime == null && bTime == null) return 0;
     if (aTime == null) return 1;
     if (bTime == null) return -1;
     return bTime.compareTo(aTime); // Latest first
   }
 
-  DateTime? _getLastCompletionTime(Hobby hobby) {
-    if (hobby.isOneTime) {
-      return hobby.completions.values
-          .where((c) => c.completed)
-          .map((c) => c.completedAt)
-          .whereType<DateTime>()
-          .fold<DateTime?>(
-            null,
-            (prev, curr) =>
-                prev == null || curr.isAfter(prev) ? curr : prev,
-          );
+  /// Most-recent completedAt timestamp within the last-7-days window.
+  DateTime? _mostRecentCompletionInWindow(Hobby hobby) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final sevenDaysAgo = today.subtract(const Duration(days: 6));
+    DateTime? best;
+    for (final entry in hobby.completions.entries) {
+      if (!entry.value.completed) continue;
+      final parts = entry.key.split('-');
+      if (parts.length != 3) continue;
+      final d = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      if (d.isBefore(sevenDaysAgo) || d.isAfter(today)) continue;
+      final ts = entry.value.completedAt ?? d;
+      if (best == null || ts.isAfter(best)) best = ts;
     }
-    return hobby.completions[_todayKey]?.completedAt;
+    return best;
   }
 
+  /// Human-readable label for the most-recent completion within last 7 days.
+  String? _completionDateLabel(Hobby hobby) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final sevenDaysAgo = today.subtract(const Duration(days: 6));
+    String? bestKey;
+    for (final entry in hobby.completions.entries) {
+      if (!entry.value.completed) continue;
+      final parts = entry.key.split('-');
+      if (parts.length != 3) continue;
+      final d = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      if (d.isBefore(sevenDaysAgo) || d.isAfter(today)) continue;
+      if (bestKey == null || entry.key.compareTo(bestKey) > 0) {
+        bestKey = entry.key;
+      }
+    }
+    if (bestKey == null) return null;
+    final parts = bestKey.split('-');
+    final d = DateTime(
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+      int.parse(parts[2]),
+    );
+    final diff = today.difference(d).inDays;
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    return DateFormat('MMM d').format(d);
+  }
+
+  /// Next occurrence of a hobby within the next 7 days (tomorrow onward).
   DateTime? _getNextOccurrence(Hobby hobby) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    switch (hobby.repeatMode.toLowerCase()) {
-      case 'weekly':
-        if (hobby.customDay == null) return null;
-        final targetWeekday = hobby.customDay! + 1; // 1-indexed (Mon=1)
-        int daysUntil = targetWeekday - today.weekday;
-        if (daysUntil <= 0) daysUntil += 7;
-        return today.add(Duration(days: daysUntil));
-      case 'monthly':
-        if (hobby.customDay == null) return null;
-        final targetDay = hobby.customDay!;
-        if (targetDay > today.day) {
-          final daysInMonth = DateTime(today.year, today.month + 1, 0).day;
-          if (targetDay <= daysInMonth) {
-            return DateTime(today.year, today.month, targetDay);
-          }
-        }
-        int nextMonth = today.month + 1;
-        int nextYear = today.year;
-        if (nextMonth > 12) {
-          nextMonth = 1;
-          nextYear++;
-        }
-        final daysInNext = DateTime(nextYear, nextMonth + 1, 0).day;
-        return DateTime(nextYear, nextMonth, targetDay.clamp(1, daysInNext));
-      default:
-        return null;
+    for (int i = 1; i <= 7; i++) {
+      final d = today.add(Duration(days: i));
+      if (_isHobbyAvailableForDate(hobby, d)) return d;
     }
+    return null;
   }
 
   // ── Metrics ──────────────────────────────────────────────────────────
@@ -455,7 +505,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
           child: _buildMetricTile(
             icon: Icons.track_changes_outlined,
             iconColor: const Color(0xFF6C3FFF),
-            label: '10-Day Score',
+            label: 'Discipline',
             value: '$_disciplineScore',
             valueColor: const Color(0xFF6C3FFF),
           ),
@@ -539,7 +589,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       children: [
         const SizedBox(height: 8),
         _buildTimelineSection(
-          title: 'Pending',
+          title: "Today's Tasks",
           count: pending.length,
           dotColor: const Color(0xFF6C3FFF),
           isLast: upcoming.isEmpty && completed.isEmpty,
@@ -552,16 +602,17 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         ),
         if (upcoming.isNotEmpty)
           _buildTimelineSection(
-            title: 'Upcoming',
+            title: 'Upcoming (7 Days)',
             count: upcoming.length,
             dotColor: const Color(0xFF0EA5E9),
             isLast: completed.isEmpty,
-            children:
-                upcoming.map((h) => _buildTaskCard(h, isUpcoming: true)).toList(),
+            children: upcoming
+                .map((h) => _buildTaskCard(h, isUpcoming: true))
+                .toList(),
           ),
         if (completed.isNotEmpty)
           _buildTimelineSection(
-            title: 'Completed',
+            title: 'Completed (7 Days)',
             count: completed.length,
             dotColor: const Color(0xFF10B981),
             isLast: true,
@@ -574,7 +625,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                     curve: Curves.easeOut,
                     builder: (context, opacity, child) =>
                         Opacity(opacity: opacity, child: child),
-                    child: _buildTaskCard(h, isCompleted: true),
+                    child: _buildTaskCard(
+                      h,
+                      isCompleted: true,
+                      completionDateLabel: _completionDateLabel(h),
+                    ),
                   ),
                 )
                 .toList(),
@@ -780,6 +835,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     Hobby hobby, {
     bool isCompleted = false,
     bool isUpcoming = false,
+    String? completionDateLabel,
   }) {
     final nextDate = isUpcoming ? _getNextOccurrence(hobby) : null;
 
@@ -787,8 +843,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       key: Key(TestKeys.taskCard(hobby.id)),
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: const Color(0xFF161616),
         borderRadius: BorderRadius.circular(14),
@@ -804,7 +860,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               child: AnimatedCheckbox(
                 key: Key(TestKeys.taskCheckbox(hobby.id)),
                 isChecked: isCompleted,
-                onTap: isUpcoming ? null : () => _toggleToday(hobby),
+                onTap: () => _toggleToday(hobby),
                 size: 24,
                 color: Color(hobby.color),
               ),
@@ -849,6 +905,28 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                             DateFormat('MMM d').format(nextDate),
                             style: const TextStyle(
                               color: Color(0xFF0EA5E9),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      // Completion date chip for completed tasks
+                      if (isCompleted && completionDateLabel != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(
+                              alpha: 0.15,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            completionDateLabel,
+                            style: const TextStyle(
+                              color: Color(0xFF10B981),
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),

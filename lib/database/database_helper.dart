@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       dbPath,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -49,6 +49,7 @@ class DatabaseHelper {
         color INTEGER NOT NULL,
         reminder_time TEXT,
         custom_day INTEGER,
+        custom_days TEXT,
         best_streak INTEGER NOT NULL DEFAULT 0,
         is_one_time INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
@@ -308,6 +309,18 @@ class DatabaseHelper {
         'ALTER TABLE hobbies ADD COLUMN is_one_time INTEGER NOT NULL DEFAULT 0',
       );
       print('✅ Migration complete: is_one_time column added');
+    }
+
+    if (oldVersion < 8) {
+      // Add custom_days column for weekly multi-select support
+      print('🔄 Migrating: Adding custom_days column to hobbies...');
+      await db.execute('ALTER TABLE hobbies ADD COLUMN custom_days TEXT');
+      // Migrate existing weekly hobbies: wrap single customDay in a JSON array
+      await db.execute(
+        "UPDATE hobbies SET custom_days = '[' || custom_day || ']' "
+        "WHERE repeat_mode = 'weekly' AND custom_day IS NOT NULL",
+      );
+      print('✅ Migration complete: custom_days column added');
     }
   }
 

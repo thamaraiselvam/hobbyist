@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:meta/meta.dart';
 import '../models/hobby.dart';
@@ -77,6 +78,19 @@ class HobbyService {
             );
           }
 
+          // Parse customDays JSON array if present
+          List<int>? customDays;
+          final rawCustomDays = hobbyData['custom_days'] as String?;
+          if (rawCustomDays != null && rawCustomDays.isNotEmpty) {
+            try {
+              customDays = (jsonDecode(rawCustomDays) as List<dynamic>)
+                  .map((e) => e as int)
+                  .toList();
+            } catch (_) {
+              customDays = null;
+            }
+          }
+
           final hobby = Hobby(
             id: hobbyData['id'],
             name: hobbyData['name'],
@@ -89,6 +103,7 @@ class HobbyService {
                 : null,
             reminderTime: hobbyData['reminder_time'],
             customDay: hobbyData['custom_day'],
+            customDays: customDays,
             bestStreak: hobbyData['best_streak'] ?? 0,
             isOneTime: (hobbyData['is_one_time'] as int? ?? 0) == 1,
           );
@@ -147,6 +162,9 @@ class HobbyService {
         'color': hobby.color,
         'reminder_time': hobby.reminderTime,
         'custom_day': hobby.customDay,
+        'custom_days': hobby.customDays != null
+            ? jsonEncode(hobby.customDays)
+            : null,
         'best_streak': hobby.bestStreak,
         'is_one_time': hobby.isOneTime ? 1 : 0,
         'created_at': now,
@@ -226,6 +244,9 @@ class HobbyService {
           'color': hobby.color,
           'reminder_time': hobby.reminderTime,
           'custom_day': hobby.customDay,
+          'custom_days': hobby.customDays != null
+              ? jsonEncode(hobby.customDays)
+              : null,
           'best_streak': hobby.bestStreak,
           'is_one_time': hobby.isOneTime ? 1 : 0,
           'updated_at': DateTime.now().millisecondsSinceEpoch,
