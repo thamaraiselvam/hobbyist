@@ -1,5 +1,4 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously, body_might_complete_normally_catch_error
-import 'dart:math' show pi;
 import 'package:flutter/material.dart';
 import '../constants/test_keys.dart';
 import 'package:intl/intl.dart';
@@ -8,7 +7,6 @@ import '../services/hobby_service.dart';
 import '../services/sound_service.dart';
 import '../services/quote_service.dart';
 import '../widgets/animated_checkbox.dart';
-import '../utils/discipline_score.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'analytics_screen.dart';
@@ -284,8 +282,6 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         .clamp(0, 100);
   }
 
-  int get _disciplineScore => DisciplineScore.calculate(_allHobbies);
-
   Map<String, dynamic> get _globalStreakData {
     if (_allHobbies.isEmpty) return {'streak': 0, 'todayCompleted': false};
     final today = DateTime.now();
@@ -501,9 +497,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
             valueColor: const Color(0xFF10B981),
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(child: _buildDisciplineGaugeTile()),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         Expanded(
           child: Semantics(
             identifier: TestKeys.streakBadge,
@@ -528,62 +522,6 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     );
   }
 
-  Widget _buildDisciplineGaugeTile() {
-    final score = _disciplineScore;
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2238),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: score / 100.0),
-            duration: const Duration(milliseconds: 1200),
-            curve: Curves.easeOutCubic,
-            builder: (context, progress, _) {
-              final displayScore = (score * progress).round();
-              return SizedBox(
-                height: 62,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CustomPaint(
-                      painter: _DisciplineGaugePainter(progress: progress),
-                      child: const SizedBox.expand(),
-                    ),
-                    Text(
-                      '$displayScore%',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        height: 1.0,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Discipline Score',
-            style: TextStyle(
-              color: Color(0xFF94A3B8),
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMetricTile({
     required IconData icon,
     required Color iconColor,
@@ -592,31 +530,32 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     required Color valueColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: const Color(0xFF2A2238),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: iconColor, size: 18),
-          const SizedBox(height: 4),
+          Icon(icon, color: iconColor, size: 20),
+          const SizedBox(height: 6),
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white38,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+              color: Colors.white54,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             value,
             style: TextStyle(
               color: valueColor,
-              fontSize: 26,
+              fontSize: 32,
               fontWeight: FontWeight.bold,
+              height: 1.0,
             ),
           ),
         ],
@@ -1329,54 +1268,3 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   }
 }
 
-/// CustomPainter that draws an animated arc gauge.
-/// Start angle is at 12 o'clock (-π/2).
-class _DisciplineGaugePainter extends CustomPainter {
-  const _DisciplineGaugePainter({required this.progress});
-
-  /// Value between 0.0 and 1.0.
-  final double progress;
-
-  static const double _strokeWidth = 13.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.shortestSide / 2) - _strokeWidth / 2;
-    const startAngle = -pi / 2; // 12 o'clock
-    const fullSweep = 2 * pi;
-
-    // Background track
-    final bgPaint = Paint()
-      ..color = Colors.white10
-      ..strokeWidth = _strokeWidth
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      fullSweep,
-      false,
-      bgPaint,
-    );
-
-    // Foreground progress arc
-    if (progress > 0) {
-      final sweepAngle = progress * fullSweep;
-      final rect = Rect.fromCircle(center: center, radius: radius);
-      final fgPaint = Paint()
-        ..shader = const SweepGradient(
-          startAngle: -pi / 2,
-          endAngle: -pi / 2 + 2 * pi,
-          colors: [Color(0xFF00F2A6), Color(0xFF00C185)],
-        ).createShader(rect)
-        ..strokeWidth = _strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-      canvas.drawArc(rect, startAngle, sweepAngle, false, fgPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DisciplineGaugePainter old) => old.progress != progress;
-}
