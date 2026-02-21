@@ -117,6 +117,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             color: _selectedColor,
             reminderTime: notificationTimeString,
             customDay: customDay,
+            isOneTime: _isOneTime,
           );
           await _service.updateHobby(updatedHobby);
 

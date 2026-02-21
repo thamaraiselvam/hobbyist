@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       dbPath,
-      version: 6,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -50,6 +50,7 @@ class DatabaseHelper {
         reminder_time TEXT,
         custom_day INTEGER,
         best_streak INTEGER NOT NULL DEFAULT 0,
+        is_one_time INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -296,6 +297,14 @@ class DatabaseHelper {
         )
       ''');
       print('✅ Migration complete: tasks table added');
+    }
+
+    if (oldVersion < 7) {
+      // Add is_one_time column to hobbies table
+      print('🔄 Migrating: Adding is_one_time column to hobbies...');
+      await db.execute(
+          'ALTER TABLE hobbies ADD COLUMN is_one_time INTEGER NOT NULL DEFAULT 0');
+      print('✅ Migration complete: is_one_time column added');
     }
   }
 

@@ -90,6 +90,7 @@ class HobbyService {
             reminderTime: hobbyData['reminder_time'],
             customDay: hobbyData['custom_day'],
             bestStreak: hobbyData['best_streak'] ?? 0,
+            isOneTime: (hobbyData['is_one_time'] as int? ?? 0) == 1,
           );
 
           // One-time fix: Calculate true historical best streak from completions
@@ -145,6 +146,7 @@ class HobbyService {
           'reminder_time': hobby.reminderTime,
           'custom_day': hobby.customDay,
           'best_streak': hobby.bestStreak,
+          'is_one_time': hobby.isOneTime ? 1 : 0,
           'created_at': now,
           'updated_at': now,
         },
@@ -222,6 +224,7 @@ class HobbyService {
           'reminder_time': hobby.reminderTime,
           'custom_day': hobby.customDay,
           'best_streak': hobby.bestStreak,
+          'is_one_time': hobby.isOneTime ? 1 : 0,
           'updated_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
