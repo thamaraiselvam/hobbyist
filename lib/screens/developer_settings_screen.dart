@@ -130,10 +130,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
 
       if (mounted) {
         // Navigate to splash screen to restart journey
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/',
-          (route) => false,
-        );
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
     }
   }
@@ -143,8 +140,9 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
 
     // Check if predefined hobbies already exist
     final existingHobbies = await _service.loadHobbies();
-    final hasPredefinedHobbies =
-        existingHobbies.any((h) => h.id.startsWith('predefined_'));
+    final hasPredefinedHobbies = existingHobbies.any(
+      (h) => h.id.startsWith('predefined_'),
+    );
 
     setState(() {
       _isGenerating = true;
@@ -162,21 +160,21 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
           'Read 30 Minutes',
           'Exercise',
           'Practice Guitar',
-          'Write Journal'
+          'Write Journal',
         ];
         final weeklyTasks = [
           'Deep Clean House',
           'Meal Prep Sunday',
           'Review Weekly Goals',
           'Family Video Call',
-          'Update Budget'
+          'Update Budget',
         ];
         final monthlyTasks = [
           'Pay Bills',
           'Car Maintenance',
           'Review Investments',
           'Haircut Appointment',
-          'Organize Closet'
+          'Organize Closet',
         ];
 
         int taskIndex = 0;
@@ -316,8 +314,10 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child:
-                const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -351,8 +351,11 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
 
       // Add 100 consecutive days of completions
       for (int i = 99; i >= 0; i--) {
-        final date =
-            DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
+        final date = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(Duration(days: i));
         final dateKey = DateFormat('yyyy-MM-dd').format(date);
 
         hobby.completions[dateKey] = HobbyCompletion(
@@ -445,18 +448,13 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Test notification sent!'),
-          ),
+          const SnackBar(content: Text('✅ Test notification sent!')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -516,10 +514,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                 ),
                 subtitle: const Text(
                   'Enable pull-to-refresh to jump to today',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: Colors.white54, fontSize: 13),
                 ),
                 value: _pullToRefreshEnabled,
                 thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
@@ -572,10 +567,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                     ),
                     subtitle: const Text(
                       'Send a test notification immediately',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                     trailing: const Icon(
                       Icons.chevron_right,
@@ -607,10 +599,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                     ),
                     subtitle: const Text(
                       'Adds 10 hobbies with random completions',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                     trailing: _isGenerating
                         ? const SizedBox(
@@ -653,10 +642,7 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                     ),
                     subtitle: const Text(
                       'Creates "create app" with 100 days completion',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                     trailing: _isGenerating
                         ? const SizedBox(
@@ -721,15 +707,9 @@ class _DeveloperSettingsScreenState extends State<DeveloperSettingsScreen> {
                 ),
                 subtitle: const Text(
                   'Delete everything and start fresh',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: Colors.white54, fontSize: 13),
                 ),
-                trailing: const Icon(
-                  Icons.chevron_right,
-                  color: Colors.red,
-                ),
+                trailing: const Icon(Icons.chevron_right, color: Colors.red),
                 onTap: _resetAllData,
               ),
             ),

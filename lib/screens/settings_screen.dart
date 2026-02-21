@@ -106,10 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF221834),
-        title: const Text(
-          'Edit Name',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Edit Name', style: TextStyle(color: Colors.white)),
         content: TextField(
           controller: controller,
           style: const TextStyle(color: Colors.white),
@@ -161,10 +158,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF221834),
-        title: const Text(
-          'Logout',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Logout', style: TextStyle(color: Colors.white)),
         content: const Text(
           'Are you sure you want to logout? Your hobbies will remain on this device.',
           style: TextStyle(color: Colors.white70),
@@ -179,10 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Logout', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -322,11 +313,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               fontSize: 14,
                             ),
                           ),
-                          Icon(
-                            Icons.favorite,
-                            color: Colors.red,
-                            size: 16,
-                          ),
+                          Icon(Icons.favorite, color: Colors.red, size: 16),
                           SizedBox(width: 4),
                           Text(
                             'for better hobbies',
@@ -355,10 +342,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1733),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: const Color(0xFF3D3560),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF3D3560), width: 1),
       ),
       child: SafeArea(
         top: false,
@@ -412,11 +396,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ],
         ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 30,
-        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 30),
       ),
     );
   }
@@ -474,8 +454,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   CircleAvatar(
                     radius: 28,
                     child: _isGoogleSignedIn && _userEmail != null
-                        ? const Icon(Icons.person,
-                            color: Colors.white, size: 28)
+                        ? const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 28,
+                          )
                         : Text(
                             initial,
                             style: const TextStyle(
@@ -765,7 +748,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             testKey: TestKeys.settingsPrivacyPolicy,
             onTap: () async {
               final url = Uri.parse(
-                  'https://github.com/thamaraiselvam/hobbyist-privacy-policy/blob/main/PRIVACY_POLICY.md');
+                'https://github.com/thamaraiselvam/hobbyist-privacy-policy/blob/main/PRIVACY_POLICY.md',
+              );
               try {
                 await launchUrl(url, mode: LaunchMode.externalApplication);
               } catch (e) {
@@ -821,33 +805,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   SizedBox(height: 16),
                   Text(
                     'Track your hobbies, build streaks, and stay consistent with your goals.',
-                    style: TextStyle(
-                      color: Colors.white60,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.white60, fontSize: 14),
                   ),
                   SizedBox(height: 16),
                   Row(
                     children: [
                       Text(
                         'Made with ',
-                        style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white60, fontSize: 14),
                       ),
-                      Icon(
-                        Icons.favorite,
-                        color: Colors.red,
-                        size: 16,
-                      ),
+                      Icon(Icons.favorite, color: Colors.red, size: 16),
                       SizedBox(width: 4),
                       Text(
                         'for better hobbies',
-                        style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white60, fontSize: 14),
                       ),
                     ],
                   ),
@@ -963,7 +934,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    'Feature flags refreshed! Email: ${_authService.userEmail}'),
+                  'Feature flags refreshed! Email: ${_authService.userEmail}',
+                ),
                 backgroundColor: const Color(0xFF4CAF78), // Readable green
 
                 duration: const Duration(seconds: 3),
@@ -981,8 +953,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   color: const Color(0xFF6C3FFF).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.refresh,
-                    color: Color(0xFF6C3FFF), size: 22),
+                child: const Icon(
+                  Icons.refresh,
+                  color: Color(0xFF6C3FFF),
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 16),
               const Expanded(
@@ -1000,10 +975,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     SizedBox(height: 4),
                     Text(
                       'Force fetch from Firebase Remote Config',
-                      style: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
                     ),
                   ],
                 ),

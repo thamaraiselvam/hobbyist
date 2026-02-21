@@ -69,3 +69,7 @@ appId: tham.hobbyist.app
 # 10 — Settings toggles and feedback submission
 - runFlow:
     file: "settings_feedback.yml"
+
+# 11 — Add a one-time task and verify it appears on the dashboard
+- runFlow:
+    file: "add_one_time_task.yml"

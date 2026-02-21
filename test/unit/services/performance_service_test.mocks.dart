@@ -27,33 +27,18 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: invalid_use_of_internal_member
 
 class _FakeFirebaseApp_0 extends _i1.SmartFake implements _i2.FirebaseApp {
-  _FakeFirebaseApp_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeFirebaseApp_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeTrace_1 extends _i1.SmartFake implements _i3.Trace {
-  _FakeTrace_1(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeTrace_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeHttpMetric_2 extends _i1.SmartFake implements _i3.HttpMetric {
-  _FakeHttpMetric_2(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeHttpMetric_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [FirebasePerformance].
@@ -62,111 +47,79 @@ class _FakeHttpMetric_2 extends _i1.SmartFake implements _i3.HttpMetric {
 class MockFirebasePerformance extends _i1.Mock
     implements _i3.FirebasePerformance {
   @override
-  _i2.FirebaseApp get app => (super.noSuchMethod(
-        Invocation.getter(#app),
-        returnValue: _FakeFirebaseApp_0(
-          this,
-          Invocation.getter(#app),
-        ),
-        returnValueForMissingStub: _FakeFirebaseApp_0(
-          this,
-          Invocation.getter(#app),
-        ),
-      ) as _i2.FirebaseApp);
+  _i2.FirebaseApp get app =>
+      (super.noSuchMethod(
+            Invocation.getter(#app),
+            returnValue: _FakeFirebaseApp_0(this, Invocation.getter(#app)),
+            returnValueForMissingStub: _FakeFirebaseApp_0(
+              this,
+              Invocation.getter(#app),
+            ),
+          )
+          as _i2.FirebaseApp);
 
   @override
   set app(_i2.FirebaseApp? value) => super.noSuchMethod(
-        Invocation.setter(
-          #app,
-          value,
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.setter(#app, value),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  Map<dynamic, dynamic> get pluginConstants => (super.noSuchMethod(
-        Invocation.getter(#pluginConstants),
-        returnValue: <dynamic, dynamic>{},
-        returnValueForMissingStub: <dynamic, dynamic>{},
-      ) as Map<dynamic, dynamic>);
+  Map<dynamic, dynamic> get pluginConstants =>
+      (super.noSuchMethod(
+            Invocation.getter(#pluginConstants),
+            returnValue: <dynamic, dynamic>{},
+            returnValueForMissingStub: <dynamic, dynamic>{},
+          )
+          as Map<dynamic, dynamic>);
 
   @override
-  _i4.Future<bool> isPerformanceCollectionEnabled() => (super.noSuchMethod(
-        Invocation.method(
-          #isPerformanceCollectionEnabled,
-          [],
-        ),
-        returnValue: _i4.Future<bool>.value(false),
-        returnValueForMissingStub: _i4.Future<bool>.value(false),
-      ) as _i4.Future<bool>);
+  _i4.Future<bool> isPerformanceCollectionEnabled() =>
+      (super.noSuchMethod(
+            Invocation.method(#isPerformanceCollectionEnabled, []),
+            returnValue: _i4.Future<bool>.value(false),
+            returnValueForMissingStub: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
 
   @override
   _i4.Future<void> setPerformanceCollectionEnabled(bool? enabled) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setPerformanceCollectionEnabled,
-          [enabled],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#setPerformanceCollectionEnabled, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i3.Trace newTrace(String? name) => (super.noSuchMethod(
-        Invocation.method(
-          #newTrace,
-          [name],
-        ),
-        returnValue: _FakeTrace_1(
-          this,
-          Invocation.method(
-            #newTrace,
-            [name],
-          ),
-        ),
-        returnValueForMissingStub: _FakeTrace_1(
-          this,
-          Invocation.method(
-            #newTrace,
-            [name],
-          ),
-        ),
-      ) as _i3.Trace);
-
-  @override
-  _i3.HttpMetric newHttpMetric(
-    String? url,
-    _i5.HttpMethod? httpMethod,
-  ) =>
+  _i3.Trace newTrace(String? name) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #newHttpMetric,
-          [
-            url,
-            httpMethod,
-          ],
-        ),
-        returnValue: _FakeHttpMetric_2(
-          this,
-          Invocation.method(
-            #newHttpMetric,
-            [
-              url,
-              httpMethod,
-            ],
-          ),
-        ),
-        returnValueForMissingStub: _FakeHttpMetric_2(
-          this,
-          Invocation.method(
-            #newHttpMetric,
-            [
-              url,
-              httpMethod,
-            ],
-          ),
-        ),
-      ) as _i3.HttpMetric);
+            Invocation.method(#newTrace, [name]),
+            returnValue: _FakeTrace_1(
+              this,
+              Invocation.method(#newTrace, [name]),
+            ),
+            returnValueForMissingStub: _FakeTrace_1(
+              this,
+              Invocation.method(#newTrace, [name]),
+            ),
+          )
+          as _i3.Trace);
+
+  @override
+  _i3.HttpMetric newHttpMetric(String? url, _i5.HttpMethod? httpMethod) =>
+      (super.noSuchMethod(
+            Invocation.method(#newHttpMetric, [url, httpMethod]),
+            returnValue: _FakeHttpMetric_2(
+              this,
+              Invocation.method(#newHttpMetric, [url, httpMethod]),
+            ),
+            returnValueForMissingStub: _FakeHttpMetric_2(
+              this,
+              Invocation.method(#newHttpMetric, [url, httpMethod]),
+            ),
+          )
+          as _i3.HttpMetric);
 }
 
 /// A class which mocks [Trace].
@@ -174,108 +127,70 @@ class MockFirebasePerformance extends _i1.Mock
 /// See the documentation for Mockito's code generation for more information.
 class MockTrace extends _i1.Mock implements _i3.Trace {
   @override
-  _i4.Future<void> start() => (super.noSuchMethod(
-        Invocation.method(
-          #start,
-          [],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> start() =>
+      (super.noSuchMethod(
+            Invocation.method(#start, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i4.Future<void> stop() => (super.noSuchMethod(
-        Invocation.method(
-          #stop,
-          [],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> stop() =>
+      (super.noSuchMethod(
+            Invocation.method(#stop, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  void incrementMetric(
-    String? name,
-    int? value,
-  ) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #incrementMetric,
-          [
-            name,
-            value,
-          ],
-        ),
-        returnValueForMissingStub: null,
-      );
+  void incrementMetric(String? name, int? value) => super.noSuchMethod(
+    Invocation.method(#incrementMetric, [name, value]),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  void setMetric(
-    String? name,
-    int? value,
-  ) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #setMetric,
-          [
-            name,
-            value,
-          ],
-        ),
-        returnValueForMissingStub: null,
-      );
+  void setMetric(String? name, int? value) => super.noSuchMethod(
+    Invocation.method(#setMetric, [name, value]),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  int getMetric(String? name) => (super.noSuchMethod(
-        Invocation.method(
-          #getMetric,
-          [name],
-        ),
-        returnValue: 0,
-        returnValueForMissingStub: 0,
-      ) as int);
+  int getMetric(String? name) =>
+      (super.noSuchMethod(
+            Invocation.method(#getMetric, [name]),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
 
   @override
-  void putAttribute(
-    String? name,
-    String? value,
-  ) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #putAttribute,
-          [
-            name,
-            value,
-          ],
-        ),
-        returnValueForMissingStub: null,
-      );
+  void putAttribute(String? name, String? value) => super.noSuchMethod(
+    Invocation.method(#putAttribute, [name, value]),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void removeAttribute(String? name) => super.noSuchMethod(
-        Invocation.method(
-          #removeAttribute,
-          [name],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#removeAttribute, [name]),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  String? getAttribute(String? name) => (super.noSuchMethod(
-        Invocation.method(
-          #getAttribute,
-          [name],
-        ),
-        returnValueForMissingStub: null,
-      ) as String?);
+  String? getAttribute(String? name) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAttribute, [name]),
+            returnValueForMissingStub: null,
+          )
+          as String?);
 
   @override
-  Map<String, String> getAttributes() => (super.noSuchMethod(
-        Invocation.method(
-          #getAttributes,
-          [],
-        ),
-        returnValue: <String, String>{},
-        returnValueForMissingStub: <String, String>{},
-      ) as Map<String, String>);
+  Map<String, String> getAttributes() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAttributes, []),
+            returnValue: <String, String>{},
+            returnValueForMissingStub: <String, String>{},
+          )
+          as Map<String, String>);
 }

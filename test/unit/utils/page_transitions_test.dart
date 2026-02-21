@@ -50,7 +50,9 @@ void main() {
     test('should have correct reverse transition duration', () {
       final route = SlidePageRoute(page: const SizedBox());
       expect(
-          route.reverseTransitionDuration, const Duration(milliseconds: 300));
+        route.reverseTransitionDuration,
+        const Duration(milliseconds: 300),
+      );
     });
 
     testWidgets('should build page correctly', (WidgetTester tester) async {
@@ -88,7 +90,9 @@ void main() {
     test('should have correct reverse transition duration', () {
       final route = FadePageRoute(page: const SizedBox());
       expect(
-          route.reverseTransitionDuration, const Duration(milliseconds: 250));
+        route.reverseTransitionDuration,
+        const Duration(milliseconds: 250),
+      );
     });
 
     testWidgets('should build page correctly', (WidgetTester tester) async {
@@ -126,7 +130,9 @@ void main() {
     test('should have correct reverse transition duration', () {
       final route = ScalePageRoute(page: const SizedBox());
       expect(
-          route.reverseTransitionDuration, const Duration(milliseconds: 300));
+        route.reverseTransitionDuration,
+        const Duration(milliseconds: 300),
+      );
     });
 
     testWidgets('should build page correctly', (WidgetTester tester) async {
@@ -156,10 +162,14 @@ void main() {
       final fade = FadePageRoute(page: const SizedBox());
       final scale = ScalePageRoute(page: const SizedBox());
 
-      expect(scale.transitionDuration.inMilliseconds,
-          greaterThan(slide.transitionDuration.inMilliseconds));
-      expect(slide.transitionDuration.inMilliseconds,
-          greaterThan(fade.transitionDuration.inMilliseconds));
+      expect(
+        scale.transitionDuration.inMilliseconds,
+        greaterThan(slide.transitionDuration.inMilliseconds),
+      );
+      expect(
+        slide.transitionDuration.inMilliseconds,
+        greaterThan(fade.transitionDuration.inMilliseconds),
+      );
     });
 
     test('all routes should be PageRouteBuilder', () {

@@ -58,11 +58,12 @@ class Hobby {
     if (completions.isEmpty) return 0;
 
     // Get all completed dates sorted chronologically
-    final completedDates = completions.entries
-        .where((e) => e.value.completed)
-        .map((e) => e.key)
-        .toList()
-      ..sort();
+    final completedDates =
+        completions.entries
+            .where((e) => e.value.completed)
+            .map((e) => e.key)
+            .toList()
+          ..sort();
 
     if (completedDates.isEmpty) return 0;
 
@@ -107,35 +108,36 @@ class Hobby {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'notes': notes,
-        'repeatMode': repeatMode,
-        'color': color,
-        'completions': completions.map((k, v) => MapEntry(k, v.toJson())),
-        'createdAt': createdAt?.toIso8601String(),
-        'reminderTime': reminderTime,
-        'bestStreak': bestStreak,
-        'isOneTime': isOneTime,
-      };
+    'id': id,
+    'name': name,
+    'notes': notes,
+    'repeatMode': repeatMode,
+    'color': color,
+    'completions': completions.map((k, v) => MapEntry(k, v.toJson())),
+    'createdAt': createdAt?.toIso8601String(),
+    'reminderTime': reminderTime,
+    'bestStreak': bestStreak,
+    'isOneTime': isOneTime,
+  };
 
   factory Hobby.fromJson(Map<String, dynamic> json) => Hobby(
-        id: json['id'],
-        name: json['name'],
-        notes: json['notes'] ?? '',
-        repeatMode: json['repeatMode'] ?? 'daily',
-        color: json['color'],
-        completions: (json['completions'] as Map<String, dynamic>?)?.map(
-              (k, v) => MapEntry(k, HobbyCompletion.fromJson(v)),
-            ) ??
-            {},
-        createdAt: json['createdAt'] != null
-            ? DateTime.parse(json['createdAt'])
-            : null,
-        reminderTime: json['reminderTime'],
-        bestStreak: json['bestStreak'] ?? 0,
-        isOneTime: json['isOneTime'] as bool? ?? false,
-      );
+    id: json['id'],
+    name: json['name'],
+    notes: json['notes'] ?? '',
+    repeatMode: json['repeatMode'] ?? 'daily',
+    color: json['color'],
+    completions:
+        (json['completions'] as Map<String, dynamic>?)?.map(
+          (k, v) => MapEntry(k, HobbyCompletion.fromJson(v)),
+        ) ??
+        {},
+    createdAt: json['createdAt'] != null
+        ? DateTime.parse(json['createdAt'])
+        : null,
+    reminderTime: json['reminderTime'],
+    bestStreak: json['bestStreak'] ?? 0,
+    isOneTime: json['isOneTime'] as bool? ?? false,
+  );
 
   Hobby copyWith({
     String? name,
@@ -148,35 +150,31 @@ class Hobby {
     int? customDay,
     int? bestStreak,
     bool? isOneTime,
-  }) =>
-      Hobby(
-        id: id,
-        name: name ?? this.name,
-        notes: notes ?? this.notes,
-        repeatMode: repeatMode ?? this.repeatMode,
-        color: color ?? this.color,
-        completions: completions ?? this.completions,
-        createdAt: createdAt ?? this.createdAt,
-        reminderTime: reminderTime ?? this.reminderTime,
-        customDay: customDay ?? this.customDay,
-        bestStreak: bestStreak ?? this.bestStreak,
-        isOneTime: isOneTime ?? this.isOneTime,
-      );
+  }) => Hobby(
+    id: id,
+    name: name ?? this.name,
+    notes: notes ?? this.notes,
+    repeatMode: repeatMode ?? this.repeatMode,
+    color: color ?? this.color,
+    completions: completions ?? this.completions,
+    createdAt: createdAt ?? this.createdAt,
+    reminderTime: reminderTime ?? this.reminderTime,
+    customDay: customDay ?? this.customDay,
+    bestStreak: bestStreak ?? this.bestStreak,
+    isOneTime: isOneTime ?? this.isOneTime,
+  );
 }
 
 class HobbyCompletion {
   final bool completed;
   final DateTime? completedAt;
 
-  HobbyCompletion({
-    required this.completed,
-    this.completedAt,
-  });
+  HobbyCompletion({required this.completed, this.completedAt});
 
   Map<String, dynamic> toJson() => {
-        'completed': completed,
-        'completedAt': completedAt?.toIso8601String(),
-      };
+    'completed': completed,
+    'completedAt': completedAt?.toIso8601String(),
+  };
 
   factory HobbyCompletion.fromJson(Map<String, dynamic> json) =>
       HobbyCompletion(

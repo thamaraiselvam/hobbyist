@@ -4,15 +4,13 @@ import 'package:hobbyist/widgets/animated_checkbox.dart';
 
 void main() {
   group('AnimatedCheckbox Widget Tests', () {
-    testWidgets('should display unchecked checkbox',
-        (WidgetTester tester) async {
+    testWidgets('should display unchecked checkbox', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AnimatedCheckbox(
-              isChecked: false,
-              onTap: () {},
-            ),
+            body: AnimatedCheckbox(isChecked: false, onTap: () {}),
           ),
         ),
       );
@@ -23,12 +21,7 @@ void main() {
     testWidgets('should display checked checkbox', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: AnimatedCheckbox(
-              isChecked: true,
-              onTap: () {},
-            ),
-          ),
+          home: Scaffold(body: AnimatedCheckbox(isChecked: true, onTap: () {})),
         ),
       );
 
@@ -57,8 +50,9 @@ void main() {
       expect(tapped, true);
     });
 
-    testWidgets('should animate when value changes',
-        (WidgetTester tester) async {
+    testWidgets('should animate when value changes', (
+      WidgetTester tester,
+    ) async {
       bool isChecked = false;
 
       await tester.pumpWidget(

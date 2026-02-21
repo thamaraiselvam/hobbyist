@@ -1,0 +1,65 @@
+appId: tham.hobbyist.app
+---
+# Add One-Time Task Flow
+# Tests that a one-time task can be created using the "One-time task" toggle.
+# Once completed, the task should disappear permanently from the home screen.
+#
+# Keys used: add_hobby_fab, hobby_name_input, daily_frequency_button,
+#            color_palette_button_2, one_time_toggle, create_hobby_button,
+#            hobby_checkbox_.*
+#
+# Before running:
+#   adb shell am start -n tham.hobbyist.app/.MainActivity
+# Onboarding must be complete (run onboarding.yml first).
+
+- extendedWaitUntil:
+    visible:
+      text: "Hello.*"
+    timeout: 5000
+
+- tapOn:
+    id: "add_hobby_fab"
+
+- assertVisible:
+    text: ADD NEW HOBBY TASK
+
+# Enter task name
+- tapOn:
+    id: "hobby_name_input"
+
+- inputText: "One-Time Test Task"
+
+# Dismiss keyboard before tapping frequency button
+- hideKeyboard
+
+- waitForAnimationToEnd
+
+# Select Daily frequency (default)
+- tapOn:
+    id: "daily_frequency_button"
+
+# Pick a color (index 2)
+- tapOn:
+    id: "color_palette_button_2"
+
+# Scroll down to reveal the one-time toggle
+- scroll
+
+# Enable the one-time task toggle
+- tapOn:
+    id: "one_time_toggle"
+
+- waitForAnimationToEnd
+
+# Scroll down so the create button is visible
+- scroll
+
+# Create the task
+- tapOn:
+    id: "create_hobby_button"
+
+# Verify task appears on dashboard
+- extendedWaitUntil:
+    visible:
+      text: "One-Time Test Task"
+    timeout: 5000

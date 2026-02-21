@@ -6,11 +6,7 @@ class ContributionChart extends StatelessWidget {
   final List<Hobby> hobbies;
   final int weeks;
 
-  const ContributionChart({
-    super.key,
-    required this.hobbies,
-    this.weeks = 12,
-  });
+  const ContributionChart({super.key, required this.hobbies, this.weeks = 12});
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +53,9 @@ class ContributionChart extends StatelessWidget {
 
   Widget _buildChart(DateTime start, DateTime end) {
     final weeks = <Widget>[];
-    DateTime currentWeekStart =
-        start.subtract(Duration(days: start.weekday % 7));
+    DateTime currentWeekStart = start.subtract(
+      Duration(days: start.weekday % 7),
+    );
 
     while (currentWeekStart.isBefore(end)) {
       weeks.add(_buildWeekColumn(currentWeekStart));
@@ -67,11 +64,7 @@ class ContributionChart extends StatelessWidget {
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildDayLabels(),
-        const SizedBox(width: 4),
-        ...weeks,
-      ],
+      children: [_buildDayLabels(), const SizedBox(width: 4), ...weeks],
     );
   }
 

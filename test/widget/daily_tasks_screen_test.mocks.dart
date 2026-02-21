@@ -33,119 +33,96 @@ import 'package:mockito/src/dummies.dart' as _i7;
 /// See the documentation for Mockito's code generation for more information.
 class MockHobbyService extends _i1.Mock implements _i2.HobbyService {
   @override
-  _i3.Future<List<_i4.Hobby>> loadHobbies() => (super.noSuchMethod(
-        Invocation.method(
-          #loadHobbies,
-          [],
-        ),
-        returnValue: _i3.Future<List<_i4.Hobby>>.value(<_i4.Hobby>[]),
-        returnValueForMissingStub:
-            _i3.Future<List<_i4.Hobby>>.value(<_i4.Hobby>[]),
-      ) as _i3.Future<List<_i4.Hobby>>);
-
-  @override
-  _i3.Future<void> addHobby(_i4.Hobby? hobby) => (super.noSuchMethod(
-        Invocation.method(
-          #addHobby,
-          [hobby],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
-
-  @override
-  _i3.Future<void> updateHobby(_i4.Hobby? hobby) => (super.noSuchMethod(
-        Invocation.method(
-          #updateHobby,
-          [hobby],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
-
-  @override
-  _i3.Future<void> deleteHobby(String? id) => (super.noSuchMethod(
-        Invocation.method(
-          #deleteHobby,
-          [id],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
-
-  @override
-  _i3.Future<void> clearAllData() => (super.noSuchMethod(
-        Invocation.method(
-          #clearAllData,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
-
-  @override
-  _i3.Future<_i4.Hobby?> toggleCompletion(
-    String? hobbyId,
-    String? date,
-  ) =>
+  _i3.Future<List<_i4.Hobby>> loadHobbies() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #toggleCompletion,
-          [
-            hobbyId,
-            date,
-          ],
-        ),
-        returnValue: _i3.Future<_i4.Hobby?>.value(),
-        returnValueForMissingStub: _i3.Future<_i4.Hobby?>.value(),
-      ) as _i3.Future<_i4.Hobby?>);
+            Invocation.method(#loadHobbies, []),
+            returnValue: _i3.Future<List<_i4.Hobby>>.value(<_i4.Hobby>[]),
+            returnValueForMissingStub: _i3.Future<List<_i4.Hobby>>.value(
+              <_i4.Hobby>[],
+            ),
+          )
+          as _i3.Future<List<_i4.Hobby>>);
 
   @override
-  _i3.Future<String?> getSetting(String? key) => (super.noSuchMethod(
-        Invocation.method(
-          #getSetting,
-          [key],
-        ),
-        returnValue: _i3.Future<String?>.value(),
-        returnValueForMissingStub: _i3.Future<String?>.value(),
-      ) as _i3.Future<String?>);
-
-  @override
-  _i3.Future<void> setSetting(
-    String? key,
-    String? value,
-  ) =>
+  _i3.Future<void> addHobby(_i4.Hobby? hobby) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setSetting,
-          [
-            key,
-            value,
-          ],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#addHobby, [hobby]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> saveHobbies(List<_i4.Hobby>? hobbies) => (super.noSuchMethod(
-        Invocation.method(
-          #saveHobbies,
-          [hobbies],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> updateHobby(_i4.Hobby? hobby) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateHobby, [hobby]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> resetDatabase() => (super.noSuchMethod(
-        Invocation.method(
-          #resetDatabase,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> deleteHobby(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteHobby, [id]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> clearAllData() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearAllData, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<_i4.Hobby?> toggleCompletion(String? hobbyId, String? date) =>
+      (super.noSuchMethod(
+            Invocation.method(#toggleCompletion, [hobbyId, date]),
+            returnValue: _i3.Future<_i4.Hobby?>.value(),
+            returnValueForMissingStub: _i3.Future<_i4.Hobby?>.value(),
+          )
+          as _i3.Future<_i4.Hobby?>);
+
+  @override
+  _i3.Future<String?> getSetting(String? key) =>
+      (super.noSuchMethod(
+            Invocation.method(#getSetting, [key]),
+            returnValue: _i3.Future<String?>.value(),
+            returnValueForMissingStub: _i3.Future<String?>.value(),
+          )
+          as _i3.Future<String?>);
+
+  @override
+  _i3.Future<void> setSetting(String? key, String? value) =>
+      (super.noSuchMethod(
+            Invocation.method(#setSetting, [key, value]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> saveHobbies(List<_i4.Hobby>? hobbies) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveHobbies, [hobbies]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> resetDatabase() =>
+      (super.noSuchMethod(
+            Invocation.method(#resetDatabase, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 }
 
 /// A class which mocks [AnalyticsService].
@@ -153,44 +130,40 @@ class MockHobbyService extends _i1.Mock implements _i2.HobbyService {
 /// See the documentation for Mockito's code generation for more information.
 class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
   @override
-  _i3.Future<void> logAppOpen() => (super.noSuchMethod(
-        Invocation.method(
-          #logAppOpen,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> logAppOpen() =>
+      (super.noSuchMethod(
+            Invocation.method(#logAppOpen, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> logScreenView(String? screenName) => (super.noSuchMethod(
-        Invocation.method(
-          #logScreenView,
-          [screenName],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> logScreenView(String? screenName) =>
+      (super.noSuchMethod(
+            Invocation.method(#logScreenView, [screenName]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> logOnboardingComplete() => (super.noSuchMethod(
-        Invocation.method(
-          #logOnboardingComplete,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> logOnboardingComplete() =>
+      (super.noSuchMethod(
+            Invocation.method(#logOnboardingComplete, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> logLandingView() => (super.noSuchMethod(
-        Invocation.method(
-          #logLandingView,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> logLandingView() =>
+      (super.noSuchMethod(
+            Invocation.method(#logLandingView, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> logHobbyCreated({
@@ -199,18 +172,15 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
     int? color,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #logHobbyCreated,
-          [],
-          {
-            #hobbyId: hobbyId,
-            #repeatMode: repeatMode,
-            #color: color,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#logHobbyCreated, [], {
+              #hobbyId: hobbyId,
+              #repeatMode: repeatMode,
+              #color: color,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> logHobbyUpdated({
@@ -218,17 +188,14 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
     String? repeatMode,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #logHobbyUpdated,
-          [],
-          {
-            #hobbyId: hobbyId,
-            #repeatMode: repeatMode,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#logHobbyUpdated, [], {
+              #hobbyId: hobbyId,
+              #repeatMode: repeatMode,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> logHobbyDeleted({
@@ -236,17 +203,14 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
     String? reason,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #logHobbyDeleted,
-          [],
-          {
-            #hobbyId: hobbyId,
-            #reason: reason,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#logHobbyDeleted, [], {
+              #hobbyId: hobbyId,
+              #reason: reason,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> logCompletionToggled({
@@ -255,18 +219,15 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
     int? currentStreak,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #logCompletionToggled,
-          [],
-          {
-            #hobbyId: hobbyId,
-            #completed: completed,
-            #currentStreak: currentStreak,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#logCompletionToggled, [], {
+              #hobbyId: hobbyId,
+              #completed: completed,
+              #currentStreak: currentStreak,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> logStreakAchieved({
@@ -274,37 +235,32 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
     required int? streakCount,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #logStreakAchieved,
-          [],
-          {
-            #hobbyId: hobbyId,
-            #streakCount: streakCount,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#logStreakAchieved, [], {
+              #hobbyId: hobbyId,
+              #streakCount: streakCount,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> logCompletionSound() => (super.noSuchMethod(
-        Invocation.method(
-          #logCompletionSound,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> logCompletionSound() =>
+      (super.noSuchMethod(
+            Invocation.method(#logCompletionSound, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> logAnalyticsViewed() => (super.noSuchMethod(
-        Invocation.method(
-          #logAnalyticsViewed,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> logAnalyticsViewed() =>
+      (super.noSuchMethod(
+            Invocation.method(#logAnalyticsViewed, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> logSettingChanged({
@@ -312,27 +268,23 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
     required String? settingValue,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #logSettingChanged,
-          [],
-          {
-            #settingName: settingName,
-            #settingValue: settingValue,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#logSettingChanged, [], {
+              #settingName: settingName,
+              #settingValue: settingValue,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> logQuoteDisplayed() => (super.noSuchMethod(
-        Invocation.method(
-          #logQuoteDisplayed,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> logQuoteDisplayed() =>
+      (super.noSuchMethod(
+            Invocation.method(#logQuoteDisplayed, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> logDatabaseQueryTime({
@@ -340,17 +292,14 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
     required int? durationMs,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #logDatabaseQueryTime,
-          [],
-          {
-            #queryType: queryType,
-            #durationMs: durationMs,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#logDatabaseQueryTime, [], {
+              #queryType: queryType,
+              #durationMs: durationMs,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> logDailyStats({
@@ -359,18 +308,15 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
     required double? averageCompletionRate,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #logDailyStats,
-          [],
-          {
-            #totalHobbies: totalHobbies,
-            #completedToday: completedToday,
-            #averageCompletionRate: averageCompletionRate,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#logDailyStats, [], {
+              #totalHobbies: totalHobbies,
+              #completedToday: completedToday,
+              #averageCompletionRate: averageCompletionRate,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> setUserProperty({
@@ -378,49 +324,43 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
     required String? value,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setUserProperty,
-          [],
-          {
-            #name: name,
-            #value: value,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#setUserProperty, [], {
+              #name: name,
+              #value: value,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> logSessionEnd({required int? durationSeconds}) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #logSessionEnd,
-          [],
-          {#durationSeconds: durationSeconds},
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#logSessionEnd, [], {
+              #durationSeconds: durationSeconds,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> logFirstHobbyCreated() => (super.noSuchMethod(
-        Invocation.method(
-          #logFirstHobbyCreated,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> logFirstHobbyCreated() =>
+      (super.noSuchMethod(
+            Invocation.method(#logFirstHobbyCreated, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> logFirstCompletion() => (super.noSuchMethod(
-        Invocation.method(
-          #logFirstCompletion,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> logFirstCompletion() =>
+      (super.noSuchMethod(
+            Invocation.method(#logFirstCompletion, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 }
 
 /// A class which mocks [QuoteService].
@@ -428,26 +368,19 @@ class MockAnalyticsService extends _i1.Mock implements _i5.AnalyticsService {
 /// See the documentation for Mockito's code generation for more information.
 class MockQuoteService extends _i1.Mock implements _i6.QuoteService {
   @override
-  String getRandomQuote() => (super.noSuchMethod(
-        Invocation.method(
-          #getRandomQuote,
-          [],
-        ),
-        returnValue: _i7.dummyValue<String>(
-          this,
-          Invocation.method(
-            #getRandomQuote,
-            [],
-          ),
-        ),
-        returnValueForMissingStub: _i7.dummyValue<String>(
-          this,
-          Invocation.method(
-            #getRandomQuote,
-            [],
-          ),
-        ),
-      ) as String);
+  String getRandomQuote() =>
+      (super.noSuchMethod(
+            Invocation.method(#getRandomQuote, []),
+            returnValue: _i7.dummyValue<String>(
+              this,
+              Invocation.method(#getRandomQuote, []),
+            ),
+            returnValueForMissingStub: _i7.dummyValue<String>(
+              this,
+              Invocation.method(#getRandomQuote, []),
+            ),
+          )
+          as String);
 }
 
 /// A class which mocks [SoundService].
@@ -455,21 +388,17 @@ class MockQuoteService extends _i1.Mock implements _i6.QuoteService {
 /// See the documentation for Mockito's code generation for more information.
 class MockSoundService extends _i1.Mock implements _i8.SoundService {
   @override
-  _i3.Future<void> playCompletionSound() => (super.noSuchMethod(
-        Invocation.method(
-          #playCompletionSound,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> playCompletionSound() =>
+      (super.noSuchMethod(
+            Invocation.method(#playCompletionSound, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(
-        Invocation.method(
-          #dispose,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#dispose, []),
+    returnValueForMissingStub: null,
+  );
 }

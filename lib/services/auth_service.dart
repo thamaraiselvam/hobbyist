@@ -25,18 +25,18 @@ class AuthService {
   }
 
   AuthService._internal()
-      : _auth = _createFirebaseAuth(),
-        _googleSignIn = GoogleSignIn(),
-        _hobbyService = HobbyService();
+    : _auth = _createFirebaseAuth(),
+      _googleSignIn = GoogleSignIn(),
+      _hobbyService = HobbyService();
 
   @visibleForTesting
   AuthService.forTesting({
     required FirebaseAuth auth,
     required GoogleSignIn googleSignIn,
     required HobbyService hobbyService,
-  })  : _auth = auth,
-        _googleSignIn = googleSignIn,
-        _hobbyService = hobbyService;
+  }) : _auth = auth,
+       _googleSignIn = googleSignIn,
+       _hobbyService = hobbyService;
 
   static FirebaseAuth? mockAuth;
   FirebaseAuth? get authInstance => _auth;

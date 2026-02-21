@@ -4,11 +4,7 @@ import 'package:hobbyist/models/hobby.dart';
 void main() {
   group('Hobby Model Tests', () {
     test('should create hobby with default values', () {
-      final hobby = Hobby(
-        id: 'test-id',
-        name: 'Test Hobby',
-        color: 0xFF6C3FFF,
-      );
+      final hobby = Hobby(id: 'test-id', name: 'Test Hobby', color: 0xFF6C3FFF);
 
       expect(hobby.id, 'test-id');
       expect(hobby.name, 'Test Hobby');
@@ -22,8 +18,10 @@ void main() {
 
     test('should create hobby with custom values', () {
       final completions = {
-        '2024-01-01':
-            HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
+        '2024-01-01': HobbyCompletion(
+          completed: true,
+          completedAt: DateTime(2024, 1, 1),
+        ),
       };
 
       final hobby = Hobby(
@@ -58,12 +56,16 @@ void main() {
     test('should calculate current streak correctly with consecutive days', () {
       final today = DateTime.now();
       final completions = {
-        _formatDate(today):
-            HobbyCompletion(completed: true, completedAt: today),
-        _formatDate(today.subtract(const Duration(days: 1))):
-            HobbyCompletion(completed: true),
-        _formatDate(today.subtract(const Duration(days: 2))):
-            HobbyCompletion(completed: true),
+        _formatDate(today): HobbyCompletion(
+          completed: true,
+          completedAt: today,
+        ),
+        _formatDate(today.subtract(const Duration(days: 1))): HobbyCompletion(
+          completed: true,
+        ),
+        _formatDate(today.subtract(const Duration(days: 2))): HobbyCompletion(
+          completed: true,
+        ),
       };
 
       final hobby = Hobby(
@@ -82,8 +84,10 @@ void main() {
 
       for (int i = 0; i < 10; i++) {
         final date = today.subtract(Duration(days: i));
-        completions[_formatDate(date)] =
-            HobbyCompletion(completed: true, completedAt: date);
+        completions[_formatDate(date)] = HobbyCompletion(
+          completed: true,
+          completedAt: date,
+        );
       }
 
       final hobby = Hobby(
@@ -97,11 +101,7 @@ void main() {
     });
 
     test('should calculate streak as 0 when no completions', () {
-      final hobby = Hobby(
-        id: 'test-id',
-        name: 'Test Hobby',
-        color: 0xFF6C3FFF,
-      );
+      final hobby = Hobby(id: 'test-id', name: 'Test Hobby', color: 0xFF6C3FFF);
 
       expect(hobby.currentStreak, 0);
     });
@@ -109,8 +109,10 @@ void main() {
     test('should calculate streak as 1 when only today is completed', () {
       final today = DateTime.now();
       final completions = {
-        _formatDate(today):
-            HobbyCompletion(completed: true, completedAt: today),
+        _formatDate(today): HobbyCompletion(
+          completed: true,
+          completedAt: today,
+        ),
       };
 
       final hobby = Hobby(
@@ -142,15 +144,20 @@ void main() {
     test('should stop streak at first gap', () {
       final today = DateTime.now();
       final completions = {
-        _formatDate(today):
-            HobbyCompletion(completed: true, completedAt: today),
-        _formatDate(today.subtract(const Duration(days: 1))):
-            HobbyCompletion(completed: true),
+        _formatDate(today): HobbyCompletion(
+          completed: true,
+          completedAt: today,
+        ),
+        _formatDate(today.subtract(const Duration(days: 1))): HobbyCompletion(
+          completed: true,
+        ),
         // Gap on day 2
-        _formatDate(today.subtract(const Duration(days: 3))):
-            HobbyCompletion(completed: true),
-        _formatDate(today.subtract(const Duration(days: 4))):
-            HobbyCompletion(completed: true),
+        _formatDate(today.subtract(const Duration(days: 3))): HobbyCompletion(
+          completed: true,
+        ),
+        _formatDate(today.subtract(const Duration(days: 4))): HobbyCompletion(
+          completed: true,
+        ),
       };
 
       final hobby = Hobby(
@@ -166,10 +173,13 @@ void main() {
     test('should handle incomplete completions in streak', () {
       final today = DateTime.now();
       final completions = {
-        _formatDate(today):
-            HobbyCompletion(completed: true, completedAt: today),
-        _formatDate(today.subtract(const Duration(days: 1))):
-            HobbyCompletion(completed: false),
+        _formatDate(today): HobbyCompletion(
+          completed: true,
+          completedAt: today,
+        ),
+        _formatDate(today.subtract(const Duration(days: 1))): HobbyCompletion(
+          completed: false,
+        ),
       };
 
       final hobby = Hobby(
@@ -206,8 +216,10 @@ void main() {
 
     test('should convert to JSON with completions', () {
       final completions = {
-        '2024-01-01':
-            HobbyCompletion(completed: true, completedAt: DateTime(2024, 1, 1)),
+        '2024-01-01': HobbyCompletion(
+          completed: true,
+          completedAt: DateTime(2024, 1, 1),
+        ),
       };
 
       final hobby = Hobby(
@@ -245,11 +257,7 @@ void main() {
     });
 
     test('should create from JSON with missing optional fields', () {
-      final json = {
-        'id': 'test-id',
-        'name': 'Test Hobby',
-        'color': 0xFF6C3FFF,
-      };
+      final json = {'id': 'test-id', 'name': 'Test Hobby', 'color': 0xFF6C3FFF};
 
       final hobby = Hobby.fromJson(json);
 
@@ -280,15 +288,9 @@ void main() {
     });
 
     test('should copy with new values', () {
-      final hobby = Hobby(
-        id: 'test-id',
-        name: 'Test Hobby',
-        color: 0xFF6C3FFF,
-      );
+      final hobby = Hobby(id: 'test-id', name: 'Test Hobby', color: 0xFF6C3FFF);
 
-      final copied = hobby.copyWith(
-        name: 'New Name',
-      );
+      final copied = hobby.copyWith(name: 'New Name');
 
       expect(copied.id, 'test-id');
       expect(copied.name, 'New Name');
@@ -320,15 +322,9 @@ void main() {
     });
 
     test('should copy with completions', () {
-      final completions = {
-        '2024-01-01': HobbyCompletion(completed: true),
-      };
+      final completions = {'2024-01-01': HobbyCompletion(completed: true)};
 
-      final hobby = Hobby(
-        id: 'test-id',
-        name: 'Test Hobby',
-        color: 0xFF6C3FFF,
-      );
+      final hobby = Hobby(id: 'test-id', name: 'Test Hobby', color: 0xFF6C3FFF);
 
       final copied = hobby.copyWith(completions: completions);
 
@@ -337,16 +333,155 @@ void main() {
     });
 
     test('should copy with createdAt', () {
-      final hobby = Hobby(
-        id: 'test-id',
-        name: 'Test Hobby',
-        color: 0xFF6C3FFF,
-      );
+      final hobby = Hobby(id: 'test-id', name: 'Test Hobby', color: 0xFF6C3FFF);
 
       final date = DateTime(2024, 1, 1);
       final copied = hobby.copyWith(createdAt: date);
 
       expect(copied.createdAt, date);
+    });
+  });
+
+  group('One-Time Task Tests', () {
+    test('isOneTime defaults to false', () {
+      final hobby = Hobby(id: 'test-id', name: 'Test Hobby', color: 0xFF6C3FFF);
+      expect(hobby.isOneTime, false);
+    });
+
+    test('can create a one-time task', () {
+      final hobby = Hobby(
+        id: 'test-id',
+        name: 'One-Time Task',
+        color: 0xFF6C3FFF,
+        isOneTime: true,
+      );
+      expect(hobby.isOneTime, true);
+    });
+
+    test('toJson serializes isOneTime correctly', () {
+      final hobby = Hobby(
+        id: 'test-id',
+        name: 'One-Time Task',
+        color: 0xFF6C3FFF,
+        isOneTime: true,
+      );
+      final json = hobby.toJson();
+      expect(json['isOneTime'], true);
+    });
+
+    test('toJson serializes isOneTime=false correctly', () {
+      final hobby = Hobby(
+        id: 'test-id',
+        name: 'Recurring Task',
+        color: 0xFF6C3FFF,
+      );
+      final json = hobby.toJson();
+      expect(json['isOneTime'], false);
+    });
+
+    test('fromJson deserializes isOneTime=true correctly', () {
+      final json = {
+        'id': 'test-id',
+        'name': 'One-Time Task',
+        'color': 0xFF6C3FFF,
+        'isOneTime': true,
+      };
+      final hobby = Hobby.fromJson(json);
+      expect(hobby.isOneTime, true);
+    });
+
+    test('fromJson defaults isOneTime to false when missing', () {
+      final json = {
+        'id': 'test-id',
+        'name': 'Old Task',
+        'color': 0xFF6C3FFF,
+      };
+      final hobby = Hobby.fromJson(json);
+      expect(hobby.isOneTime, false);
+    });
+
+    test('copyWith preserves isOneTime', () {
+      final hobby = Hobby(
+        id: 'test-id',
+        name: 'One-Time Task',
+        color: 0xFF6C3FFF,
+        isOneTime: true,
+      );
+      final copied = hobby.copyWith(name: 'Updated Name');
+      expect(copied.isOneTime, true);
+    });
+
+    test('copyWith can update isOneTime', () {
+      final hobby = Hobby(
+        id: 'test-id',
+        name: 'Task',
+        color: 0xFF6C3FFF,
+        isOneTime: false,
+      );
+      final copied = hobby.copyWith(isOneTime: true);
+      expect(copied.isOneTime, true);
+    });
+
+    test('one-time task with completion should be filtered from home screen', () {
+      // Simulate the filter logic used in daily_tasks_screen.dart
+      final oneTimeCompleted = Hobby(
+        id: '1',
+        name: 'Done One-Time',
+        color: 0xFF6C3FFF,
+        isOneTime: true,
+        completions: {
+          '2024-01-01': HobbyCompletion(completed: true),
+        },
+      );
+      final oneTimePending = Hobby(
+        id: '2',
+        name: 'Pending One-Time',
+        color: 0xFF6C3FFF,
+        isOneTime: true,
+        completions: {},
+      );
+      final recurring = Hobby(
+        id: '3',
+        name: 'Recurring',
+        color: 0xFF6C3FFF,
+        isOneTime: false,
+        completions: {
+          '2024-01-01': HobbyCompletion(completed: true),
+        },
+      );
+
+      final allHobbies = [oneTimeCompleted, oneTimePending, recurring];
+
+      // Apply the same filter as daily_tasks_screen.dart
+      final filtered = allHobbies.where((h) {
+        if (!h.isOneTime) return true;
+        return !h.completions.values.any((c) => c.completed);
+      }).toList();
+
+      expect(filtered.length, 2);
+      expect(filtered.any((h) => h.id == '1'), false); // completed one-time hidden
+      expect(filtered.any((h) => h.id == '2'), true); // pending one-time shown
+      expect(filtered.any((h) => h.id == '3'), true); // recurring always shown
+    });
+
+    test('recurring task with completion should NOT be filtered out', () {
+      final recurring = Hobby(
+        id: '1',
+        name: 'Recurring',
+        color: 0xFF6C3FFF,
+        isOneTime: false,
+        completions: {
+          '2024-01-01': HobbyCompletion(completed: true),
+        },
+      );
+
+      final allHobbies = [recurring];
+      final filtered = allHobbies.where((h) {
+        if (!h.isOneTime) return true;
+        return !h.completions.values.any((c) => c.completed);
+      }).toList();
+
+      expect(filtered.length, 1);
     });
   });
 
@@ -362,18 +497,14 @@ void main() {
     });
 
     test('should create incomplete completion', () {
-      final completion = HobbyCompletion(
-        completed: false,
-      );
+      final completion = HobbyCompletion(completed: false);
 
       expect(completion.completed, false);
       expect(completion.completedAt, isNull);
     });
 
     test('should create completion without date', () {
-      final completion = HobbyCompletion(
-        completed: true,
-      );
+      final completion = HobbyCompletion(completed: true);
 
       expect(completion.completed, true);
       expect(completion.completedAt, isNull);
@@ -392,9 +523,7 @@ void main() {
     });
 
     test('should convert to JSON without date', () {
-      final completion = HobbyCompletion(
-        completed: false,
-      );
+      final completion = HobbyCompletion(completed: false);
 
       final json = completion.toJson();
 
@@ -415,9 +544,7 @@ void main() {
     });
 
     test('should create from JSON with missing date', () {
-      final json = {
-        'completed': false,
-      };
+      final json = {'completed': false};
 
       final completion = HobbyCompletion.fromJson(json);
 
@@ -426,10 +553,7 @@ void main() {
     });
 
     test('should create from JSON with null date', () {
-      final json = {
-        'completed': true,
-        'completedAt': null,
-      };
+      final json = {'completed': true, 'completedAt': null};
 
       final completion = HobbyCompletion.fromJson(json);
 

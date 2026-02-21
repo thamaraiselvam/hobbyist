@@ -8,9 +8,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-@GenerateNiceMocks([
-  MockSpec<FirebaseCrashlytics>(),
-])
+@GenerateNiceMocks([MockSpec<FirebaseCrashlytics>()])
 import 'crashlytics_service_test.mocks.dart';
 
 void main() {
@@ -21,8 +19,9 @@ void main() {
 
   // Each test file gets a unique temp directory so concurrent test runs
   // don't collide on the same hobbyist.db file path.
-  final testDir =
-      Directory.systemTemp.createTempSync('hobbyist_crashlytics_test_');
+  final testDir = Directory.systemTemp.createTempSync(
+    'hobbyist_crashlytics_test_',
+  );
 
   setUpAll(() async {
     sqfliteFfiInit();
@@ -30,10 +29,11 @@ void main() {
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/path_provider'),
-            (MethodCall methodCall) async {
-      return testDir.path;
-    });
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async {
+            return testDir.path;
+          },
+        );
   });
 
   setUp(() async {
@@ -48,14 +48,11 @@ void main() {
 
     // Enable telemetry for tests that expect it enabled
     final db = await DatabaseHelper.instance.database;
-    await db.insert(
-        'settings',
-        {
-          'key': 'telemetry_enabled',
-          'value': 'true',
-          'updated_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('settings', {
+      'key': 'telemetry_enabled',
+      'value': 'true',
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   });
 
   tearDown(() {
@@ -77,8 +74,9 @@ void main() {
 
     test('updateCollectionEnabled - enabled', () async {
       // Telemetry defaults to enabled if DB is empty or explicitly true
-      when(mockCrashlytics.setCrashlyticsCollectionEnabled(true))
-          .thenAnswer((_) async {});
+      when(
+        mockCrashlytics.setCrashlyticsCollectionEnabled(true),
+      ).thenAnswer((_) async {});
 
       await service.updateCollectionEnabled();
       verify(mockCrashlytics.setCrashlyticsCollectionEnabled(true)).called(1);
@@ -88,12 +86,21 @@ void main() {
       final exception = Exception('test');
       final stackTrace = StackTrace.current;
 
-      await service.logError(exception, stackTrace,
-          reason: 'test reason', fatal: true);
+      await service.logError(
+        exception,
+        stackTrace,
+        reason: 'test reason',
+        fatal: true,
+      );
 
-      verify(mockCrashlytics.recordError(exception, stackTrace,
-              reason: 'test reason', fatal: true))
-          .called(1);
+      verify(
+        mockCrashlytics.recordError(
+          exception,
+          stackTrace,
+          reason: 'test reason',
+          fatal: true,
+        ),
+      ).called(1);
     });
 
     test('log message when telemetry enabled', () async {
@@ -120,17 +127,15 @@ void main() {
       // Manually insert disabled setting into mocked DB or mocked DB Helper
       // Since CrashlyticsService uses DatabaseHelper.instance, we need to ensure it's initialized correctly.
       final db = await DatabaseHelper.instance.database;
-      await db.insert(
-          'settings',
-          {
-            'key': 'telemetry_enabled',
-            'value': 'false',
-            'updated_at': DateTime.now().millisecondsSinceEpoch,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('settings', {
+        'key': 'telemetry_enabled',
+        'value': 'false',
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
-      when(mockCrashlytics.setCrashlyticsCollectionEnabled(false))
-          .thenAnswer((_) async {});
+      when(
+        mockCrashlytics.setCrashlyticsCollectionEnabled(false),
+      ).thenAnswer((_) async {});
 
       await service.updateCollectionEnabled();
       verify(mockCrashlytics.setCrashlyticsCollectionEnabled(false)).called(1);
@@ -141,8 +146,14 @@ void main() {
       await service.setCustomKey('k', 'v');
       await service.setUserIdentifier('id');
 
-      verifyNever(mockCrashlytics.recordError(any, any,
-          reason: anyNamed('reason'), fatal: anyNamed('fatal')));
+      verifyNever(
+        mockCrashlytics.recordError(
+          any,
+          any,
+          reason: anyNamed('reason'),
+          fatal: anyNamed('fatal'),
+        ),
+      );
       verifyNever(mockCrashlytics.log(any));
       verifyNever(mockCrashlytics.setCustomKey(any, any));
       verifyNever(mockCrashlytics.setUserIdentifier(any));

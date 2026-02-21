@@ -17,12 +17,12 @@ class HobbyService {
   static set instance(HobbyService value) => _instance = value;
 
   HobbyService._internal()
-      : _dbHelper = DatabaseHelper.instance,
-        _notificationService = NotificationService(),
-        _analytics = AnalyticsService(),
-        _performance = PerformanceService(),
-        _crashlytics = CrashlyticsService(),
-        _ratingService = RatingService();
+    : _dbHelper = DatabaseHelper.instance,
+      _notificationService = NotificationService(),
+      _analytics = AnalyticsService(),
+      _performance = PerformanceService(),
+      _crashlytics = CrashlyticsService(),
+      _ratingService = RatingService();
 
   @visibleForTesting
   HobbyService.forTesting({
@@ -32,12 +32,12 @@ class HobbyService {
     PerformanceService? performance,
     CrashlyticsService? crashlytics,
     RatingService? ratingService,
-  })  : _dbHelper = dbHelper ?? DatabaseHelper.instance,
-        _notificationService = notificationService ?? NotificationService(),
-        _analytics = analytics ?? AnalyticsService(),
-        _performance = performance ?? PerformanceService(),
-        _crashlytics = crashlytics ?? CrashlyticsService(),
-        _ratingService = ratingService ?? RatingService();
+  }) : _dbHelper = dbHelper ?? DatabaseHelper.instance,
+       _notificationService = notificationService ?? NotificationService(),
+       _analytics = analytics ?? AnalyticsService(),
+       _performance = performance ?? PerformanceService(),
+       _crashlytics = crashlytics ?? CrashlyticsService(),
+       _ratingService = ratingService ?? RatingService();
 
   final DatabaseHelper _dbHelper;
   final NotificationService _notificationService;
@@ -100,7 +100,7 @@ class HobbyService {
           final trueBestStreak = [
             hobby.bestStreak,
             calculatedBestStreak,
-            hobby.currentStreak
+            hobby.currentStreak,
           ].reduce((a, b) => a > b ? a : b);
 
           // Update if the calculated best streak is higher than stored value
@@ -114,7 +114,8 @@ class HobbyService {
             // Create updated hobby with correct bestStreak
             hobbies.add(hobby.copyWith(bestStreak: trueBestStreak));
             print(
-                '🔧 Fixed bestStreak for ${hobby.name}: ${hobby.bestStreak} -> $trueBestStreak');
+              '🔧 Fixed bestStreak for ${hobby.name}: ${hobby.bestStreak} -> $trueBestStreak',
+            );
           } else {
             hobbies.add(hobby);
           }
@@ -122,8 +123,11 @@ class HobbyService {
 
         return hobbies;
       } catch (e, stackTrace) {
-        await _crashlytics.logError(e, stackTrace,
-            reason: 'Failed to load hobbies');
+        await _crashlytics.logError(
+          e,
+          stackTrace,
+          reason: 'Failed to load hobbies',
+        );
         rethrow;
       }
     });
@@ -135,36 +139,28 @@ class HobbyService {
       final now = DateTime.now().millisecondsSinceEpoch;
 
       // Insert hobby
-      await db.insert(
-        'hobbies',
-        {
-          'id': hobby.id,
-          'name': hobby.name,
-          'notes': hobby.notes,
-          'repeat_mode': hobby.repeatMode,
-          'color': hobby.color,
-          'reminder_time': hobby.reminderTime,
-          'custom_day': hobby.customDay,
-          'best_streak': hobby.bestStreak,
-          'is_one_time': hobby.isOneTime ? 1 : 0,
-          'created_at': now,
-          'updated_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('hobbies', {
+        'id': hobby.id,
+        'name': hobby.name,
+        'notes': hobby.notes,
+        'repeat_mode': hobby.repeatMode,
+        'color': hobby.color,
+        'reminder_time': hobby.reminderTime,
+        'custom_day': hobby.customDay,
+        'best_streak': hobby.bestStreak,
+        'is_one_time': hobby.isOneTime ? 1 : 0,
+        'created_at': now,
+        'updated_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       // Insert completions
       for (var entry in hobby.completions.entries) {
-        await db.insert(
-          'completions',
-          {
-            'hobby_id': hobby.id,
-            'date': entry.key,
-            'completed': entry.value.completed ? 1 : 0,
-            'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await db.insert('completions', {
+          'hobby_id': hobby.id,
+          'date': entry.key,
+          'completed': entry.value.completed ? 1 : 0,
+          'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
       // Track hobby creation in analytics
@@ -184,23 +180,30 @@ class HobbyService {
       if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
         try {
           print(
-              '📅 Scheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
-          final success =
-              await _notificationService.scheduleNotification(hobby);
+            '📅 Scheduling notification for "${hobby.name}" at ${hobby.reminderTime}',
+          );
+          final success = await _notificationService.scheduleNotification(
+            hobby,
+          );
           if (success) {
-            final pending =
-                await _notificationService.getPendingNotifications();
+            final pending = await _notificationService
+                .getPendingNotifications();
             print('✅ Notification scheduled. Total pending: ${pending.length}');
           } else {
             print(
-                '⚠️ Notification scheduling returned false for "${hobby.name}"');
+              '⚠️ Notification scheduling returned false for "${hobby.name}"',
+            );
           }
         } catch (notifError, notifStackTrace) {
           // Log notification error but don't fail the hobby creation
           print(
-              '⚠️ Failed to schedule notification for "${hobby.name}": $notifError');
-          await _crashlytics.logError(notifError, notifStackTrace,
-              reason: 'Failed to schedule notification during hobby creation');
+            '⚠️ Failed to schedule notification for "${hobby.name}": $notifError',
+          );
+          await _crashlytics.logError(
+            notifError,
+            notifStackTrace,
+            reason: 'Failed to schedule notification during hobby creation',
+          );
         }
       }
     } catch (e, stackTrace) {
@@ -240,16 +243,12 @@ class HobbyService {
 
       // Insert updated completions
       for (var entry in hobby.completions.entries) {
-        await db.insert(
-          'completions',
-          {
-            'hobby_id': hobby.id,
-            'date': entry.key,
-            'completed': entry.value.completed ? 1 : 0,
-            'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await db.insert('completions', {
+          'hobby_id': hobby.id,
+          'date': entry.key,
+          'completed': entry.value.completed ? 1 : 0,
+          'completed_at': entry.value.completedAt?.millisecondsSinceEpoch,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
       // Track hobby update in analytics
@@ -263,29 +262,40 @@ class HobbyService {
         await _notificationService.cancelNotification(hobby.id);
         if (hobby.reminderTime != null && hobby.reminderTime!.isNotEmpty) {
           print(
-              '📅 Rescheduling notification for "${hobby.name}" at ${hobby.reminderTime}');
-          final success =
-              await _notificationService.scheduleNotification(hobby);
+            '📅 Rescheduling notification for "${hobby.name}" at ${hobby.reminderTime}',
+          );
+          final success = await _notificationService.scheduleNotification(
+            hobby,
+          );
           if (success) {
-            final pending =
-                await _notificationService.getPendingNotifications();
+            final pending = await _notificationService
+                .getPendingNotifications();
             print(
-                '✅ Notification rescheduled. Total pending: ${pending.length}');
+              '✅ Notification rescheduled. Total pending: ${pending.length}',
+            );
           } else {
             print(
-                '⚠️ Notification rescheduling returned false for "${hobby.name}"');
+              '⚠️ Notification rescheduling returned false for "${hobby.name}"',
+            );
           }
         }
       } catch (notifError, notifStackTrace) {
         // Log notification error but don't fail the hobby update
         print(
-            '⚠️ Failed to reschedule notification for "${hobby.name}": $notifError');
-        await _crashlytics.logError(notifError, notifStackTrace,
-            reason: 'Failed to reschedule notification during hobby update');
+          '⚠️ Failed to reschedule notification for "${hobby.name}": $notifError',
+        );
+        await _crashlytics.logError(
+          notifError,
+          notifStackTrace,
+          reason: 'Failed to reschedule notification during hobby update',
+        );
       }
     } catch (e, stackTrace) {
-      await _crashlytics.logError(e, stackTrace,
-          reason: 'Failed to update hobby');
+      await _crashlytics.logError(
+        e,
+        stackTrace,
+        reason: 'Failed to update hobby',
+      );
       rethrow;
     }
   }
@@ -299,22 +309,24 @@ class HobbyService {
         await _notificationService.cancelNotification(id);
       } catch (notifError, notifStackTrace) {
         print('⚠️ Failed to cancel notification for hobby "$id": $notifError');
-        await _crashlytics.logError(notifError, notifStackTrace,
-            reason: 'Failed to cancel notification during hobby deletion');
+        await _crashlytics.logError(
+          notifError,
+          notifStackTrace,
+          reason: 'Failed to cancel notification during hobby deletion',
+        );
       }
 
       // Track hobby deletion
       await _analytics.logHobbyDeleted(hobbyId: id);
 
       // Delete hobby (completions will be deleted automatically due to CASCADE)
-      await db.delete(
-        'hobbies',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      await db.delete('hobbies', where: 'id = ?', whereArgs: [id]);
     } catch (e, stackTrace) {
-      await _crashlytics.logError(e, stackTrace,
-          reason: 'Failed to delete hobby');
+      await _crashlytics.logError(
+        e,
+        stackTrace,
+        reason: 'Failed to delete hobby',
+      );
       rethrow;
     }
   }
@@ -351,8 +363,9 @@ class HobbyService {
         'completions',
         {
           'completed': isCompleted ? 1 : 0,
-          'completed_at':
-              isCompleted ? DateTime.now().millisecondsSinceEpoch : null,
+          'completed_at': isCompleted
+              ? DateTime.now().millisecondsSinceEpoch
+              : null,
         },
         where: 'hobby_id = ? AND date = ?',
         whereArgs: [hobbyId, date],
@@ -441,23 +454,16 @@ class HobbyService {
 
   Future<void> setSetting(String key, String value) async {
     final db = await _dbHelper.database;
-    await db.insert(
-      'settings',
-      {
-        'key': key,
-        'value': value,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('settings', {
+      'key': key,
+      'value': value,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
 
     // Track settings changes — skip PII keys (never send user data to Firebase)
     const sensitiveSettingKeys = {'userName', 'userEmail', 'userPhoto'};
     if (!sensitiveSettingKeys.contains(key)) {
-      await _analytics.logSettingChanged(
-        settingName: key,
-        settingValue: value,
-      );
+      await _analytics.logSettingChanged(settingName: key, settingValue: value);
     }
   }
 

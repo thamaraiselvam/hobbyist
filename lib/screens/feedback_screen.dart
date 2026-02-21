@@ -114,10 +114,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             children: [
               const Text(
                 'We\'d love to hear your thoughts!',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
               const SizedBox(height: 24),
               // Feedback input
@@ -139,10 +136,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         _remainingChars = 500 - text.length;
                       });
                     },
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                     decoration: const InputDecoration(
                       hintText:
                           'Share your feedback, suggestions, or report issues...',
@@ -188,10 +182,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     key: const Key(TestKeys.feedbackEmailInput),
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                     decoration: const InputDecoration(
                       hintText: 'your@email.com',
                       hintStyle: TextStyle(color: Colors.white38),
@@ -207,10 +198,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               const SizedBox(height: 8),
               const Text(
                 'We\'ll only use this to follow up on your feedback',
-                style: TextStyle(
-                  color: Colors.white38,
-                  fontSize: 11,
-                ),
+                style: TextStyle(color: Colors.white38, fontSize: 11),
               ),
               const SizedBox(height: 32),
               // Submit button
@@ -221,8 +209,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   onPressed: _isSubmitting ? null : _submitFeedback,
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        const Color(0xFF6C3FFF).withValues(alpha: 0.5),
+                    disabledBackgroundColor: const Color(
+                      0xFF6C3FFF,
+                    ).withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -235,8 +224,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text(

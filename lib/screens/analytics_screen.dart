@@ -122,7 +122,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     }
 
     print(
-        '📊 Analytics bestStreak: $maxOverallStreak (calculated from overall completion history)');
+      '📊 Analytics bestStreak: $maxOverallStreak (calculated from overall completion history)',
+    );
     return maxOverallStreak;
   }
 
@@ -294,8 +295,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       case 'Yearly':
         // Show 52 weeks (grouped by week)
         for (int i = 51; i >= 0; i--) {
-          final startOfWeek =
-              now.subtract(Duration(days: now.weekday - 1 + (i * 7)));
+          final startOfWeek = now.subtract(
+            Duration(days: now.weekday - 1 + (i * 7)),
+          );
           int weekCount = 0;
 
           // Count all completions in this week (7 days)
@@ -700,11 +702,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             ),
                           ),
                           SizedBox(width: 4),
-                          Icon(
-                            Icons.star,
-                            color: Color(0xFFFFD700),
-                            size: 22,
-                          ),
+                          Icon(Icons.star, color: Color(0xFFFFD700), size: 22),
                         ],
                       ),
                       Flexible(
@@ -892,16 +890,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final period = label == 'WEEKLY'
         ? 'weekly'
         : label == 'MONTHLY'
-            ? 'monthly'
-            : 'yearly';
+        ? 'monthly'
+        : 'yearly';
     return Expanded(
       child: Semantics(
         identifier: TestKeys.analyticsPeriodButton(period),
         child: GestureDetector(
           key: Key(TestKeys.analyticsPeriodButton(period)),
           onTap: () {
-            setState(() => _selectedPeriod =
-                period[0].toUpperCase() + period.substring(1));
+            setState(
+              () => _selectedPeriod =
+                  period[0].toUpperCase() + period.substring(1),
+            );
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -926,7 +926,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildCompactPeriodButton(
-      String label, bool isSelected, String period) {
+    String label,
+    bool isSelected,
+    String period,
+  ) {
     return Semantics(
       identifier: TestKeys.analyticsPeriodButton(period.toLowerCase()),
       child: GestureDetector(
@@ -963,8 +966,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     }
 
     // Ensure chartData and labels have same length
-    final dataLength =
-        chartData.length < labels.length ? chartData.length : labels.length;
+    final dataLength = chartData.length < labels.length
+        ? chartData.length
+        : labels.length;
     final safeChartData = chartData.take(dataLength).toList();
     final safeLabels = labels.take(dataLength).toList();
 
@@ -1023,11 +1027,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildCompactPeriodButton(
-                        'W', _selectedPeriod == 'Weekly', 'Weekly'),
+                      'W',
+                      _selectedPeriod == 'Weekly',
+                      'Weekly',
+                    ),
                     _buildCompactPeriodButton(
-                        'M', _selectedPeriod == 'Monthly', 'Monthly'),
+                      'M',
+                      _selectedPeriod == 'Monthly',
+                      'Monthly',
+                    ),
                     _buildCompactPeriodButton(
-                        'Y', _selectedPeriod == 'Yearly', 'Yearly'),
+                      'Y',
+                      _selectedPeriod == 'Yearly',
+                      'Yearly',
+                    ),
                   ],
                 ),
               ),
@@ -1076,11 +1089,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children:
-                              List.generate(safeChartData.length, (index) {
+                          children: List.generate(safeChartData.length, (
+                            index,
+                          ) {
                             final value = safeChartData[index];
-                            final barHeight =
-                                scaledMax > 0 ? (value / scaledMax) * 160 : 0;
+                            final barHeight = scaledMax > 0
+                                ? (value / scaledMax) * 160
+                                : 0;
 
                             // Dark, muted colors for better visibility
                             final colors = [
@@ -1102,18 +1117,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                   horizontal: _selectedPeriod == 'Yearly'
                                       ? 0.3
                                       : (_selectedPeriod == 'Monthly'
-                                          ? 0.5
-                                          : 1),
+                                            ? 0.5
+                                            : 1),
                                 ),
                                 child: TweenAnimationBuilder<double>(
                                   duration: Duration(
-                                      milliseconds: 600 + (index * 80)),
+                                    milliseconds: 600 + (index * 80),
+                                  ),
                                   curve: Curves.easeOutCubic,
                                   tween: Tween(
-                                      begin: 0.0,
-                                      end: barHeight
-                                          .clamp(2.0, 160.0)
-                                          .toDouble()),
+                                    begin: 0.0,
+                                    end: barHeight.clamp(2.0, 160.0).toDouble(),
+                                  ),
                                   builder: (context, animatedHeight, child) {
                                     return Container(
                                       width: double.infinity,
@@ -1122,12 +1137,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                         color: barColor,
                                         borderRadius:
                                             const BorderRadius.vertical(
-                                          top: Radius.circular(3),
-                                        ),
+                                              top: Radius.circular(3),
+                                            ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color:
-                                                barColor.withValues(alpha: 0.4),
+                                            color: barColor.withValues(
+                                              alpha: 0.4,
+                                            ),
                                             blurRadius: 2,
                                             offset: const Offset(0, 1),
                                           ),
@@ -1149,10 +1165,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 Row(
                   children: [
                     const SizedBox(
-                        width: 38), // Align with bars (y-axis width + padding)
-                    Expanded(
-                      child: _buildXAxisLabels(safeLabels),
-                    ),
+                      width: 38,
+                    ), // Align with bars (y-axis width + padding)
+                    Expanded(child: _buildXAxisLabels(safeLabels)),
                   ],
                 ),
               ],
@@ -1194,17 +1209,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: labelsToShow
-          .map((label) => Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF71717A),
-                  height: 1.0,
-                ),
-              ))
+          .map(
+            (label) => Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF71717A),
+                height: 1.0,
+              ),
+            ),
+          )
           .toList(),
     );
   }
@@ -1261,10 +1278,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
               const Text(
                 'Last 365 days',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF94A3B8),
-                ),
+                style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
               ),
             ],
           ),
@@ -1283,8 +1297,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 Wrap(
                   spacing: 2,
                   runSpacing: 2,
-                  children:
-                      yearData.map((data) => _buildActivityCell(data)).toList(),
+                  children: yearData
+                      .map((data) => _buildActivityCell(data))
+                      .toList(),
                 ),
                 const SizedBox(height: 16),
                 // Legend - GitHub-style intensity
@@ -1293,10 +1308,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   children: [
                     const Text(
                       'Less',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF71717A),
-                      ),
+                      style: TextStyle(fontSize: 10, color: Color(0xFF71717A)),
                     ),
                     const SizedBox(width: 6),
                     // None
@@ -1351,10 +1363,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     const SizedBox(width: 6),
                     const Text(
                       'More',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF71717A),
-                      ),
+                      style: TextStyle(fontSize: 10, color: Color(0xFF71717A)),
                     ),
                   ],
                 ),
@@ -1371,7 +1380,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final int count = data['count'] ?? 0;
     final date = data['date'] as DateTime;
     final today = DateTime.now();
-    final isToday = date.year == today.year &&
+    final isToday =
+        date.year == today.year &&
         date.month == today.month &&
         date.day == today.day;
 
@@ -1396,10 +1406,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         color: cellColor,
         borderRadius: BorderRadius.circular(2),
         border: isToday
-            ? Border.all(
-                color: Colors.white.withValues(alpha: 0.6),
-                width: 1,
-              )
+            ? Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1)
             : null,
       ),
     );
@@ -1427,17 +1434,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           const SizedBox(height: 8),
           const Text(
             'Last 90 days',
-            style: TextStyle(
-              fontSize: 13,
-              color: Color(0xFF94A3B8),
-            ),
+            style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
           ),
           const SizedBox(height: 16),
           // Show calendar for each hobby
-          ...widget.hobbies.map((hobby) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _buildHobbyCompletionRow(hobby),
-              )),
+          ...widget.hobbies.map(
+            (hobby) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildHobbyCompletionRow(hobby),
+            ),
+          ),
         ],
       ),
     );
@@ -1512,7 +1518,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   if (hobby.currentStreak > 0)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -1542,7 +1550,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     if (hobby.currentStreak > 0) const SizedBox(width: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFD700).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -1576,10 +1586,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           // Show period
           const Text(
             'Last 90 days',
-            style: TextStyle(
-              fontSize: 10,
-              color: Color(0xFF71717A),
-            ),
+            style: TextStyle(fontSize: 10, color: Color(0xFF71717A)),
           ),
           const SizedBox(height: 8),
           // Compact calendar grid
@@ -1614,7 +1621,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     final today = DateTime.now();
     final cellDate = data['date'] as DateTime;
-    final isToday = cellDate.year == today.year &&
+    final isToday =
+        cellDate.year == today.year &&
         cellDate.month == today.month &&
         cellDate.day == today.day;
 
@@ -1625,10 +1633,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         color: cellColor,
         borderRadius: BorderRadius.circular(2),
         border: isToday
-            ? Border.all(
-                color: Colors.white.withValues(alpha: 0.6),
-                width: 1,
-              )
+            ? Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1)
             : null,
       ),
     );
@@ -1675,10 +1680,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1733),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: const Color(0xFF3D3560),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF3D3560), width: 1),
       ),
       child: SafeArea(
         top: false,
@@ -1733,11 +1735,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ],
         ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 30,
-        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 30),
       ),
     );
   }

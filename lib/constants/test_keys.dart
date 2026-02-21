@@ -46,12 +46,8 @@ class TestKeys {
   static const String navSettings = 'bottom_nav_settings';
 
   /// index: 0=home, 1=tasks list, 2=analytics, 3=settings
-  static String navItem(int index) => const [
-        navHome,
-        navTasksList,
-        navAnalytics,
-        navSettings,
-      ][index];
+  static String navItem(int index) =>
+      const [navHome, navTasksList, navAnalytics, navSettings][index];
 
   /// The centre (+) create button in the bottom nav bar.
   static const String addHobbyFab = 'add_hobby_fab';

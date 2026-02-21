@@ -150,27 +150,27 @@ class _TasksListScreenState extends State<TasksListScreen>
                       ),
                     )
                   : _pullToRefreshEnabled
-                      ? RefreshIndicator(
-                          onRefresh: _loadHobbies,
-                          color: const Color(0xFF6C3FFF),
-                          backgroundColor: const Color(0xFF2A2139),
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: filteredHobbies.length,
-                            itemBuilder: (context, index) {
-                              final hobby = filteredHobbies[index];
-                              return _buildTaskCard(hobby);
-                            },
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: filteredHobbies.length,
-                          itemBuilder: (context, index) {
-                            final hobby = filteredHobbies[index];
-                            return _buildTaskCard(hobby);
-                          },
-                        ),
+                  ? RefreshIndicator(
+                      onRefresh: _loadHobbies,
+                      color: const Color(0xFF6C3FFF),
+                      backgroundColor: const Color(0xFF2A2139),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredHobbies.length,
+                        itemBuilder: (context, index) {
+                          final hobby = filteredHobbies[index];
+                          return _buildTaskCard(hobby);
+                        },
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filteredHobbies.length,
+                      itemBuilder: (context, index) {
+                        final hobby = filteredHobbies[index];
+                        return _buildTaskCard(hobby);
+                      },
+                    ),
             ),
           ],
         ),
@@ -227,10 +227,7 @@ class _TasksListScreenState extends State<TasksListScreen>
         ),
         labelColor: Colors.white,
         unselectedLabelColor: Colors.white54,
-        labelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
@@ -265,8 +262,9 @@ class _TasksListScreenState extends State<TasksListScreen>
   }
 
   Widget _buildTaskCard(Hobby hobby) {
-    final totalCompletions =
-        hobby.completions.values.where((c) => c.completed).length;
+    final totalCompletions = hobby.completions.values
+        .where((c) => c.completed)
+        .length;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -325,8 +323,9 @@ class _TasksListScreenState extends State<TasksListScreen>
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B35)
-                                  .withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFFFF6B35,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -359,8 +358,9 @@ class _TasksListScreenState extends State<TasksListScreen>
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700)
-                                  .withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFFFFD700,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -393,22 +393,30 @@ class _TasksListScreenState extends State<TasksListScreen>
               // Edit and delete buttons
               PopupMenuButton(
                 padding: EdgeInsets.zero,
-                icon: const Icon(Icons.more_vert,
-                    color: Colors.white38, size: 22),
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: Colors.white38,
+                  size: 22,
+                ),
                 color: const Color(0xFF2A2738),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 itemBuilder: (context) => [
                   const PopupMenuItem(
                     value: 'edit',
                     child: Row(
                       children: [
-                        Icon(Icons.edit_outlined,
-                            color: Colors.white70, size: 18),
+                        Icon(
+                          Icons.edit_outlined,
+                          color: Colors.white70,
+                          size: 18,
+                        ),
                         SizedBox(width: 10),
-                        Text('Edit',
-                            style:
-                                TextStyle(color: Colors.white70, fontSize: 14)),
+                        Text(
+                          'Edit',
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
                       ],
                     ),
                   ),
@@ -416,12 +424,19 @@ class _TasksListScreenState extends State<TasksListScreen>
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline,
-                            color: Colors.redAccent, size: 18),
+                        Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                          size: 18,
+                        ),
                         SizedBox(width: 10),
-                        Text('Delete',
-                            style: TextStyle(
-                                color: Colors.redAccent, fontSize: 14)),
+                        Text(
+                          'Delete',
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -495,7 +510,8 @@ class _TasksListScreenState extends State<TasksListScreen>
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                  '🗑️ Hobby "$hobbyName" deleted successfully'),
+                                '🗑️ Hobby "$hobbyName" deleted successfully',
+                              ),
                               backgroundColor: Colors.orange,
                               duration: const Duration(seconds: 2),
                             ),
@@ -508,7 +524,8 @@ class _TasksListScreenState extends State<TasksListScreen>
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                  '❌ Error deleting hobby: ${e.toString()}'),
+                                '❌ Error deleting hobby: ${e.toString()}',
+                              ),
                               backgroundColor: Colors.red,
                               duration: const Duration(seconds: 4),
                             ),
@@ -546,18 +563,11 @@ class _TasksListScreenState extends State<TasksListScreen>
                       const SizedBox(height: 2),
                       const Text(
                         'Completed',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: Colors.white54, fontSize: 11),
                       ),
                     ],
                   ),
-                  Container(
-                    width: 1,
-                    height: 30,
-                    color: Colors.white12,
-                  ),
+                  Container(width: 1, height: 30, color: Colors.white12),
                   Column(
                     children: [
                       Text(
@@ -571,18 +581,11 @@ class _TasksListScreenState extends State<TasksListScreen>
                       const SizedBox(height: 2),
                       const Text(
                         'Current',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: Colors.white54, fontSize: 11),
                       ),
                     ],
                   ),
-                  Container(
-                    width: 1,
-                    height: 30,
-                    color: Colors.white12,
-                  ),
+                  Container(width: 1, height: 30, color: Colors.white12),
                   Column(
                     children: [
                       Text(
@@ -596,10 +599,7 @@ class _TasksListScreenState extends State<TasksListScreen>
                       const SizedBox(height: 2),
                       const Text(
                         'Best',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: Colors.white54, fontSize: 11),
                       ),
                     ],
                   ),
@@ -618,10 +618,7 @@ class _TasksListScreenState extends State<TasksListScreen>
       decoration: BoxDecoration(
         color: const Color(0xFF1E1733),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: const Color(0xFF3D3560),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF3D3560), width: 1),
       ),
       child: SafeArea(
         top: false,
@@ -675,11 +672,7 @@ class _TasksListScreenState extends State<TasksListScreen>
             ),
           ],
         ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 30,
-        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 30),
       ),
     );
   }

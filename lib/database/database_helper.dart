@@ -165,7 +165,8 @@ class DatabaseHelper {
     if (oldVersion < 4) {
       // Add best_streak column to hobbies table for tracking max streak (unbounded per FR-014)
       await db.execute(
-          'ALTER TABLE hobbies ADD COLUMN best_streak INTEGER NOT NULL DEFAULT 0');
+        'ALTER TABLE hobbies ADD COLUMN best_streak INTEGER NOT NULL DEFAULT 0',
+      );
 
       // Calculate and set initial best_streak values for existing hobbies
       print('🔄 Migrating: Calculating best streaks for existing hobbies...');
@@ -276,7 +277,8 @@ class DatabaseHelper {
       // Recreate index without priority
       await db.execute('DROP INDEX IF EXISTS idx_hobbies_priority');
       await db.execute(
-          'CREATE INDEX idx_hobbies_created_at ON hobbies(created_at)');
+        'CREATE INDEX idx_hobbies_created_at ON hobbies(created_at)',
+      );
 
       print('✅ Migration complete: Priority column removed');
     }
@@ -303,7 +305,8 @@ class DatabaseHelper {
       // Add is_one_time column to hobbies table
       print('🔄 Migrating: Adding is_one_time column to hobbies...');
       await db.execute(
-          'ALTER TABLE hobbies ADD COLUMN is_one_time INTEGER NOT NULL DEFAULT 0');
+        'ALTER TABLE hobbies ADD COLUMN is_one_time INTEGER NOT NULL DEFAULT 0',
+      );
       print('✅ Migration complete: is_one_time column added');
     }
   }
@@ -323,10 +326,7 @@ class DatabaseHelper {
     // Reset has_seen_landing to false
     await db.update(
       'settings',
-      {
-        'value': 'false',
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      {'value': 'false', 'updated_at': DateTime.now().millisecondsSinceEpoch},
       where: 'key = ?',
       whereArgs: ['has_seen_landing'],
     );

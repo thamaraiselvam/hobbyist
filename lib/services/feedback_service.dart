@@ -13,7 +13,7 @@ class FeedbackService {
   }
 
   FeedbackService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? _createFirestore();
+    : _firestore = firestore ?? _createFirestore();
 
   /// Submit user feedback to Firestore
   /// Returns true if successful, false otherwise

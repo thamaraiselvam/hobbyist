@@ -6,10 +6,7 @@ import '../constants/test_keys.dart';
 class LandingScreen extends StatefulWidget {
   final VoidCallback onGetStarted;
 
-  const LandingScreen({
-    super.key,
-    required this.onGetStarted,
-  });
+  const LandingScreen({super.key, required this.onGetStarted});
 
   @override
   State<LandingScreen> createState() => _LandingScreenState();
@@ -136,11 +133,7 @@ class _LandingScreenState extends State<LandingScreen> {
               color: const Color(0xFF590df2).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF590df2),
-              size: 24,
-            ),
+            child: Icon(icon, color: const Color(0xFF590df2), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(

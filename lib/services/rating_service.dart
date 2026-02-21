@@ -10,7 +10,7 @@ class RatingService {
   final InAppReview _inAppReview;
 
   RatingService({InAppReview? inAppReview})
-      : _inAppReview = inAppReview ?? InAppReview.instance;
+    : _inAppReview = inAppReview ?? InAppReview.instance;
 
   /// Check if we should show rating prompt and show it if conditions are met
   Future<void> checkAndShowRatingPrompt() async {
@@ -52,7 +52,8 @@ class RatingService {
   /// Show the native in-app rating prompt
   Future<void> _showRatingPrompt({required bool isFirstTime}) async {
     debugPrint(
-        '🌟 RatingService: Attempting to show rating prompt (first time: $isFirstTime)');
+      '🌟 RatingService: Attempting to show rating prompt (first time: $isFirstTime)',
+    );
 
     // Check if in-app review is available
     final isAvailable = await _inAppReview.isAvailable();
@@ -85,7 +86,8 @@ class RatingService {
     final newCount = currentCount + 1;
     await prefs.setInt(_keyCompletionCount, newCount);
     debugPrint(
-        '🌟 RatingService: Completion count incremented: $currentCount → $newCount');
+      '🌟 RatingService: Completion count incremented: $currentCount → $newCount',
+    );
   }
 
   /// Mark that user has rated the app

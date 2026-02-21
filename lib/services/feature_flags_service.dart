@@ -18,14 +18,15 @@ class FeatureFlagsService {
   final RemoteConfigService _remoteConfig;
   final AuthService _authService;
 
-  FeatureFlagsService.test(
-      {RemoteConfigService? remoteConfig, AuthService? authService})
-      : _remoteConfig = remoteConfig ?? RemoteConfigService(),
-        _authService = authService ?? AuthService();
+  FeatureFlagsService.test({
+    RemoteConfigService? remoteConfig,
+    AuthService? authService,
+  }) : _remoteConfig = remoteConfig ?? RemoteConfigService(),
+       _authService = authService ?? AuthService();
 
   FeatureFlagsService._internal()
-      : _remoteConfig = RemoteConfigService(),
-        _authService = AuthService();
+    : _remoteConfig = RemoteConfigService(),
+      _authService = AuthService();
 
   Map<String, dynamic>? _developerSettings;
 
@@ -38,9 +39,11 @@ class FeatureFlagsService {
       if (configJson.isNotEmpty) {
         _developerSettings = jsonDecode(configJson) as Map<String, dynamic>;
         print(
-            '✅ Developer settings loaded: ${_developerSettings?.keys.join(', ')}');
+          '✅ Developer settings loaded: ${_developerSettings?.keys.join(', ')}',
+        );
         print(
-            '📧 Available emails: ${(_developerSettings!['feature_access_by_email'] as Map<String, dynamic>?)?.keys.join(', ')}');
+          '📧 Available emails: ${(_developerSettings!['feature_access_by_email'] as Map<String, dynamic>?)?.keys.join(', ')}',
+        );
       } else {
         _developerSettings = null;
         print('⚠️ No allow_developer_settings found in Remote Config');

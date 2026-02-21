@@ -154,11 +154,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
   Future<void> _loadHobbies({bool preserveScrollPosition = true}) async {
     // Only preserve scroll position if we're on home screen (index 0) and requested
-    final shouldPreserveScroll = preserveScrollPosition &&
+    final shouldPreserveScroll =
+        preserveScrollPosition &&
         _selectedIndex == 0 &&
         _dayScrollController.hasClients;
-    final currentScrollOffset =
-        shouldPreserveScroll ? _dayScrollController.offset : null;
+    final currentScrollOffset = shouldPreserveScroll
+        ? _dayScrollController.offset
+        : null;
 
     setState(() => _loading = true);
     final allHobbies = await _service.loadHobbies();
@@ -234,8 +236,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     // Prevent completing tasks in the future
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    final selectedDateOnly =
-        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final selectedDateOnly = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+    );
 
     if (selectedDateOnly.isAfter(todayDate)) {
       // Show message that future tasks cannot be completed
@@ -256,8 +261,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     final isCompleted = hobby.completions[selectedDay]?.completed ?? false;
 
     // Update UI immediately for responsive feel
-    final updatedCompletions =
-        Map<String, HobbyCompletion>.from(hobby.completions);
+    final updatedCompletions = Map<String, HobbyCompletion>.from(
+      hobby.completions,
+    );
     updatedCompletions[selectedDay] = HobbyCompletion(
       completed: !isCompleted,
       completedAt: !isCompleted ? DateTime.now() : null,
@@ -335,9 +341,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   int get completedToday {
     final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
-        .where((h) =>
-            _isHobbyAvailableForDate(h, _selectedDate) &&
-            h.completions[today]?.completed == true)
+        .where(
+          (h) =>
+              _isHobbyAvailableForDate(h, _selectedDate) &&
+              h.completions[today]?.completed == true,
+        )
         .length;
   }
 
@@ -357,18 +365,22 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   List<Hobby> get inProgressTasks {
     final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
-        .where((h) =>
-            _isHobbyAvailableForDate(h, _selectedDate) &&
-            h.completions[today]?.completed != true)
+        .where(
+          (h) =>
+              _isHobbyAvailableForDate(h, _selectedDate) &&
+              h.completions[today]?.completed != true,
+        )
         .toList();
   }
 
   List<Hobby> get completedTasks {
     final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
-        .where((h) =>
-            _isHobbyAvailableForDate(h, _selectedDate) &&
-            h.completions[today]?.completed == true)
+        .where(
+          (h) =>
+              _isHobbyAvailableForDate(h, _selectedDate) &&
+              h.completions[today]?.completed == true,
+        )
         .toList();
   }
 
@@ -421,8 +433,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                             backgroundColor: const Color(0xFF2A2139),
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -433,8 +446,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                     const Center(
                                       child: Column(
                                         children: [
-                                          Icon(Icons.task_alt,
-                                              size: 80, color: Colors.white24),
+                                          Icon(
+                                            Icons.task_alt,
+                                            size: 80,
+                                            color: Colors.white24,
+                                          ),
                                           SizedBox(height: 16),
                                           Text(
                                             'Welcome to Hobbyist! 👋',
@@ -515,8 +531,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                             _isFutureDate()
                                                 ? 'Upcoming Tasks'
                                                 : (_isToday()
-                                                    ? 'In Progress'
-                                                    : 'Not Completed'),
+                                                      ? 'In Progress'
+                                                      : 'Not Completed'),
                                             style: const TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
@@ -534,8 +550,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                         ],
                                       ),
                                       const SizedBox(height: 8),
-                                      ...inProgressTasks.map((hobby) =>
-                                          _buildTaskCard(hobby, false)),
+                                      ...inProgressTasks.map(
+                                        (hobby) => _buildTaskCard(hobby, false),
+                                      ),
                                       const SizedBox(height: 12),
                                     ],
                                     if (completedTasks.isNotEmpty) ...[
@@ -550,8 +567,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                         ),
                                       ),
                                       const SizedBox(height: 8),
-                                      ...completedTasks.map((hobby) =>
-                                          _buildTaskCard(hobby, true)),
+                                      ...completedTasks.map(
+                                        (hobby) => _buildTaskCard(hobby, true),
+                                      ),
                                       const SizedBox(height: 12),
                                     ],
                                   ],
@@ -575,8 +593,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                   const Center(
                                     child: Column(
                                       children: [
-                                        Icon(Icons.task_alt,
-                                            size: 80, color: Colors.white24),
+                                        Icon(
+                                          Icons.task_alt,
+                                          size: 80,
+                                          color: Colors.white24,
+                                        ),
                                         SizedBox(height: 16),
                                         Text(
                                           'Welcome to Hobbyist! 👋',
@@ -657,8 +678,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                           _isFutureDate()
                                               ? 'Upcoming Tasks'
                                               : (_isToday()
-                                                  ? 'In Progress'
-                                                  : 'Not Completed'),
+                                                    ? 'In Progress'
+                                                    : 'Not Completed'),
                                           style: const TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold,
@@ -676,8 +697,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                       ],
                                     ),
                                     const SizedBox(height: 8),
-                                    ...inProgressTasks.map((hobby) =>
-                                        _buildTaskCard(hobby, false)),
+                                    ...inProgressTasks.map(
+                                      (hobby) => _buildTaskCard(hobby, false),
+                                    ),
                                     const SizedBox(height: 12),
                                   ],
                                   if (completedTasks.isNotEmpty &&
@@ -696,12 +718,16 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                         ),
                                         Container(
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 10, vertical: 4),
+                                            horizontal: 10,
+                                            vertical: 4,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF10B981)
-                                                .withValues(alpha: 0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
+                                            color: const Color(
+                                              0xFF10B981,
+                                            ).withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
                                           child: Row(
                                             children: [
@@ -726,7 +752,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     ...completedTasks.map(
-                                        (hobby) => _buildTaskCard(hobby, true)),
+                                      (hobby) => _buildTaskCard(hobby, true),
+                                    ),
                                   ],
                                 ],
                                 // Quote at the bottom (always)
@@ -838,7 +865,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2A2238),
                       borderRadius: BorderRadius.circular(12),
@@ -1020,8 +1049,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               value: progressPercentage / 100,
               minHeight: 12,
               backgroundColor: const Color(0xFF2A2738),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF6C3FFF)),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF6C3FFF),
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -1061,8 +1091,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     // Check if selected date is in the future
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    final selectedDateOnly =
-        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final selectedDateOnly = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+    );
     final isFutureDate = selectedDateOnly.isAfter(todayDate);
 
     return AnimatedContainer(
@@ -1090,7 +1123,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                   onTap: isFutureDate
                       ? null
                       : () =>
-                          _toggleToday(hobby), // Disable tap for future dates
+                            _toggleToday(hobby), // Disable tap for future dates
                   size: 24,
                   color: Color(hobby.color),
                 ),
@@ -1108,8 +1141,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                       color: Colors.white,
                       fontSize: 14.5,
                       fontWeight: FontWeight.bold,
-                      decoration:
-                          isCompleted ? TextDecoration.lineThrough : null,
+                      decoration: isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
                       decorationColor: Colors.white38,
                       decorationThickness: 1.5,
                     ),
@@ -1125,8 +1159,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           style: TextStyle(
                             color: const Color(0xFF71717A),
                             fontSize: 12,
-                            decoration:
-                                isCompleted ? TextDecoration.lineThrough : null,
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
                             decorationColor: Colors.white38,
                           ),
                           maxLines: 1,
@@ -1144,8 +1179,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B35)
-                                  .withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFFFF6B35,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1177,8 +1213,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700)
-                                  .withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFFFFD700,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1212,21 +1249,30 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
             PopupMenuButton(
               key: Key(TestKeys.hobbyMenu(hobby.id)),
               padding: EdgeInsets.zero,
-              icon:
-                  const Icon(Icons.more_vert, color: Colors.white38, size: 22),
+              icon: const Icon(
+                Icons.more_vert,
+                color: Colors.white38,
+                size: 22,
+              ),
               color: const Color(0xFF2A2738),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit_outlined,
-                          color: Colors.white70, size: 18),
+                      Icon(
+                        Icons.edit_outlined,
+                        color: Colors.white70,
+                        size: 18,
+                      ),
                       SizedBox(width: 10),
-                      Text('Edit',
-                          style: TextStyle(color: Colors.white, fontSize: 14)),
+                      Text(
+                        'Edit',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
                     ],
                   ),
                 ),
@@ -1234,12 +1280,16 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline,
-                          color: Colors.redAccent, size: 18),
+                      Icon(
+                        Icons.delete_outline,
+                        color: Colors.redAccent,
+                        size: 18,
+                      ),
                       SizedBox(width: 10),
-                      Text('Delete',
-                          style:
-                              TextStyle(color: Colors.redAccent, fontSize: 14)),
+                      Text(
+                        'Delete',
+                        style: TextStyle(color: Colors.redAccent, fontSize: 14),
+                      ),
                     ],
                   ),
                 ),
@@ -1320,7 +1370,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                '🗑️ Hobby "$hobbyName" deleted successfully'),
+                              '🗑️ Hobby "$hobbyName" deleted successfully',
+                            ),
                             backgroundColor: Colors.orange,
                             duration: const Duration(seconds: 2),
                           ),
@@ -1337,8 +1388,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content:
-                                Text('❌ Error deleting hobby: ${e.toString()}'),
+                            content: Text(
+                              '❌ Error deleting hobby: ${e.toString()}',
+                            ),
                             backgroundColor: Colors.red,
                             duration: const Duration(seconds: 4),
                           ),
@@ -1361,10 +1413,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       decoration: BoxDecoration(
         color: const Color(0xFF1E1733),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: const Color(0xFF3D3560),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF3D3560), width: 1),
       ),
       child: SafeArea(
         top: false,
@@ -1426,11 +1475,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
               ),
             ],
           ),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 30,
-          ),
+          child: const Icon(Icons.add, color: Colors.white, size: 30),
         ),
       ),
     );
@@ -1523,8 +1568,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   bool _isFutureDate() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final selected =
-        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final selected = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+    );
     return selected.isAfter(today);
   }
 }

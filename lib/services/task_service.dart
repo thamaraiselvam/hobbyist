@@ -15,7 +15,7 @@ class TaskService {
 
   @visibleForTesting
   TaskService.forTesting({DatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? DatabaseHelper.instance;
+    : _dbHelper = dbHelper ?? DatabaseHelper.instance;
 
   final DatabaseHelper _dbHelper;
 
@@ -23,10 +23,7 @@ class TaskService {
   Future<List<Task>> loadTasks() async {
     try {
       final db = await _dbHelper.database;
-      final rows = await db.query(
-        'tasks',
-        orderBy: 'created_at DESC',
-      );
+      final rows = await db.query('tasks', orderBy: 'created_at DESC');
       return rows.map(Task.fromMap).toList();
     } catch (e, st) {
       print('❌ TaskService.loadTasks error: $e\n$st');
@@ -73,11 +70,7 @@ class TaskService {
   Future<void> deleteTask(String id) async {
     try {
       final db = await _dbHelper.database;
-      await db.delete(
-        'tasks',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      await db.delete('tasks', where: 'id = ?', whereArgs: [id]);
       print('✅ Task deleted: $id');
     } catch (e, st) {
       print('❌ TaskService.deleteTask error: $e\n$st');
@@ -89,11 +82,7 @@ class TaskService {
   Future<Task> toggleTask(String id) async {
     try {
       final db = await _dbHelper.database;
-      final rows = await db.query(
-        'tasks',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      final rows = await db.query('tasks', where: 'id = ?', whereArgs: [id]);
       if (rows.isEmpty) {
         throw Exception('Task not found: $id');
       }
@@ -110,7 +99,8 @@ class TaskService {
         whereArgs: [id],
       );
       print(
-          '✅ Task toggled: ${updated.title} → ${updated.isCompleted ? "done" : "pending"}');
+        '✅ Task toggled: ${updated.title} → ${updated.isCompleted ? "done" : "pending"}',
+      );
       return updated;
     } catch (e, st) {
       print('❌ TaskService.toggleTask error: $e\n$st');

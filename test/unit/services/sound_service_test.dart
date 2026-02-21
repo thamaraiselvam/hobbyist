@@ -6,10 +6,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:flutter/services.dart';
 
-@GenerateNiceMocks([
-  MockSpec<HobbyService>(),
-  MockSpec<AnalyticsService>(),
-])
+@GenerateNiceMocks([MockSpec<HobbyService>(), MockSpec<AnalyticsService>()])
 import 'sound_service_test.mocks.dart';
 
 void main() {
@@ -22,13 +19,14 @@ void main() {
 
   setUpAll(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(SystemChannels.platform,
-            (MethodCall methodCall) async {
-      if (methodCall.method == 'HapticFeedback.vibrate') {
-        hapticCalls.add(methodCall);
-      }
-      return null;
-    });
+        .setMockMethodCallHandler(SystemChannels.platform, (
+          MethodCall methodCall,
+        ) async {
+          if (methodCall.method == 'HapticFeedback.vibrate') {
+            hapticCalls.add(methodCall);
+          }
+          return null;
+        });
   });
 
   setUp(() {
@@ -61,8 +59,9 @@ void main() {
     });
 
     test('playCompletionSound when enabled', () async {
-      when(mockHobbyService.getSetting('completion_sound'))
-          .thenAnswer((_) async => 'true');
+      when(
+        mockHobbyService.getSetting('completion_sound'),
+      ).thenAnswer((_) async => 'true');
 
       await soundService.playCompletionSound();
 
@@ -77,8 +76,9 @@ void main() {
     });
 
     test('playCompletionSound when disabled', () async {
-      when(mockHobbyService.getSetting('completion_sound'))
-          .thenAnswer((_) async => 'false');
+      when(
+        mockHobbyService.getSetting('completion_sound'),
+      ).thenAnswer((_) async => 'false');
 
       await soundService.playCompletionSound();
 
@@ -86,19 +86,23 @@ void main() {
       verifyNever(mockAnalyticsService.logCompletionSound());
     });
 
-    test('playCompletionSound when setting is null (default enabled)',
-        () async {
-      when(mockHobbyService.getSetting('completion_sound'))
-          .thenAnswer((_) async => null);
+    test(
+      'playCompletionSound when setting is null (default enabled)',
+      () async {
+        when(
+          mockHobbyService.getSetting('completion_sound'),
+        ).thenAnswer((_) async => null);
 
-      await soundService.playCompletionSound();
+        await soundService.playCompletionSound();
 
-      expect(hapticCalls.length, 2);
-    });
+        expect(hapticCalls.length, 2);
+      },
+    );
 
     test('Error handling in playCompletionSound', () async {
-      when(mockHobbyService.getSetting('completion_sound'))
-          .thenThrow(Exception('DB Error'));
+      when(
+        mockHobbyService.getSetting('completion_sound'),
+      ).thenThrow(Exception('DB Error'));
 
       // Should not throw because of try-catch in SoundService
       await expectLater(soundService.playCompletionSound(), completes);
@@ -106,30 +110,33 @@ void main() {
     });
 
     test('Error handling in _playHapticFeedback', () async {
-      when(mockHobbyService.getSetting('completion_sound'))
-          .thenAnswer((_) async => 'true');
+      when(
+        mockHobbyService.getSetting('completion_sound'),
+      ).thenAnswer((_) async => 'true');
 
       // Force error in haptics by setting a failing handler
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(const MethodChannel('flutter/platform'),
-              (MethodCall methodCall) async {
-        if (methodCall.method.startsWith('HapticFeedback.')) {
-          throw Exception('Haptic Error');
-        }
-        return null;
-      });
+          .setMockMethodCallHandler(const MethodChannel('flutter/platform'), (
+            MethodCall methodCall,
+          ) async {
+            if (methodCall.method.startsWith('HapticFeedback.')) {
+              throw Exception('Haptic Error');
+            }
+            return null;
+          });
 
       await expectLater(soundService.playCompletionSound(), completes);
 
       // Restore handler
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(const MethodChannel('flutter/platform'),
-              (MethodCall methodCall) async {
-        if (methodCall.method.startsWith('HapticFeedback.')) {
-          hapticCalls.add(methodCall);
-        }
-        return null;
-      });
+          .setMockMethodCallHandler(const MethodChannel('flutter/platform'), (
+            MethodCall methodCall,
+          ) async {
+            if (methodCall.method.startsWith('HapticFeedback.')) {
+              hapticCalls.add(methodCall);
+            }
+            return null;
+          });
     });
 
     test('dispose does nothing', () {

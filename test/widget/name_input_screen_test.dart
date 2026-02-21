@@ -15,10 +15,11 @@ void main() async {
     // Mock path_provider
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/path_provider'),
-            (MethodCall methodCall) async {
-      return '.';
-    });
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async {
+            return '.';
+          },
+        );
 
     await Firebase.initializeApp();
 
@@ -31,100 +32,72 @@ void main() async {
       SharedPreferences.setMockInitialValues({});
     });
 
-    testWidgets('should display name input screen',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: NameInputScreen(),
-        ),
-      );
+    testWidgets('should display name input screen', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: NameInputScreen()));
 
       expect(find.text('What should we call you?'), findsOneWidget);
-      expect(find.text('Set a display name for your hobby profile.'),
-          findsOneWidget);
+      expect(
+        find.text('Set a display name for your hobby profile.'),
+        findsOneWidget,
+      );
       expect(find.byType(TextField), findsOneWidget);
       expect(find.text('Start My Journey'), findsOneWidget);
     });
 
-    testWidgets('should disable button when text is empty',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: NameInputScreen(),
-        ),
-      );
+    testWidgets('should disable button when text is empty', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: NameInputScreen()));
 
-      final button = tester.widget<ElevatedButton>(
-        find.byType(ElevatedButton),
-      );
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
 
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('should enable button when text is entered',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: NameInputScreen(),
-        ),
-      );
+    testWidgets('should enable button when text is entered', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: NameInputScreen()));
 
       await tester.enterText(find.byType(TextField), 'Test User');
       await tester.pump();
 
-      final button = tester.widget<ElevatedButton>(
-        find.byType(ElevatedButton),
-      );
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
 
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('should not enable button with only whitespace',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: NameInputScreen(),
-        ),
-      );
+    testWidgets('should not enable button with only whitespace', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: NameInputScreen()));
 
       await tester.enterText(find.byType(TextField), '   ');
       await tester.pump();
 
-      final button = tester.widget<ElevatedButton>(
-        find.byType(ElevatedButton),
-      );
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
 
       expect(button.onPressed, isNull);
     });
 
     testWidgets('should have correct hint text', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: NameInputScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: NameInputScreen()));
 
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.decoration?.hintText, 'e.g. Tham');
     });
 
     testWidgets('should capitalize words', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: NameInputScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: NameInputScreen()));
 
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.textCapitalization, TextCapitalization.words);
     });
 
     testWidgets('should autofocus text field', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: NameInputScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: NameInputScreen()));
 
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.autofocus, true);

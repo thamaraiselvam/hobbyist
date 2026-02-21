@@ -52,11 +52,13 @@ class RemoteConfigService {
     });
 
     // Configure fetch and cache settings
-    await _remoteConfig!.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(seconds: 60),
-      minimumFetchInterval:
-          Duration.zero, // Fetch on every app launch (development mode)
-    ));
+    await _remoteConfig!.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(seconds: 60),
+        minimumFetchInterval:
+            Duration.zero, // Fetch on every app launch (development mode)
+      ),
+    );
 
     // Fetch and activate new values
     try {
@@ -67,7 +69,8 @@ class RemoteConfigService {
       // Debug: Print actual value of allow_developer_settings
       final devSettings = _remoteConfig!.getString('allow_developer_settings');
       print(
-          '🔧 allow_developer_settings value: ${devSettings.isEmpty ? "(empty)" : devSettings.substring(0, devSettings.length > 100 ? 100 : devSettings.length)}...');
+        '🔧 allow_developer_settings value: ${devSettings.isEmpty ? "(empty)" : devSettings.substring(0, devSettings.length > 100 ? 100 : devSettings.length)}...',
+      );
 
       print('🔧 Remote Config initialized and activated');
     } catch (e) {

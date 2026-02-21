@@ -885,6 +885,9 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                   ],
                                 ),
                                 Switch(
+                                  key: const Key(
+                                    TestKeys.addHobbyOneTimeToggle,
+                                  ),
                                   value: _isOneTime,
                                   onChanged: (value) {
                                     setState(() {

@@ -86,18 +86,14 @@ class AnalyticsService {
     if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'user_onboarding_complete',
-      parameters: {
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      },
+      parameters: {'timestamp': DateTime.now().millisecondsSinceEpoch},
     );
   }
 
   /// Track landing page view
   Future<void> logLandingView() async {
     if (!await _isTelemetryEnabled()) return;
-    await _analytics?.logEvent(
-      name: 'landing_page_viewed',
-    );
+    await _analytics?.logEvent(name: 'landing_page_viewed');
   }
 
   // ========================
@@ -135,10 +131,7 @@ class AnalyticsService {
 
     if (repeatMode != null) params['repeat_mode'] = repeatMode;
 
-    await _analytics?.logEvent(
-      name: 'hobby_updated',
-      parameters: params,
-    );
+    await _analytics?.logEvent(name: 'hobby_updated', parameters: params);
   }
 
   /// Track hobby deletion
@@ -203,9 +196,7 @@ class AnalyticsService {
   /// Track completion sound played
   Future<void> logCompletionSound() async {
     if (!await _isTelemetryEnabled()) return;
-    await _analytics?.logEvent(
-      name: 'completion_sound_played',
-    );
+    await _analytics?.logEvent(name: 'completion_sound_played');
   }
 
   // ========================
@@ -217,9 +208,7 @@ class AnalyticsService {
     if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'analytics_viewed',
-      parameters: {
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      },
+      parameters: {'timestamp': DateTime.now().millisecondsSinceEpoch},
     );
   }
 
@@ -242,9 +231,7 @@ class AnalyticsService {
   /// Track quote displayed
   Future<void> logQuoteDisplayed() async {
     if (!await _isTelemetryEnabled()) return;
-    await _analytics?.logEvent(
-      name: 'quote_displayed',
-    );
+    await _analytics?.logEvent(name: 'quote_displayed');
   }
 
   // ========================
@@ -319,9 +306,7 @@ class AnalyticsService {
     if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'first_hobby_created',
-      parameters: {
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      },
+      parameters: {'timestamp': DateTime.now().millisecondsSinceEpoch},
     );
   }
 
@@ -330,9 +315,7 @@ class AnalyticsService {
     if (!await _isTelemetryEnabled()) return;
     await _analytics?.logEvent(
       name: 'first_completion',
-      parameters: {
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      },
+      parameters: {'timestamp': DateTime.now().millisecondsSinceEpoch},
     );
   }
 }
