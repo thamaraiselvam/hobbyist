@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       dbPath,
-      version: 5,
+      version: 6,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -74,6 +74,20 @@ class DatabaseHelper {
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL,
         updated_at INTEGER NOT NULL
+      )
+    ''');
+
+    // Create tasks table (one-time tasks)
+    await db.execute('''
+      CREATE TABLE tasks (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        due_date INTEGER,
+        priority TEXT NOT NULL DEFAULT 'medium',
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        completed_at INTEGER
       )
     ''');
 
@@ -264,6 +278,24 @@ class DatabaseHelper {
           'CREATE INDEX idx_hobbies_created_at ON hobbies(created_at)');
 
       print('✅ Migration complete: Priority column removed');
+    }
+
+    if (oldVersion < 6) {
+      // Add tasks table for one-time task management
+      print('🔄 Migrating: Adding tasks table...');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          due_date INTEGER,
+          priority TEXT NOT NULL DEFAULT 'medium',
+          is_completed INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          completed_at INTEGER
+        )
+      ''');
+      print('✅ Migration complete: tasks table added');
     }
   }
 

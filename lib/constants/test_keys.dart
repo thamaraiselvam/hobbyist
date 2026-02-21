@@ -25,6 +25,7 @@ class TestKeys {
   // ─── ADD HOBBY SCREEN ────────────────────────────────────────────────────
   static const String addHobbyNameInput = 'hobby_name_input';
   static const String addHobbyNotifyToggle = 'notify_toggle';
+  static const String addHobbyOneTimeToggle = 'one_time_toggle';
   static const String addHobbyReminderPicker = 'reminder_time_picker';
   static const String addHobbySubmitButton = 'create_hobby_button';
 
@@ -54,6 +55,12 @@ class TestKeys {
 
   /// The centre (+) create button in the bottom nav bar.
   static const String addHobbyFab = 'add_hobby_fab';
+
+  // ─── ONE-TIME TASKS SCREEN ───────────────────────────────────────────────
+  /// ⚠️ taskId = task.id (UUID string), NOT task.title
+  static String taskItem(String taskId) => 'task_item_$taskId';
+  static String taskItemCheckbox(String taskId) => 'task_item_checkbox_$taskId';
+  static String taskItemMenu(String taskId) => 'task_item_menu_$taskId';
 
   // ─── DAILY TASKS SCREEN ──────────────────────────────────────────────────
   static const String streakBadge = 'streak_badge';

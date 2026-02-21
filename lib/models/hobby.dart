@@ -9,6 +9,7 @@ class Hobby {
   final String? reminderTime; // Time in HH:mm format (e.g., "09:00")
   final int? customDay; // For weekly: 0-6 (Mon-Sun), For monthly: 1-31
   final int bestStreak; // Max historical streak (unbounded per FR-014)
+  final bool isOneTime; // If true, task disappears after first completion
 
   Hobby({
     required this.id,
@@ -21,6 +22,7 @@ class Hobby {
     this.reminderTime,
     this.customDay,
     this.bestStreak = 0,
+    this.isOneTime = false,
   }) : completions = completions ?? {};
 
   int get currentStreak {
@@ -114,6 +116,7 @@ class Hobby {
         'createdAt': createdAt?.toIso8601String(),
         'reminderTime': reminderTime,
         'bestStreak': bestStreak,
+        'isOneTime': isOneTime,
       };
 
   factory Hobby.fromJson(Map<String, dynamic> json) => Hobby(
@@ -131,6 +134,7 @@ class Hobby {
             : null,
         reminderTime: json['reminderTime'],
         bestStreak: json['bestStreak'] ?? 0,
+        isOneTime: json['isOneTime'] as bool? ?? false,
       );
 
   Hobby copyWith({
@@ -143,6 +147,7 @@ class Hobby {
     String? reminderTime,
     int? customDay,
     int? bestStreak,
+    bool? isOneTime,
   }) =>
       Hobby(
         id: id,
@@ -155,6 +160,7 @@ class Hobby {
         reminderTime: reminderTime ?? this.reminderTime,
         customDay: customDay ?? this.customDay,
         bestStreak: bestStreak ?? this.bestStreak,
+        isOneTime: isOneTime ?? this.isOneTime,
       );
 }
 

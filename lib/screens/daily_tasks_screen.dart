@@ -161,7 +161,12 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         shouldPreserveScroll ? _dayScrollController.offset : null;
 
     setState(() => _loading = true);
-    final hobbies = await _service.loadHobbies();
+    final allHobbies = await _service.loadHobbies();
+    // Filter out one-time tasks that have been completed at any point
+    final hobbies = allHobbies.where((h) {
+      if (!h.isOneTime) return true;
+      return !h.completions.values.any((c) => c.completed);
+    }).toList();
     setState(() {
       _hobbies = hobbies;
       _loading = false;
