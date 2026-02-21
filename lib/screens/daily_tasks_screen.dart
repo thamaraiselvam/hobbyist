@@ -348,6 +348,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     return _hobbies
         .where(
           (h) =>
+              !h.isOneTime &&
               _isHobbyAvailableForDate(h, _selectedDate) &&
               h.completions[today]?.completed == true,
         )
@@ -356,7 +357,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
   int get totalTasksForSelectedDate {
     return _hobbies
-        .where((h) => _isHobbyAvailableForDate(h, _selectedDate))
+        .where(
+          (h) => !h.isOneTime && _isHobbyAvailableForDate(h, _selectedDate),
+        )
         .length;
   }
 
@@ -367,26 +370,22 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     return (completed / totalTasks * 100).toDouble();
   }
 
+  /// Regular (recurring) hobbies pending for the selected date.
   List<Hobby> get inProgressTasks {
     final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return _hobbies
         .where(
           (h) =>
+              !h.isOneTime &&
               _isHobbyAvailableForDate(h, _selectedDate) &&
               h.completions[today]?.completed != true,
         )
         .toList();
   }
 
-  List<Hobby> get completedTasks {
-    final today = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return _hobbies
-        .where(
-          (h) =>
-              _isHobbyAvailableForDate(h, _selectedDate) &&
-              h.completions[today]?.completed == true,
-        )
-        .toList();
+  /// Pending one-time tasks (not date-filtered — they show until completed).
+  List<Hobby> get pendingOneTimeTasks {
+    return _hobbies.where((h) => h.isOneTime).toList();
   }
 
   @override
@@ -441,337 +440,215 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  // Empty state: No hobbies at all
-                                  if (_hobbies.isEmpty) ...[
-                                    const SizedBox(height: 80),
-                                    const Center(
-                                      child: Column(
-                                        children: [
-                                          Icon(
-                                            Icons.task_alt,
-                                            size: 80,
-                                            color: Colors.white24,
-                                          ),
-                                          SizedBox(height: 16),
-                                          Text(
-                                            'Welcome to Hobbyist! 👋',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          SizedBox(height: 12),
-                                          Text(
-                                            'No hobbies yet',
-                                            style: TextStyle(
-                                              color: Colors.white54,
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          SizedBox(height: 8),
-                                          Text(
-                                            'Tap the + button below to create your first hobby\nand start building your habit streak!',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              color: Colors.white38,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 120),
-                                  ]
-                                  // Check if there are tasks for this day
-                                  else if (totalTasksForSelectedDate == 0) ...[
-                                    // No tasks for this day - show centered message
-                                    const SizedBox(height: 120),
-                                    Center(
-                                      child: Column(
-                                        children: [
-                                          const Icon(
-                                            Icons.event_available,
-                                            size: 80,
-                                            color: Colors.white24,
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            _isToday()
-                                                ? 'No tasks for today'
-                                                : 'No tasks for this day',
-                                            style: const TextStyle(
-                                              color: Colors.white54,
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            _isToday()
-                                                ? 'Enjoy your free day!'
-                                                : 'No hobbies scheduled for this day',
-                                            style: const TextStyle(
-                                              color: Colors.white38,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 120),
-                                  ] else ...[
-                                    // Has tasks - show normal layout
-                                    if (inProgressTasks.isNotEmpty) ...[
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            _isFutureDate()
-                                                ? 'Upcoming Tasks'
-                                                : (_isToday()
-                                                      ? 'In Progress'
-                                                      : 'Not Completed'),
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${inProgressTasks.length} Pending',
-                                            style: const TextStyle(
-                                              color: Color(0xFF8B5CF6),
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ...inProgressTasks.map(
-                                        (hobby) => _buildTaskCard(hobby, false),
-                                      ),
-                                      const SizedBox(height: 12),
-                                    ],
-                                    if (completedTasks.isNotEmpty) ...[
-                                      Text(
-                                        _isToday()
-                                            ? 'Completed Today'
-                                            : 'Completed',
-                                        style: const TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ...completedTasks.map(
-                                        (hobby) => _buildTaskCard(hobby, true),
-                                      ),
-                                      const SizedBox(height: 12),
-                                    ],
-                                  ],
-                                  // Quote at the bottom (always)
-                                  _buildQuoteSection(),
-                                  const SizedBox(height: 16),
-                                ],
-                              ),
+                              child: _buildScrollContent(),
                             ),
                           )
                         : SingleChildScrollView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                // Empty state: No hobbies at all
-                                if (_hobbies.isEmpty) ...[
-                                  const SizedBox(height: 80),
-                                  const Center(
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.task_alt,
-                                          size: 80,
-                                          color: Colors.white24,
-                                        ),
-                                        SizedBox(height: 16),
-                                        Text(
-                                          'Welcome to Hobbyist! 👋',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        SizedBox(height: 12),
-                                        Text(
-                                          'No hobbies yet',
-                                          style: TextStyle(
-                                            color: Colors.white54,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          'Tap the + button below to create your first hobby\nand start building your habit streak!',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.white38,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 120),
-                                ]
-                                // Check if there are tasks for this day
-                                else if (totalTasksForSelectedDate == 0) ...[
-                                  // No tasks for this day - show centered message
-                                  const SizedBox(height: 120),
-                                  Center(
-                                    child: Column(
-                                      children: [
-                                        const Icon(
-                                          Icons.event_available,
-                                          size: 80,
-                                          color: Colors.white24,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          _isToday()
-                                              ? 'No tasks for today'
-                                              : 'No tasks for this day',
-                                          style: const TextStyle(
-                                            color: Colors.white54,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          _isToday()
-                                              ? 'Enjoy your free day!'
-                                              : 'No hobbies scheduled for this day',
-                                          style: const TextStyle(
-                                            color: Colors.white38,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 120),
-                                ] else ...[
-                                  // Has tasks - show normal layout
-                                  if (inProgressTasks.isNotEmpty) ...[
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          _isFutureDate()
-                                              ? 'Upcoming Tasks'
-                                              : (_isToday()
-                                                    ? 'In Progress'
-                                                    : 'Not Completed'),
-                                          style: const TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${inProgressTasks.length} Pending',
-                                          style: const TextStyle(
-                                            color: Color(0xFF8B5CF6),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ...inProgressTasks.map(
-                                      (hobby) => _buildTaskCard(hobby, false),
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                  if (completedTasks.isNotEmpty &&
-                                      !_isFutureDate()) ...[
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'Completed',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(
-                                              0xFF10B981,
-                                            ).withValues(alpha: 0.2),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.check_circle,
-                                                color: Color(0xFF10B981),
-                                                size: 14,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                '${completedTasks.length}',
-                                                style: const TextStyle(
-                                                  color: Color(0xFF10B981),
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ...completedTasks.map(
-                                      (hobby) => _buildTaskCard(hobby, true),
-                                    ),
-                                  ],
-                                ],
-                                // Quote at the bottom (always)
-                                _buildQuoteSection(),
-                                const SizedBox(height: 16),
-                              ],
-                            ),
+                            child: _buildScrollContent(),
                           ),
                   ),
                 ],
               ),
       ),
       bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  /// Builds the scrollable body content for the home screen.
+  /// Regular hobbies are date-filtered (day scroll applies to them).
+  /// One-time tasks appear below, independent of the selected date.
+  /// Completed tasks are never shown here.
+  Widget _buildScrollContent() {
+    final regularPending = inProgressTasks;
+    final oneTimePending = pendingOneTimeTasks;
+    final hasRegularHobbies = _hobbies.any((h) => !h.isOneTime);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 4),
+
+        // ── Welcome state: nothing at all ─────────────────────────────
+        if (_hobbies.isEmpty) ...[
+          const SizedBox(height: 80),
+          const Center(
+            child: Column(
+              children: [
+                Icon(Icons.task_alt, size: 80, color: Colors.white24),
+                SizedBox(height: 16),
+                Text(
+                  'Welcome to Hobbyist! 👋',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'No hobbies yet',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Tap the + button below to create your first hobby\nand start building your habit streak!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white38, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 120),
+        ] else ...[
+
+          // ── Regular hobbies (date-filtered) ───────────────────────
+          if (hasRegularHobbies) ...[
+            if (totalTasksForSelectedDate == 0) ...[
+              // No regular tasks scheduled for this day
+              const SizedBox(height: 32),
+              Center(
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.event_available,
+                      size: 60,
+                      color: Colors.white24,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _isToday() ? 'No tasks for today' : 'No tasks for this day',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _isToday()
+                          ? 'Enjoy your free day!'
+                          : 'No hobbies scheduled for this day',
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ] else if (regularPending.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isFutureDate()
+                        ? 'Upcoming'
+                        : (_isToday() ? 'In Progress' : 'Not Completed'),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    '${regularPending.length} Pending',
+                    style: const TextStyle(
+                      color: Color(0xFF8B5CF6),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ...regularPending.map((h) => _buildTaskCard(h, false)),
+              const SizedBox(height: 12),
+            ] else ...[
+              // All regular tasks for this day are done
+              const SizedBox(height: 24),
+              const Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.celebration,
+                      size: 48,
+                      color: Color(0xFF10B981),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'All done for today!',
+                      style: TextStyle(
+                        color: Color(0xFF10B981),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ],
+
+          // ── One-time tasks (no date filter) ───────────────────────
+          if (oneTimePending.isNotEmpty) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'One-time Tasks',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF8056).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline,
+                        color: Color(0xFFFF8056),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${oneTimePending.length}',
+                        style: const TextStyle(
+                          color: Color(0xFFFF8056),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ...oneTimePending.map((h) => _buildTaskCard(h, false)),
+            const SizedBox(height: 12),
+          ],
+        ],
+
+        _buildQuoteSection(),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
@@ -1173,8 +1050,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Streak badges after subtitle
-                      if (hobby.currentStreak > 0 || hobby.bestStreak > 0) ...[
+                      // Streak badges: only for recurring hobbies
+                      if (!hobby.isOneTime &&
+                          (hobby.currentStreak > 0 || hobby.bestStreak > 0)) ...[
                         const SizedBox(width: 8),
                         // Current streak
                         if (hobby.currentStreak > 0)
