@@ -16,7 +16,7 @@ appId: tham.hobbyist.app
 
 - extendedWaitUntil:
     visible:
-      text: "Pending"
+      text: "Today's Tasks"
     timeout: 5000
 
 # Tap the checkbox for the first available daily hobby
