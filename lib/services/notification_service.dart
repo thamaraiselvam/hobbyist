@@ -441,7 +441,9 @@ class NotificationService {
     final hour = int.tryParse(timeParts[0]);
     final minute = int.tryParse(timeParts[1]);
     if (year == null || month == null || day == null ||
-        hour == null || minute == null) return;
+        hour == null || minute == null) {
+      return;
+    }
 
     final scheduledDate = tz.TZDateTime(tz.local, year, month, day, hour, minute);
     if (scheduledDate.isBefore(tz.TZDateTime.now(tz.local))) {
@@ -451,7 +453,7 @@ class NotificationService {
 
     print('📅 One-time notification for "${hobby.name}" at $scheduledDate');
 
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'hobby_reminders',
       'Hobby Reminders',
       channelDescription: 'Notifications for hobby reminders and streaks',
