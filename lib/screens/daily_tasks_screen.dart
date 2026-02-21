@@ -1356,10 +1356,10 @@ class _DisciplineGaugePainter extends CustomPainter {
       final sweepAngle = progress * fullSweep;
       final rect = Rect.fromCircle(center: center, radius: radius);
       final fgPaint = Paint()
-        ..shader = SweepGradient(
-          startAngle: startAngle,
-          endAngle: startAngle + fullSweep,
-          colors: const [Color(0xFF00F2A6), Color(0xFF00C185)],
+        ..shader = const SweepGradient(
+          startAngle: -pi / 2,
+          endAngle: -pi / 2 + 2 * pi,
+          colors: [Color(0xFF00F2A6), Color(0xFF00C185)],
         ).createShader(rect)
         ..strokeWidth = _strokeWidth
         ..style = PaintingStyle.stroke
