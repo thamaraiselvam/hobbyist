@@ -100,24 +100,19 @@ void main() async {
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
-    testWidgets('should display 7 days in day selector', (
+    testWidgets('should not display a horizontal day selector', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(const MaterialApp(home: DailyTasksScreen()));
 
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
 
-      final listViewFinder = find.byWidgetPredicate(
+      // The day selector was removed in the home-screen redesign.
+      final horizontalListFinder = find.byWidgetPredicate(
         (widget) =>
             widget is ListView && widget.scrollDirection == Axis.horizontal,
       );
-
-      expect(listViewFinder, findsOneWidget);
-
-      final listView = tester.widget<ListView>(listViewFinder);
-      final delegate = listView.childrenDelegate as SliverChildBuilderDelegate;
-      // In the current code, itemCount is 7 (current week)
-      expect(delegate.estimatedChildCount, 7);
+      expect(horizontalListFinder, findsNothing);
     });
   });
 }
