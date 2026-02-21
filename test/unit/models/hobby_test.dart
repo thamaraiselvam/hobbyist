@@ -391,11 +391,7 @@ void main() {
     });
 
     test('fromJson defaults isOneTime to false when missing', () {
-      final json = {
-        'id': 'test-id',
-        'name': 'Old Task',
-        'color': 0xFF6C3FFF,
-      };
+      final json = {'id': 'test-id', 'name': 'Old Task', 'color': 0xFF6C3FFF};
       final hobby = Hobby.fromJson(json);
       expect(hobby.isOneTime, false);
     });
@@ -422,47 +418,55 @@ void main() {
       expect(copied.isOneTime, true);
     });
 
-    test('one-time task with completion should be filtered from home screen', () {
-      // Simulate the filter logic used in daily_tasks_screen.dart
-      final oneTimeCompleted = Hobby(
-        id: '1',
-        name: 'Done One-Time',
-        color: 0xFF6C3FFF,
-        isOneTime: true,
-        completions: {
-          '2024-01-01': HobbyCompletion(completed: true),
-        },
-      );
-      final oneTimePending = Hobby(
-        id: '2',
-        name: 'Pending One-Time',
-        color: 0xFF6C3FFF,
-        isOneTime: true,
-        completions: {},
-      );
-      final recurring = Hobby(
-        id: '3',
-        name: 'Recurring',
-        color: 0xFF6C3FFF,
-        isOneTime: false,
-        completions: {
-          '2024-01-01': HobbyCompletion(completed: true),
-        },
-      );
+    test(
+      'one-time task with completion should be filtered from home screen',
+      () {
+        // Simulate the filter logic used in daily_tasks_screen.dart
+        final oneTimeCompleted = Hobby(
+          id: '1',
+          name: 'Done One-Time',
+          color: 0xFF6C3FFF,
+          isOneTime: true,
+          completions: {'2024-01-01': HobbyCompletion(completed: true)},
+        );
+        final oneTimePending = Hobby(
+          id: '2',
+          name: 'Pending One-Time',
+          color: 0xFF6C3FFF,
+          isOneTime: true,
+          completions: {},
+        );
+        final recurring = Hobby(
+          id: '3',
+          name: 'Recurring',
+          color: 0xFF6C3FFF,
+          isOneTime: false,
+          completions: {'2024-01-01': HobbyCompletion(completed: true)},
+        );
 
-      final allHobbies = [oneTimeCompleted, oneTimePending, recurring];
+        final allHobbies = [oneTimeCompleted, oneTimePending, recurring];
 
-      // Apply the same filter as daily_tasks_screen.dart
-      final filtered = allHobbies.where((h) {
-        if (!h.isOneTime) return true;
-        return !h.completions.values.any((c) => c.completed);
-      }).toList();
+        // Apply the same filter as daily_tasks_screen.dart
+        final filtered = allHobbies.where((h) {
+          if (!h.isOneTime) return true;
+          return !h.completions.values.any((c) => c.completed);
+        }).toList();
 
-      expect(filtered.length, 2);
-      expect(filtered.any((h) => h.id == '1'), false); // completed one-time hidden
-      expect(filtered.any((h) => h.id == '2'), true); // pending one-time shown
-      expect(filtered.any((h) => h.id == '3'), true); // recurring always shown
-    });
+        expect(filtered.length, 2);
+        expect(
+          filtered.any((h) => h.id == '1'),
+          false,
+        ); // completed one-time hidden
+        expect(
+          filtered.any((h) => h.id == '2'),
+          true,
+        ); // pending one-time shown
+        expect(
+          filtered.any((h) => h.id == '3'),
+          true,
+        ); // recurring always shown
+      },
+    );
 
     test('recurring task with completion should NOT be filtered out', () {
       final recurring = Hobby(
@@ -470,9 +474,7 @@ void main() {
         name: 'Recurring',
         color: 0xFF6C3FFF,
         isOneTime: false,
-        completions: {
-          '2024-01-01': HobbyCompletion(completed: true),
-        },
+        completions: {'2024-01-01': HobbyCompletion(completed: true)},
       );
 
       final allHobbies = [recurring];
