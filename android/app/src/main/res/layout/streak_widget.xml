@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Streak home-screen widget layout.
-  Uses only RemoteViews-compatible views (LinearLayout, TextView).
-  Day circles are TextViews whose background drawable is swapped at runtime
-  by StreakWidget.kt to reflect each day's completion state.
+  Streak home-screen widget layout (rolling 7-day window, today at index 6).
+  Day circles are TextViews whose background is swapped at runtime by
+  StreakWidget.kt to reflect each day's completion state.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -14,77 +13,55 @@
     android:paddingLeft="14dp"
     android:paddingRight="14dp"
     android:paddingTop="12dp"
-    android:paddingBottom="12dp">
+    android:paddingBottom="10dp">
 
-    <!-- ── Header ──────────────────────────────────────────────────────── -->
+    <!-- ── Header (full-width, no logo) ──────────────────────────────── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:orientation="vertical">
 
-        <!-- Left: title row + subtitle -->
+        <!-- Title + streak pill -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-            <!-- Title + streak pill on same row -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Current Streak"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <!-- Streak count pill -->
-                <TextView
-                    android:id="@+id/streak_pill"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:background="@drawable/widget_streak_pill_bg"
-                    android:paddingLeft="8dp"
-                    android:paddingRight="8dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp"
-                    android:text="🔥 0"
-                    android:textColor="#FF6B35"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <!-- Subtitle / motivational copy -->
             <TextView
-                android:id="@+id/widget_subtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Your journey starts now"
-                android:textColor="#80FFFFFF"
-                android:textSize="11sp" />
+                android:text="Current Streak"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/streak_pill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:background="@drawable/widget_streak_pill_bg"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:text="🔥 0"
+                android:textColor="#FF6B35"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
-        <!-- Right: 'H' logo circle -->
+        <!-- Subtitle / onboarding-aware motivational copy -->
         <TextView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/widget_logo_bg"
-            android:gravity="center"
-            android:text="H"
-            android:textColor="#FFFFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:id="@+id/widget_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Create your first task to start your streak"
+            android:textColor="#80FFFFFF"
+            android:textSize="11sp" />
 
     </LinearLayout>
 
@@ -95,7 +72,7 @@
         android:layout_marginTop="12dp"
         android:orientation="horizontal">
 
-        <!-- Mon -->
+        <!-- Day 0 (6 days ago) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -108,7 +85,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="M"
-                android:textColor="#66FFFFFF"
+                android:textColor="#40FFFFFF"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -117,7 +94,7 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="4dp"
-                android:background="@drawable/widget_day_future"
+                android:background="@drawable/widget_day_pending"
                 android:gravity="center"
                 android:textColor="#FFFFFFFF"
                 android:textSize="11sp"
@@ -125,7 +102,7 @@
 
         </LinearLayout>
 
-        <!-- Tue -->
+        <!-- Day 1 (5 days ago) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -138,7 +115,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="T"
-                android:textColor="#66FFFFFF"
+                android:textColor="#40FFFFFF"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -147,7 +124,7 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="4dp"
-                android:background="@drawable/widget_day_future"
+                android:background="@drawable/widget_day_pending"
                 android:gravity="center"
                 android:textColor="#FFFFFFFF"
                 android:textSize="11sp"
@@ -155,7 +132,7 @@
 
         </LinearLayout>
 
-        <!-- Wed -->
+        <!-- Day 2 (4 days ago) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -168,7 +145,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="W"
-                android:textColor="#66FFFFFF"
+                android:textColor="#40FFFFFF"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -177,7 +154,7 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="4dp"
-                android:background="@drawable/widget_day_future"
+                android:background="@drawable/widget_day_pending"
                 android:gravity="center"
                 android:textColor="#FFFFFFFF"
                 android:textSize="11sp"
@@ -185,7 +162,7 @@
 
         </LinearLayout>
 
-        <!-- Thu -->
+        <!-- Day 3 (3 days ago) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -198,7 +175,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="T"
-                android:textColor="#66FFFFFF"
+                android:textColor="#40FFFFFF"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -207,7 +184,7 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="4dp"
-                android:background="@drawable/widget_day_future"
+                android:background="@drawable/widget_day_pending"
                 android:gravity="center"
                 android:textColor="#FFFFFFFF"
                 android:textSize="11sp"
@@ -215,7 +192,7 @@
 
         </LinearLayout>
 
-        <!-- Fri -->
+        <!-- Day 4 (2 days ago) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -228,7 +205,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="F"
-                android:textColor="#66FFFFFF"
+                android:textColor="#40FFFFFF"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -237,7 +214,7 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="4dp"
-                android:background="@drawable/widget_day_future"
+                android:background="@drawable/widget_day_pending"
                 android:gravity="center"
                 android:textColor="#FFFFFFFF"
                 android:textSize="11sp"
@@ -245,7 +222,7 @@
 
         </LinearLayout>
 
-        <!-- Sat -->
+        <!-- Day 5 (yesterday) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -258,7 +235,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="S"
-                android:textColor="#66FFFFFF"
+                android:textColor="#40FFFFFF"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -267,7 +244,7 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="4dp"
-                android:background="@drawable/widget_day_future"
+                android:background="@drawable/widget_day_pending"
                 android:gravity="center"
                 android:textColor="#FFFFFFFF"
                 android:textSize="11sp"
@@ -275,7 +252,7 @@
 
         </LinearLayout>
 
-        <!-- Sun -->
+        <!-- Day 6 (today — always rightmost) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -288,7 +265,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="S"
-                android:textColor="#66FFFFFF"
+                android:textColor="#FFFFFFFF"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -297,7 +274,7 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="4dp"
-                android:background="@drawable/widget_day_future"
+                android:background="@drawable/widget_day_today"
                 android:gravity="center"
                 android:textColor="#FFFFFFFF"
                 android:textSize="11sp"
@@ -312,12 +289,12 @@
         android:id="@+id/cta_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="11dp"
         android:background="@drawable/widget_button_bg"
         android:gravity="center"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
-        android:text="⚡ Stay consistent"
+        android:text="⚡ Stay Consistent"
         android:textColor="#FFFFFFFF"
         android:textSize="12sp"
         android:textStyle="bold" />

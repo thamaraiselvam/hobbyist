@@ -1,21 +1,31 @@
 import 'package:flutter/material.dart';
 
-/// A motivational streak card displayed at the top of the Home screen.
+/// A motivational streak card for the Home screen.
 ///
-/// Shows the current global streak, a 7-day week indicator with per-day
-/// completion states, and a dynamic CTA button — all styled to match the
-/// app's dark purple design system.
+/// The 7-day indicator uses a **rolling window anchored on today**:
+/// index 0 = 6 days ago, index 6 = today.  Labels are computed from the
+/// actual calendar day so the row is always accurate regardless of weekday.
+///
+/// Visual states (per day):
+///   • completed (any past day)  → green circle + ✓
+///   • today completed           → glowing green circle + ✓
+///   • today pending             → orange filled circle + 🔥
+///   • missed (past, has hobbies) → dull red circle + ✕
+///   • pending (past, no hobbies) → muted grey circle
 class StreakMotivationCard extends StatelessWidget {
   /// Number of consecutive days with at least one hobby completed.
   final int currentStreak;
 
-  /// Completion state for each day of the current week (Mon–Sun, index 0–6).
-  /// A `true` value means at least one hobby was completed on that day.
-  /// Future days should be `false`.
+  /// Completion state for the rolling 7-day window.
+  /// Index 0 = 6 days ago, index 6 = today.
   final List<bool> completedDaysInWeek;
 
-  /// Today's index in the Mon–Sun week (0 = Monday, 6 = Sunday).
-  final int currentDayIndex;
+  /// Whether the user has created at least one hobby.
+  /// Drives the missed (red) vs pending (grey) distinction for past days.
+  final bool hasHobbies;
+
+  /// Optional user name used in the subtitle.
+  final String? userName;
 
   /// Optional callback invoked when the CTA button is tapped.
   final VoidCallback? onCtaTap;
@@ -24,14 +34,15 @@ class StreakMotivationCard extends StatelessWidget {
     super.key,
     required this.currentStreak,
     required this.completedDaysInWeek,
-    required this.currentDayIndex,
+    required this.hasHobbies,
+    this.userName,
     this.onCtaTap,
   }) : assert(
          completedDaysInWeek.length == 7,
-         'completedDaysInWeek must have exactly 7 entries',
+         'completedDaysInWeek must have exactly 7 entries (index 6 = today)',
        );
 
-  // ── Color tokens (derived from app theme) ─────────────────────────────
+  // ── Color tokens ──────────────────────────────────────────────────────
 
   static const _cardBg = Color(0xFF2A2238);
   static const _borderColor = Color(0xFF3D3560);
@@ -39,24 +50,22 @@ class StreakMotivationCard extends StatelessWidget {
   static const _secondaryPurple = Color(0xFF8B5CF6);
   static const _streakOrange = Color(0xFFFF6B35);
   static const _successGreen = Color(0xFF10B981);
+  static const _missedRed = Color(0xFF8B3A3A);
+  static const _pendingGrey = Color(0xFF3A3A4A);
 
-  // ── Dynamic copy ───────────────────────────────────────────────────────
+  static const _dayAbbrs = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  // ── Copy helpers ──────────────────────────────────────────────────────
 
   String get _subtitle {
-    if (currentStreak == 0) return 'Your journey starts now';
-    if (currentStreak == 1) return 'Great start — day 1 done!';
-    if (currentStreak < 7) return 'Building momentum';
-    if (currentStreak < 30) return "You're on a roll!";
-    return "You're unstoppable!";
+    final name = userName?.trim();
+    if (name != null && name.isNotEmpty) return 'Keep it up, $name';
+    if (!hasHobbies) return 'Create your first task to start your streak';
+    return 'Keep going — you\'re building a great habit';
   }
 
-  String get _ctaLabel {
-    if (currentStreak == 0) return 'Start your streak today';
-    if (currentStreak < 3) return 'Keep the momentum going';
-    if (currentStreak < 7) return 'Stay consistent';
-    if (currentStreak < 30) return "You're doing great — keep it up";
-    return 'Legendary streak — keep going';
-  }
+  String get _ctaLabel =>
+      currentStreak == 0 ? 'Start your streak today' : 'Stay Consistent';
 
   // ── Build ──────────────────────────────────────────────────────────────
 
@@ -64,7 +73,7 @@ class StreakMotivationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
         color: _cardBg,
         borderRadius: BorderRadius.circular(20),
@@ -74,9 +83,9 @@ class StreakMotivationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
-          const SizedBox(height: 16),
-          _buildWeekRow(),
           const SizedBox(height: 14),
+          _buildWeekRow(),
+          const SizedBox(height: 12),
           _buildCtaButton(),
         ],
       ),
@@ -86,17 +95,6 @@ class StreakMotivationCard extends StatelessWidget {
   // ── Header ─────────────────────────────────────────────────────────────
 
   Widget _buildHeader() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(child: _buildTitleColumn()),
-        const SizedBox(width: 12),
-        _buildLogoCircle(),
-      ],
-    );
-  }
-
-  Widget _buildTitleColumn() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -138,11 +136,7 @@ class StreakMotivationCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.local_fire_department,
-            color: _streakOrange,
-            size: 13,
-          ),
+          const Icon(Icons.local_fire_department, color: _streakOrange, size: 13),
           const SizedBox(width: 3),
           Text(
             '$currentStreak',
@@ -157,68 +151,33 @@ class StreakMotivationCard extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoCircle() {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_primaryPurple, _secondaryPurple],
-        ),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: _primaryPurple.withValues(alpha: 0.35),
-            blurRadius: 10,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: const Center(
-        child: Text(
-          'H',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-            height: 1.0,
-          ),
-        ),
-      ),
-    );
-  }
-
   // ── Week indicator ─────────────────────────────────────────────────────
 
   Widget _buildWeekRow() {
-    const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final now = DateTime.now();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(
-        7,
-        (i) => _buildDayColumn(label: labels[i], dayIndex: i),
-      ),
+      children: List.generate(7, (i) {
+        // Rolling window: index 0 = 6 days ago, index 6 = today
+        final day = now.subtract(Duration(days: 6 - i));
+        final label = _dayAbbrs[day.weekday - 1];
+        return _buildDayColumn(label: label, dayIndex: i);
+      }),
     );
   }
 
   Widget _buildDayColumn({required String label, required int dayIndex}) {
-    final isToday = dayIndex == currentDayIndex;
-    final isFuture = dayIndex > currentDayIndex;
+    final isToday = dayIndex == 6;
     final isCompleted = completedDaysInWeek[dayIndex];
+    // Past day that wasn't completed and the user has hobbies → missed
+    final isMissed = !isToday && !isCompleted && hasHobbies;
 
     return Column(
       children: [
         Text(
           label,
           style: TextStyle(
-            color: isToday
-                ? Colors.white
-                : isFuture
-                    ? Colors.white24
-                    : Colors.white38,
+            color: isToday ? Colors.white : Colors.white38,
             fontSize: 11,
             fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
             letterSpacing: 0.5,
@@ -228,7 +187,7 @@ class StreakMotivationCard extends StatelessWidget {
         _buildCircle(
           isCompleted: isCompleted,
           isToday: isToday,
-          isFuture: isFuture,
+          isMissed: isMissed,
         ),
       ],
     );
@@ -237,10 +196,10 @@ class StreakMotivationCard extends StatelessWidget {
   Widget _buildCircle({
     required bool isCompleted,
     required bool isToday,
-    required bool isFuture,
+    required bool isMissed,
   }) {
+    // Today completed → glowing green ✓
     if (isCompleted && isToday) {
-      // Today completed: vivid green, glowing
       return Container(
         width: 36,
         height: 36,
@@ -259,8 +218,8 @@ class StreakMotivationCard extends StatelessWidget {
       );
     }
 
+    // Past completed → solid green ✓
     if (isCompleted) {
-      // Past completed: solid green, no glow
       return Container(
         width: 36,
         height: 36,
@@ -276,18 +235,17 @@ class StreakMotivationCard extends StatelessWidget {
       );
     }
 
+    // Today pending → orange filled circle + flame
     if (isToday) {
-      // Today not yet completed: orange border + flame icon
       return Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: _streakOrange.withValues(alpha: 0.12),
+          color: _streakOrange,
           shape: BoxShape.circle,
-          border: Border.all(color: _streakOrange, width: 2),
           boxShadow: [
             BoxShadow(
-              color: _streakOrange.withValues(alpha: 0.2),
+              color: _streakOrange.withValues(alpha: 0.35),
               blurRadius: 8,
               spreadRadius: 0,
             ),
@@ -295,35 +253,41 @@ class StreakMotivationCard extends StatelessWidget {
         ),
         child: const Icon(
           Icons.local_fire_department,
-          color: _streakOrange,
+          color: Colors.white,
           size: 18,
         ),
       );
     }
 
-    if (isFuture) {
-      // Future day: very muted outline, no content
+    // Past missed (has hobbies) → dull red + ✕
+    if (isMissed) {
       return Container(
         width: 36,
         height: 36,
-        decoration: BoxDecoration(
-          color: Colors.transparent,
+        decoration: const BoxDecoration(
+          color: _missedRed,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white12, width: 1.5),
+        ),
+        child: Icon(
+          Icons.close_rounded,
+          color: Colors.white.withValues(alpha: 0.7),
+          size: 15,
         ),
       );
     }
 
-    // Past missed: dim outline with subtle ✕
+    // Pending (no hobbies yet, or future) → muted grey circle
     return Container(
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: _pendingGrey,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white24, width: 1.5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 1,
+        ),
       ),
-      child: const Icon(Icons.close_rounded, color: Colors.white24, size: 13),
     );
   }
 
@@ -334,7 +298,7 @@ class StreakMotivationCard extends StatelessWidget {
       onTap: onCtaTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 11),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
