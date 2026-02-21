@@ -462,7 +462,7 @@ class NotificationService {
       icon: '@mipmap/ic_launcher',
       enableVibration: true,
       playSound: true,
-      styleInformation: const BigTextStyleInformation(
+      styleInformation: BigTextStyleInformation(
         'Your one-time task is due now!',
       ),
     );
@@ -479,7 +479,7 @@ class NotificationService {
         hobby.name,
         'Your one-time task is due now!',
         scheduledDate,
-        NotificationDetails(android: androidDetails, iOS: iosDetails),
+        const NotificationDetails(android: androidDetails, iOS: iosDetails),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
