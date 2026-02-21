@@ -16,7 +16,7 @@ appId: tham.hobbyist.app
 
 - extendedWaitUntil:
     visible:
-      text: "In Progress"
+      text: "Pending"
     timeout: 5000
 
 # Tap the checkbox for the first available daily hobby
@@ -50,8 +50,7 @@ appId: tham.hobbyist.app
 
 # Verify hobby moved to Completed section.
 # 4 daily tasks comfortably fit the S24 Ultra viewport so no scroll is needed.
-# The header reads "Completed Today" when today is selected (anchored regex —
-# bare "Completed" would not match "Completed Today").
+# The section header is exactly "Completed" in the redesigned home screen.
 - extendedWaitUntil:
     visible:
       text: "Completed.*"
