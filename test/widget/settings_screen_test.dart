@@ -79,8 +79,12 @@ void main() async {
         ),
       );
 
-      await tester.pumpAndSettle();
+      // Use pump instead of pumpAndSettle — Firebase mock creates a 10s timer
+      // that pumpAndSettle would hang waiting for.
+      await tester.pump();
       expect(find.text('ACCOUNT'), findsOneWidget);
+      // Drain the 10s Firebase Remote Config timer to prevent pending-timer failure.
+      await tester.pump(const Duration(seconds: 11));
     });
 
     testWidgets('should display preferences section', (
@@ -92,9 +96,10 @@ void main() async {
         ),
       );
 
-      // Use pump with duration instead of pumpAndSettle to avoid pending timer issues
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('PREFERENCES'), findsOneWidget);
+      // Drain the 10s Firebase Remote Config timer to prevent pending-timer failure.
+      await tester.pump(const Duration(seconds: 11));
     });
 
     testWidgets('should have bottom navigation', (WidgetTester tester) async {
