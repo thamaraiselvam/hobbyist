@@ -109,7 +109,8 @@ void main() async {
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
-    testWidgets('should display 7 days in day selector', (WidgetTester tester) async {
+    testWidgets('should display 7 days in day selector',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: DailyTasksScreen(),
@@ -118,8 +119,9 @@ void main() async {
 
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
 
-      final listViewFinder = find.byWidgetPredicate((widget) =>
-        widget is ListView && widget.scrollDirection == Axis.horizontal
+      final listViewFinder = find.byWidgetPredicate(
+        (widget) =>
+            widget is ListView && widget.scrollDirection == Axis.horizontal,
       );
 
       expect(listViewFinder, findsOneWidget);
