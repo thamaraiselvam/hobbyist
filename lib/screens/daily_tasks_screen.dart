@@ -68,6 +68,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     super.dispose();
   }
 
+  DateTime _getStartOfWeek() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    // 1=Monday, 7=Sunday. We want Monday to be start.
+    return today.subtract(Duration(days: today.weekday - 1));
+  }
+
   void _animateToToday() async {
     if (!mounted || !_dayScrollController.hasClients) return;
 
@@ -76,12 +83,12 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       final screenWidth = MediaQuery.of(context).size.width;
       const itemWidth = 56.0; // 48px pill + 8px margin
       const pillWidth = 48.0; // Actual pill width
-      const todayIndex =
-          30; // Index 30 = today (30 days back + today + 30 days forward)
+      final todayIndex =
+          DateTime.now().weekday - 1; // Index based on current weekday (0-6)
       const listPadding = 16.0; // ListView horizontal padding
 
       // Position of today's item (from start of list)
-      const todayPosition = todayIndex * itemWidth;
+      final todayPosition = todayIndex * itemWidth;
 
       // Center calculation:
       // We want the pill center at screen center
@@ -111,10 +118,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     try {
       await Future.delayed(const Duration(milliseconds: 50));
 
-      // Calculate how many days from the base (30 days ago)
-      final now = DateTime.now();
-      final baseDate = now.subtract(const Duration(days: 30));
-      final daysDifference = _selectedDate.difference(baseDate).inDays;
+      // Calculate how many days from the start of the week
+      final startOfWeek = _getStartOfWeek();
+      final daysDifference = _selectedDate.difference(startOfWeek).inDays;
 
       // Calculate centered position
       final screenWidth = MediaQuery.of(context).size.width;
@@ -201,9 +207,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         const itemWidth = 56.0; // 48px pill + 8px margin
         const pillWidth = 48.0; // Actual pill width
         const listPadding = 16.0; // ListView horizontal padding
-        const todayIndex = 30; // Index 30 is always today
+        final todayIndex = DateTime.now().weekday - 1; // Index is 0-6
 
-        const datePosition = todayIndex * itemWidth;
+        final datePosition = todayIndex * itemWidth;
         final centeredPosition =
             datePosition - (screenWidth / 2) + (pillWidth / 2) + listPadding;
 
@@ -896,12 +902,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         controller: _dayScrollController,
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 61, // 30 days back + today + 30 days forward
+        itemCount: 7, // Current week (7 days)
         physics: const BouncingScrollPhysics(),
         cacheExtent: 500, // Cache items for smooth scrolling
         itemBuilder: (context, index) {
-          // Calculate date: index 0 = 30 days ago, index 30 = today, index 60 = 30 days forward
-          final date = DateTime.now().subtract(Duration(days: 30 - index));
+          // Calculate date: index 0 = Monday, ..., index 6 = Sunday
+          final startOfWeek = _getStartOfWeek();
+          final date = startOfWeek.add(Duration(days: index));
           final dateStr = DateFormat('yyyy-MM-dd').format(date);
           final selectedStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
           final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
