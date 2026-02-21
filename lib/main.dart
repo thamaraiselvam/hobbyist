@@ -58,7 +58,8 @@ void main() async {
   try {
     await NotificationService().initialize();
     print(
-        '🔔 Notification service initialized (permissions will be requested on first use)');
+      '🔔 Notification service initialized (permissions will be requested on first use)',
+    );
   } catch (e) {
     print('❌ Error initializing notifications: $e');
   }
@@ -96,8 +97,9 @@ class HobbyTrackerApp extends StatelessWidget {
           ),
         ),
         snackBarTheme: const SnackBarThemeData(
-          backgroundColor:
-              Color(0xFF3D3560), // Darker purple-grey for background
+          backgroundColor: Color(
+            0xFF3D3560,
+          ), // Darker purple-grey for background
           contentTextStyle: TextStyle(
             color: Color(0xFFE8E5F0), // Light purple-white for text
             fontSize: 14,
@@ -131,7 +133,8 @@ class HobbyTrackerApp extends StatelessWidget {
         switch (settings.name) {
           case '/':
             return MaterialPageRoute(
-                builder: (context) => const SplashScreen());
+              builder: (context) => const SplashScreen(),
+            );
           case '/landing':
             return MaterialPageRoute(
               builder: (context) => LandingScreen(
@@ -142,13 +145,16 @@ class HobbyTrackerApp extends StatelessWidget {
             );
           case '/name-input':
             return MaterialPageRoute(
-                builder: (context) => const NameInputScreen());
+              builder: (context) => const NameInputScreen(),
+            );
           case '/dashboard':
             return MaterialPageRoute(
-                builder: (context) => const DailyTasksScreen());
+              builder: (context) => const DailyTasksScreen(),
+            );
           default:
             return MaterialPageRoute(
-                builder: (context) => const SplashScreen());
+              builder: (context) => const SplashScreen(),
+            );
         }
       },
     );

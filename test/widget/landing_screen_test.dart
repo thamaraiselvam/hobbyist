@@ -13,10 +13,11 @@ void main() async {
     // Mock path_provider
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/path_provider'),
-            (MethodCall methodCall) async {
-      return '.';
-    });
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async {
+            return '.';
+          },
+        );
 
     await Firebase.initializeApp();
 
@@ -25,35 +26,39 @@ void main() async {
   });
 
   group('LandingScreen Widget Tests', () {
-    testWidgets('should display landing screen content',
-        (WidgetTester tester) async {
+    testWidgets('should display landing screen content', (
+      WidgetTester tester,
+    ) async {
       // Skip: Firebase initialization issues
     }, skip: true);
 
-    testWidgets('should trigger onGetStarted when Continue Offline is pressed',
-        (WidgetTester tester) async {
-      bool pressed = false;
+    testWidgets(
+      'should trigger onGetStarted when Continue Offline is pressed',
+      (WidgetTester tester) async {
+        bool pressed = false;
 
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LandingScreen(
+              onGetStarted: () {
+                pressed = true;
+              },
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Continue Offline'));
+        await tester.pumpAndSettle();
+
+        expect(pressed, true);
+      },
+    );
+
+    testWidgets('should have correct background color', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: LandingScreen(onGetStarted: () {
-            pressed = true;
-          }),
-        ),
-      );
-
-      await tester.tap(find.text('Continue Offline'));
-      await tester.pumpAndSettle();
-
-      expect(pressed, true);
-    });
-
-    testWidgets('should have correct background color',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: LandingScreen(onGetStarted: () {}),
-        ),
+        MaterialApp(home: LandingScreen(onGetStarted: () {})),
       );
 
       final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
@@ -62,9 +67,7 @@ void main() async {
 
     testWidgets('should display feature list', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: LandingScreen(onGetStarted: () {}),
-        ),
+        MaterialApp(home: LandingScreen(onGetStarted: () {})),
       );
 
       final listFinder = find.byType(Scrollable);

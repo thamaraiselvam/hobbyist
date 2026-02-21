@@ -28,7 +28,7 @@ class TestKeys {
   static const String addHobbyReminderPicker = 'reminder_time_picker';
   static const String addHobbySubmitButton = 'create_hobby_button';
 
-  /// mode: 'daily' | 'weekly' | 'monthly' → e.g. 'daily_frequency_button'
+  /// mode: 'daily' | 'weekly' | 'monthly' | 'one_time' → e.g. 'daily_frequency_button'
   static String addHobbyFrequencyButton(String mode) =>
       '${mode}_frequency_button';
 
@@ -45,15 +45,17 @@ class TestKeys {
   static const String navSettings = 'bottom_nav_settings';
 
   /// index: 0=home, 1=tasks list, 2=analytics, 3=settings
-  static String navItem(int index) => const [
-        navHome,
-        navTasksList,
-        navAnalytics,
-        navSettings,
-      ][index];
+  static String navItem(int index) =>
+      const [navHome, navTasksList, navAnalytics, navSettings][index];
 
   /// The centre (+) create button in the bottom nav bar.
   static const String addHobbyFab = 'add_hobby_fab';
+
+  // ─── ONE-TIME TASKS SCREEN ───────────────────────────────────────────────
+  /// ⚠️ taskId = task.id (UUID string), NOT task.title
+  static String taskItem(String taskId) => 'task_item_$taskId';
+  static String taskItemCheckbox(String taskId) => 'task_item_checkbox_$taskId';
+  static String taskItemMenu(String taskId) => 'task_item_menu_$taskId';
 
   // ─── DAILY TASKS SCREEN ──────────────────────────────────────────────────
   static const String streakBadge = 'streak_badge';

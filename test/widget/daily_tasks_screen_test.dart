@@ -32,30 +32,30 @@ void main() async {
     // Mock path_provider
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/path_provider'),
-      (MethodCall methodCall) async {
-        return '.';
-      },
-    );
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async {
+            return '.';
+          },
+        );
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/shared_preferences'),
-      (MethodCall methodCall) async {
-        if (methodCall.method == 'getAll') {
-          return <String, Object>{};
-        }
-        return true;
-      },
-    );
+          const MethodChannel('plugins.flutter.io/shared_preferences'),
+          (MethodCall methodCall) async {
+            if (methodCall.method == 'getAll') {
+              return <String, Object>{};
+            }
+            return true;
+          },
+        );
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('xyz.luan/audioplayers'),
-      (MethodCall methodCall) async {
-        return null;
-      },
-    );
+          const MethodChannel('xyz.luan/audioplayers'),
+          (MethodCall methodCall) async {
+            return null;
+          },
+        );
 
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -63,9 +63,7 @@ void main() async {
 
   group('DailyTasksScreen Widget Tests', () {
     setUp(() {
-      SharedPreferences.setMockInitialValues({
-        'hasCompletedOnboarding': true,
-      });
+      SharedPreferences.setMockInitialValues({'hasCompletedOnboarding': true});
 
       mockHobbyService = MockHobbyService();
       mockAnalyticsService = MockAnalyticsService();
@@ -82,13 +80,10 @@ void main() async {
       when(mockQuoteService.getRandomQuote()).thenReturn('Test Quote');
     });
 
-    testWidgets('should display daily tasks screen',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: DailyTasksScreen(),
-        ),
-      );
+    testWidgets('should display daily tasks screen', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: DailyTasksScreen()));
 
       // Wait for all initState timers and animations
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
@@ -97,11 +92,7 @@ void main() async {
     });
 
     testWidgets('should display scaffold', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: DailyTasksScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: DailyTasksScreen()));
 
       // Wait for all initState timers and animations
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
@@ -109,13 +100,10 @@ void main() async {
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
-    testWidgets('should display 7 days in day selector',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: DailyTasksScreen(),
-        ),
-      );
+    testWidgets('should display 7 days in day selector', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: DailyTasksScreen()));
 
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
 

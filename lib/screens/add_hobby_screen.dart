@@ -26,7 +26,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   int _selectedColor = 0xFF590df2; // Default to first color
   TimeOfDay _notificationTime = const TimeOfDay(hour: 8, minute: 0);
   bool _notifyEnabled = false; // Default OFF
-
+  DateTime? _oneTimeReminderDateTime; // Full date+time for one-time task reminders
   // Color palette - 10 bright colors matching theme
   final List<int> _colorPalette = const [
     0xFF590df2, // Purple (theme primary)
@@ -55,6 +55,10 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
       _nameController.text = widget.hobby!.name;
       _notesController.text = widget.hobby!.notes;
       _repeatMode = widget.hobby!.repeatMode;
+      // Backward compat: legacy one-time hobbies stored with isOneTime=true but repeatMode!='one_time'
+      if (widget.hobby!.isOneTime && _repeatMode != 'one_time') {
+        _repeatMode = 'one_time';
+      }
       _selectedColor = widget.hobby!.color;
 
       // Load custom day if exists
@@ -69,15 +73,35 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
       // Load notification time if exists
       if (widget.hobby!.reminderTime != null &&
           widget.hobby!.reminderTime!.isNotEmpty) {
-        final timeParts = widget.hobby!.reminderTime!.split(':');
-        if (timeParts.length == 2) {
-          _notificationTime = TimeOfDay(
-            hour: int.tryParse(timeParts[0]) ?? 8,
-            minute: int.tryParse(timeParts[1]) ?? 0,
-          );
-          _notifyEnabled = true;
+        final rt = widget.hobby!.reminderTime!;
+        if (_repeatMode == 'one_time' && rt.contains(' ')) {
+          // One-time format: 'yyyy-MM-dd HH:mm'
+          final parts = rt.split(' ');
+          final dateParts = parts[0].split('-');
+          final timeParts = parts[1].split(':');
+          if (dateParts.length == 3 && timeParts.length == 2) {
+            _oneTimeReminderDateTime = DateTime(
+              int.tryParse(dateParts[0]) ?? DateTime.now().year,
+              int.tryParse(dateParts[1]) ?? 1,
+              int.tryParse(dateParts[2]) ?? 1,
+              int.tryParse(timeParts[0]) ?? 8,
+              int.tryParse(timeParts[1]) ?? 0,
+            );
+            _notifyEnabled = true;
+          }
+        } else {
+          // Recurring format: 'HH:mm'
+          final timeParts = rt.split(':');
+          if (timeParts.length == 2) {
+            _notificationTime = TimeOfDay(
+              hour: int.tryParse(timeParts[0]) ?? 8,
+              minute: int.tryParse(timeParts[1]) ?? 0,
+            );
+            _notifyEnabled = true;
+          }
         }
       }
+
     }
   }
 
@@ -91,10 +115,19 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   Future<void> _saveHobby() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Format notification time as HH:mm
-        final notificationTimeString = _notifyEnabled
-            ? '${_notificationTime.hour.toString().padLeft(2, '0')}:${_notificationTime.minute.toString().padLeft(2, '0')}'
-            : '';
+        // Format notification time: 'yyyy-MM-dd HH:mm' for one-time, 'HH:mm' for recurring
+        String notificationTimeString = '';
+        if (_notifyEnabled) {
+          if (_repeatMode == 'one_time' && _oneTimeReminderDateTime != null) {
+            final dt = _oneTimeReminderDateTime!;
+            notificationTimeString =
+                '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+                '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+          } else if (_repeatMode != 'one_time') {
+            notificationTimeString =
+                '${_notificationTime.hour.toString().padLeft(2, '0')}:${_notificationTime.minute.toString().padLeft(2, '0')}';
+          }
+        }
 
         // Get custom day based on repeat mode
         int? customDay;
@@ -113,6 +146,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             color: _selectedColor,
             reminderTime: notificationTimeString,
             customDay: customDay,
+            isOneTime: _repeatMode == 'one_time',
           );
           await _service.updateHobby(updatedHobby);
 
@@ -120,7 +154,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    '✅ Hobby "${_nameController.text}" updated successfully'),
+                  '✅ Hobby "${_nameController.text}" updated successfully',
+                ),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
               ),
@@ -137,6 +172,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             color: _selectedColor,
             reminderTime: notificationTimeString,
             customDay: customDay,
+            isOneTime: _repeatMode == 'one_time',
           );
           await _service.addHobby(hobby);
 
@@ -144,7 +180,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    '✅ Hobby "${_nameController.text}" created successfully'),
+                  '✅ Hobby "${_nameController.text}" created successfully',
+                ),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 2),
               ),
@@ -201,6 +238,92 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
     }
   }
 
+  /// Date + time picker for one-time task reminders.
+  Future<void> _selectDateTime() async {
+    final now = DateTime.now();
+    final initialDate = _oneTimeReminderDateTime != null &&
+            _oneTimeReminderDateTime!.isAfter(now)
+        ? _oneTimeReminderDateTime!
+        : now.add(const Duration(days: 1));
+
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF590df2),
+              onPrimary: Colors.white,
+              surface: Color(0xFF221834),
+              onSurface: Colors.white,
+            ),
+            dialogTheme: const DialogThemeData(
+              backgroundColor: Color(0xFF221834),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate == null || !mounted) return;
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: _oneTimeReminderDateTime != null
+          ? TimeOfDay.fromDateTime(_oneTimeReminderDateTime!)
+          : const TimeOfDay(hour: 8, minute: 0),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF590df2),
+              onPrimary: Colors.white,
+              surface: Color(0xFF221834),
+              onSurface: Colors.white,
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: const Color(0xFF221834),
+              hourMinuteShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              dayPeriodShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime == null || !mounted) return;
+
+    setState(() {
+      _oneTimeReminderDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+    });
+  }
+
+  /// Format a DateTime for display in the one-time reminder picker.
+  String _formatOneTimeReminder(DateTime dt) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    final date = '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    final time = _formatTime(TimeOfDay(hour: dt.hour, minute: dt.minute));
+    return '$date at $time';
+  }
+
   String _formatTime(TimeOfDay time) {
     final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
     final minute = time.minute.toString().padLeft(2, '0');
@@ -241,20 +364,14 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF161022),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFF161022)),
       child: SafeArea(
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: Stack(
             children: [
               // Blurred background
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.black26,
-                ),
-              ),
+              Container(decoration: const BoxDecoration(color: Colors.black26)),
               // Bottom sheet
               Align(
                 alignment: Alignment.bottomCenter,
@@ -310,7 +427,9 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                     key: const Key(TestKeys.addHobbyNameInput),
                                     controller: _nameController,
                                     style: const TextStyle(
-                                        color: Colors.white, fontSize: 16),
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
                                     onChanged: _onSearchChanged,
                                     decoration: InputDecoration(
                                       hintText: 'e.g., Read book - 30 mins',
@@ -326,7 +445,9 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                       ),
                                       contentPadding:
                                           const EdgeInsets.symmetric(
-                                              horizontal: 24, vertical: 20),
+                                            horizontal: 24,
+                                            vertical: 20,
+                                          ),
                                     ),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
@@ -340,25 +461,29 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                 if (_showSuggestions) ...[
                                   const SizedBox(height: 12),
                                   Container(
-                                    constraints:
-                                        const BoxConstraints(maxHeight: 200),
+                                    constraints: const BoxConstraints(
+                                      maxHeight: 200,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFF221834),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                          color: const Color(0xFF382a54)),
+                                        color: const Color(0xFF382a54),
+                                      ),
                                     ),
                                     child: ListView.separated(
                                       shrinkWrap: true,
                                       padding: const EdgeInsets.symmetric(
-                                          vertical: 8),
-                                      itemCount:
-                                          _filteredHobbies.take(6).length,
+                                        vertical: 8,
+                                      ),
+                                      itemCount: _filteredHobbies
+                                          .take(6)
+                                          .length,
                                       separatorBuilder: (context, index) =>
                                           const Divider(
-                                        color: Color(0xFF382a54),
-                                        height: 1,
-                                      ),
+                                            color: Color(0xFF382a54),
+                                            height: 1,
+                                          ),
                                       itemBuilder: (context, index) {
                                         final hobby = _filteredHobbies[index];
                                         return InkWell(
@@ -373,7 +498,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                                 Text(
                                                   hobby.emoji,
                                                   style: const TextStyle(
-                                                      fontSize: 20),
+                                                    fontSize: 20,
+                                                  ),
                                                 ),
                                                 const SizedBox(width: 12),
                                                 Text(
@@ -401,16 +527,20 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFF221834),
                                 borderRadius: BorderRadius.circular(24),
-                                border:
-                                    Border.all(color: const Color(0xFF382a54)),
+                                border: Border.all(
+                                  color: const Color(0xFF382a54),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Row(
                                     children: [
-                                      Icon(Icons.repeat,
-                                          color: Color(0xFFa490cb), size: 16),
+                                      Icon(
+                                        Icons.repeat,
+                                        color: Color(0xFFa490cb),
+                                        size: 16,
+                                      ),
                                       SizedBox(width: 8),
                                       Text(
                                         'FREQUENCY',
@@ -428,17 +558,26 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF161022)
-                                          .withValues(alpha: 0.4),
+                                      color: const Color(
+                                        0xFF161022,
+                                      ).withValues(alpha: 0.4),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
                                       children: [
                                         _buildFrequencyButton('daily', 'Daily'),
                                         _buildFrequencyButton(
-                                            'weekly', 'Weekly'),
+                                          'weekly',
+                                          'Weekly',
+                                        ),
                                         _buildFrequencyButton(
-                                            'monthly', 'Monthly'),
+                                          'monthly',
+                                          'Monthly',
+                                        ),
+                                        _buildFrequencyButton(
+                                          'one_time',
+                                          'One-time',
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -454,8 +593,10 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             _selectedWeekDay == index;
                                         return GestureDetector(
                                           key: Key(
-                                              TestKeys.addHobbyWeekdayButton(
-                                                  index)),
+                                            TestKeys.addHobbyWeekdayButton(
+                                              index,
+                                            ),
+                                          ),
                                           onTap: () {
                                             setState(() {
                                               _selectedWeekDay = index;
@@ -473,7 +614,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                                 color: isSelected
                                                     ? const Color(0xFF590df2)
                                                     : Colors.white.withValues(
-                                                        alpha: 0.05),
+                                                        alpha: 0.05,
+                                                      ),
                                               ),
                                             ),
                                             child: Center(
@@ -497,15 +639,18 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF161022)
-                                            .withValues(alpha: 0.4),
+                                        color: const Color(
+                                          0xFF161022,
+                                        ).withValues(alpha: 0.4),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: const Row(
                                         children: [
-                                          Icon(Icons.today,
-                                              color: Color(0xFFa490cb),
-                                              size: 20),
+                                          Icon(
+                                            Icons.today,
+                                            color: Color(0xFFa490cb),
+                                            size: 20,
+                                          ),
                                           SizedBox(width: 12),
                                           Text(
                                             'Repeats every day',
@@ -526,9 +671,11 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                       children: [
                                         Row(
                                           children: [
-                                            const Icon(Icons.calendar_month,
-                                                color: Color(0xFFa490cb),
-                                                size: 20),
+                                            const Icon(
+                                              Icons.calendar_month,
+                                              color: Color(0xFFa490cb),
+                                              size: 20,
+                                            ),
                                             const SizedBox(width: 12),
                                             Text(
                                               'Day of month: $_selectedMonthDay${_getDaySuffix(_selectedMonthDay)}',
@@ -543,18 +690,20 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                         const SizedBox(height: 12),
                                         SliderTheme(
                                           data: SliderThemeData(
-                                            activeTrackColor:
-                                                const Color(0xFF590df2),
-                                            inactiveTrackColor:
-                                                const Color(0xFF590df2)
-                                                    .withValues(alpha: 0.2),
+                                            activeTrackColor: const Color(
+                                              0xFF590df2,
+                                            ),
+                                            inactiveTrackColor: const Color(
+                                              0xFF590df2,
+                                            ).withValues(alpha: 0.2),
                                             thumbColor: const Color(0xFF590df2),
-                                            overlayColor:
-                                                const Color(0xFF590df2)
-                                                    .withValues(alpha: 0.2),
+                                            overlayColor: const Color(
+                                              0xFF590df2,
+                                            ).withValues(alpha: 0.2),
                                             thumbShape:
                                                 const RoundSliderThumbShape(
-                                                    enabledThumbRadius: 10),
+                                                  enabledThumbRadius: 10,
+                                                ),
                                             trackHeight: 4,
                                           ),
                                           child: Slider(
@@ -564,8 +713,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             divisions: 30,
                                             onChanged: (value) {
                                               setState(() {
-                                                _selectedMonthDay =
-                                                    value.toInt();
+                                                _selectedMonthDay = value
+                                                    .toInt();
                                               });
                                             },
                                           ),
@@ -573,32 +722,72 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                         // Show day markers
                                         const Padding(
                                           padding: EdgeInsets.symmetric(
-                                              horizontal: 8),
+                                            horizontal: 8,
+                                          ),
                                           child: Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('1',
-                                                  style: TextStyle(
-                                                      color: Color(0xFFa490cb),
-                                                      fontSize: 10)),
-                                              Text('15',
-                                                  style: TextStyle(
-                                                      color: Color(0xFFa490cb),
-                                                      fontSize: 10)),
-                                              Text('31',
-                                                  style: TextStyle(
-                                                      color: Color(0xFFa490cb),
-                                                      fontSize: 10)),
+                                              Text(
+                                                '1',
+                                                style: TextStyle(
+                                                  color: Color(0xFFa490cb),
+                                                  fontSize: 10,
+                                                ),
+                                              ),
+                                              Text(
+                                                '15',
+                                                style: TextStyle(
+                                                  color: Color(0xFFa490cb),
+                                                  fontSize: 10,
+                                                ),
+                                              ),
+                                              Text(
+                                                '31',
+                                                style: TextStyle(
+                                                  color: Color(0xFFa490cb),
+                                                  fontSize: 10,
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         ),
                                       ],
                                     ),
+                                  ] else if (_repeatMode == 'one_time') ...[
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                          0xFF161022,
+                                        ).withValues(alpha: 0.4),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.check_circle_outline,
+                                            color: Color(0xFFFF8056),
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text(
+                                            'Occurs only once',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                   const SizedBox(height: 20),
                                   const Divider(
-                                      color: Color(0xFF382a54), height: 1),
+                                    color: Color(0xFF382a54),
+                                    height: 1,
+                                  ),
                                   const SizedBox(height: 20),
                                   // Notify Me toggle
                                   Row(
@@ -611,8 +800,9 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             width: 32,
                                             height: 32,
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF590df2)
-                                                  .withValues(alpha: 0.1),
+                                              color: const Color(
+                                                0xFF590df2,
+                                              ).withValues(alpha: 0.1),
                                               shape: BoxShape.circle,
                                             ),
                                             child: const Icon(
@@ -637,7 +827,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             TestKeys.addHobbyNotifyToggle,
                                         child: Switch(
                                           key: const Key(
-                                              TestKeys.addHobbyNotifyToggle),
+                                            TestKeys.addHobbyNotifyToggle,
+                                          ),
                                           value: _notifyEnabled,
                                           onChanged: (value) async {
                                             if (value) {
@@ -657,17 +848,18 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                                   // Permission denied, show message
                                                   if (mounted) {
                                                     ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
+                                                      context,
+                                                    ).showSnackBar(
                                                       const SnackBar(
                                                         content: Text(
                                                           'Notification permission denied. Please enable it in settings.',
                                                           style: TextStyle(
-                                                              color:
-                                                                  Colors.white),
+                                                            color: Colors.white,
+                                                          ),
                                                         ),
                                                         backgroundColor: Color(
-                                                            0xFFE88D39), // Readable orange
+                                                          0xFFE88D39,
+                                                        ), // Readable orange
                                                       ),
                                                     );
                                                   }
@@ -680,97 +872,199 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                               _notifyEnabled = value;
                                             });
                                           },
-                                          thumbColor: WidgetStateProperty
-                                              .resolveWith<Color?>((states) {
-                                            if (states.contains(
-                                                WidgetState.selected)) {
-                                              return const Color(0xFF590df2);
-                                            }
-                                            return null;
-                                          }),
-                                          trackColor: WidgetStateProperty
-                                              .resolveWith<Color?>((states) {
-                                            if (states.contains(
-                                                WidgetState.selected)) {
-                                              return const Color(0xFF590df2)
-                                                  .withValues(alpha: 0.5);
-                                            }
-                                            return null;
-                                          }),
+                                          thumbColor:
+                                              WidgetStateProperty.resolveWith<
+                                                Color?
+                                              >((states) {
+                                                if (states.contains(
+                                                  WidgetState.selected,
+                                                )) {
+                                                  return const Color(
+                                                    0xFF590df2,
+                                                  );
+                                                }
+                                                return null;
+                                              }),
+                                          trackColor:
+                                              WidgetStateProperty.resolveWith<
+                                                Color?
+                                              >((states) {
+                                                if (states.contains(
+                                                  WidgetState.selected,
+                                                )) {
+                                                  return const Color(
+                                                    0xFF590df2,
+                                                  ).withValues(alpha: 0.5);
+                                                }
+                                                return null;
+                                              }),
                                         ),
                                       ),
                                     ],
                                   ),
                                   if (_notifyEnabled) ...[
                                     const SizedBox(height: 16),
-                                    // Notification time
-                                    Semantics(
-                                      identifier:
-                                          TestKeys.addHobbyReminderPicker,
-                                      child: InkWell(
-                                        key: const Key(
-                                            TestKeys.addHobbyReminderPicker),
-                                        onTap: _selectTime,
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF161022)
-                                                .withValues(alpha: 0.4),
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                            border: Border.all(
-                                                color: Colors.white
-                                                    .withValues(alpha: 0.05)),
+                                    // One-time: date + time picker; recurring: time-only picker
+                                    if (_repeatMode == 'one_time')
+                                      Semantics(
+                                        identifier:
+                                            TestKeys.addHobbyReminderPicker,
+                                        child: InkWell(
+                                          key: const Key(
+                                            TestKeys.addHobbyReminderPicker,
                                           ),
-                                          child: Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.alarm,
-                                                color: Color(0xFFa490cb),
-                                                size: 20,
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Text(
-                                                      'REMINDER TIME',
-                                                      style: TextStyle(
-                                                        color:
-                                                            Color(0xFFa490cb),
-                                                        fontSize: 10,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        letterSpacing: 1.2,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      _formatTime(
-                                                          _notificationTime),
-                                                      style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
+                                          onTap: _selectDateTime,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF161022,
+                                              ).withValues(alpha: 0.4),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.05,
                                                 ),
                                               ),
-                                              const Icon(
-                                                Icons.expand_more,
-                                                color: Color(0xFF6B6B6B),
-                                                size: 18,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.event_available,
+                                                  color: Color(0xFFFF8056),
+                                                  size: 20,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      const Text(
+                                                        'REMINDER DATE & TIME',
+                                                        style: TextStyle(
+                                                          color: Color(
+                                                            0xFFa490cb,
+                                                          ),
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          letterSpacing: 1.2,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        _oneTimeReminderDateTime !=
+                                                                null
+                                                            ? _formatOneTimeReminder(
+                                                                _oneTimeReminderDateTime!,
+                                                              )
+                                                            : 'Tap to set date & time',
+                                                        style: TextStyle(
+                                                          color: _oneTimeReminderDateTime !=
+                                                                  null
+                                                              ? Colors.white
+                                                              : const Color(
+                                                                  0xFFa490cb,
+                                                                ),
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Icon(
+                                                  Icons.expand_more,
+                                                  color: Color(0xFF6B6B6B),
+                                                  size: 18,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Semantics(
+                                        identifier:
+                                            TestKeys.addHobbyReminderPicker,
+                                        child: InkWell(
+                                          key: const Key(
+                                            TestKeys.addHobbyReminderPicker,
+                                          ),
+                                          onTap: _selectTime,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF161022,
+                                              ).withValues(alpha: 0.4),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.05,
+                                                ),
                                               ),
-                                            ],
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.alarm,
+                                                  color: Color(0xFFa490cb),
+                                                  size: 20,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      const Text(
+                                                        'REMINDER TIME',
+                                                        style: TextStyle(
+                                                          color: Color(
+                                                            0xFFa490cb,
+                                                          ),
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          letterSpacing: 1.2,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        _formatTime(
+                                                          _notificationTime,
+                                                        ),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Icon(
+                                                  Icons.expand_more,
+                                                  color: Color(0xFF6B6B6B),
+                                                  size: 18,
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
                                   ],
                                 ],
                               ),
@@ -796,11 +1090,15 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                 Wrap(
                                   spacing: 12,
                                   runSpacing: 12,
-                                  children: List.generate(_colorPalette.length,
-                                      (index) {
-                                    return _buildColorButton(
-                                        _colorPalette[index], index);
-                                  }),
+                                  children: List.generate(
+                                    _colorPalette.length,
+                                    (index) {
+                                      return _buildColorButton(
+                                        _colorPalette[index],
+                                        index,
+                                      );
+                                    },
+                                  ),
                                 ),
                               ],
                             ),
@@ -814,14 +1112,16 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF590df2),
                                   foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   elevation: 8,
-                                  shadowColor: const Color(0xFF590df2)
-                                      .withValues(alpha: 0.3),
+                                  shadowColor: const Color(
+                                    0xFF590df2,
+                                  ).withValues(alpha: 0.3),
                                 ),
                                 child: Text(
                                   widget.hobby != null
@@ -841,8 +1141,9 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                               onPressed: () => Navigator.pop(context),
                               style: TextButton.styleFrom(
                                 foregroundColor: const Color(0xFFa490cb),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
                               ),
                               child: const Text(
                                 'Cancel',

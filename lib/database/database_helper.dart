@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       dbPath,
-      version: 5,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -50,6 +50,7 @@ class DatabaseHelper {
         reminder_time TEXT,
         custom_day INTEGER,
         best_streak INTEGER NOT NULL DEFAULT 0,
+        is_one_time INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -74,6 +75,20 @@ class DatabaseHelper {
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL,
         updated_at INTEGER NOT NULL
+      )
+    ''');
+
+    // Create tasks table (one-time tasks)
+    await db.execute('''
+      CREATE TABLE tasks (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        due_date INTEGER,
+        priority TEXT NOT NULL DEFAULT 'medium',
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        completed_at INTEGER
       )
     ''');
 
@@ -150,7 +165,8 @@ class DatabaseHelper {
     if (oldVersion < 4) {
       // Add best_streak column to hobbies table for tracking max streak (unbounded per FR-014)
       await db.execute(
-          'ALTER TABLE hobbies ADD COLUMN best_streak INTEGER NOT NULL DEFAULT 0');
+        'ALTER TABLE hobbies ADD COLUMN best_streak INTEGER NOT NULL DEFAULT 0',
+      );
 
       // Calculate and set initial best_streak values for existing hobbies
       print('🔄 Migrating: Calculating best streaks for existing hobbies...');
@@ -261,9 +277,37 @@ class DatabaseHelper {
       // Recreate index without priority
       await db.execute('DROP INDEX IF EXISTS idx_hobbies_priority');
       await db.execute(
-          'CREATE INDEX idx_hobbies_created_at ON hobbies(created_at)');
+        'CREATE INDEX idx_hobbies_created_at ON hobbies(created_at)',
+      );
 
       print('✅ Migration complete: Priority column removed');
+    }
+
+    if (oldVersion < 6) {
+      // Add tasks table for one-time task management
+      print('🔄 Migrating: Adding tasks table...');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          due_date INTEGER,
+          priority TEXT NOT NULL DEFAULT 'medium',
+          is_completed INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          completed_at INTEGER
+        )
+      ''');
+      print('✅ Migration complete: tasks table added');
+    }
+
+    if (oldVersion < 7) {
+      // Add is_one_time column to hobbies table
+      print('🔄 Migrating: Adding is_one_time column to hobbies...');
+      await db.execute(
+        'ALTER TABLE hobbies ADD COLUMN is_one_time INTEGER NOT NULL DEFAULT 0',
+      );
+      print('✅ Migration complete: is_one_time column added');
     }
   }
 
@@ -282,10 +326,7 @@ class DatabaseHelper {
     // Reset has_seen_landing to false
     await db.update(
       'settings',
-      {
-        'value': 'false',
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      {'value': 'false', 'updated_at': DateTime.now().millisecondsSinceEpoch},
       where: 'key = ?',
       whereArgs: ['has_seen_landing'],
     );

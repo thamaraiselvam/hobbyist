@@ -28,29 +28,39 @@ void main() {
 
     test('should include fitness hobbies', () {
       final fitnessHobbies = DefaultHobbies.hobbies
-          .where((h) => [
-                'Running',
-                'Cycling',
-                'Swimming',
-                'Yoga',
-                'Gym Workout'
-              ].contains(h.name))
+          .where(
+            (h) => [
+              'Running',
+              'Cycling',
+              'Swimming',
+              'Yoga',
+              'Gym Workout',
+            ].contains(h.name),
+          )
           .toList();
       expect(fitnessHobbies.length, 5);
     });
 
     test('should include creative hobbies', () {
       final creativeHobbies = DefaultHobbies.hobbies
-          .where((h) => ['Painting', 'Drawing', 'Photography', 'Writing']
-              .contains(h.name))
+          .where(
+            (h) => [
+              'Painting',
+              'Drawing',
+              'Photography',
+              'Writing',
+            ].contains(h.name),
+          )
           .toList();
       expect(creativeHobbies.length, 4);
     });
 
     test('should include music hobbies', () {
       final musicHobbies = DefaultHobbies.hobbies
-          .where((h) =>
-              ['Guitar', 'Piano', 'Drums', 'Music Practice'].contains(h.name))
+          .where(
+            (h) =>
+                ['Guitar', 'Piano', 'Drums', 'Music Practice'].contains(h.name),
+          )
           .toList();
       expect(musicHobbies.length, 4);
     });

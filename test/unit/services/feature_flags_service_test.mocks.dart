@@ -28,13 +28,8 @@ import 'package:mockito/src/dummies.dart' as _i4;
 // ignore_for_file: invalid_use_of_internal_member
 
 class _FakeFirebaseAuth_0 extends _i1.SmartFake implements _i2.FirebaseAuth {
-  _FakeFirebaseAuth_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeFirebaseAuth_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [RemoteConfigService].
@@ -43,207 +38,207 @@ class _FakeFirebaseAuth_0 extends _i1.SmartFake implements _i2.FirebaseAuth {
 class MockRemoteConfigService extends _i1.Mock
     implements _i3.RemoteConfigService {
   @override
-  bool get isAnalyticsScreenEnabled => (super.noSuchMethod(
-        Invocation.getter(#isAnalyticsScreenEnabled),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
-
-  @override
-  bool get areNotificationsEnabled => (super.noSuchMethod(
-        Invocation.getter(#areNotificationsEnabled),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
-
-  @override
-  bool get isSoundFeedbackEnabled => (super.noSuchMethod(
-        Invocation.getter(#isSoundFeedbackEnabled),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
-
-  @override
-  bool get areStreakMilestonesEnabled => (super.noSuchMethod(
-        Invocation.getter(#areStreakMilestonesEnabled),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
-
-  @override
-  bool get showMotivationalQuotes => (super.noSuchMethod(
-        Invocation.getter(#showMotivationalQuotes),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
-
-  @override
-  bool get arePremiumFeaturesEnabled => (super.noSuchMethod(
-        Invocation.getter(#arePremiumFeaturesEnabled),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
-
-  @override
-  int get maxHobbiesLimit => (super.noSuchMethod(
-        Invocation.getter(#maxHobbiesLimit),
-        returnValue: 0,
-        returnValueForMissingStub: 0,
-      ) as int);
-
-  @override
-  String get defaultThemeMode => (super.noSuchMethod(
-        Invocation.getter(#defaultThemeMode),
-        returnValue: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#defaultThemeMode),
-        ),
-        returnValueForMissingStub: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#defaultThemeMode),
-        ),
-      ) as String);
-
-  @override
-  int get cacheDurationHours => (super.noSuchMethod(
-        Invocation.getter(#cacheDurationHours),
-        returnValue: 0,
-        returnValueForMissingStub: 0,
-      ) as int);
-
-  @override
-  int get maxStreakDays => (super.noSuchMethod(
-        Invocation.getter(#maxStreakDays),
-        returnValue: 0,
-        returnValueForMissingStub: 0,
-      ) as int);
-
-  @override
-  String get onboardingFlowVersion => (super.noSuchMethod(
-        Invocation.getter(#onboardingFlowVersion),
-        returnValue: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#onboardingFlowVersion),
-        ),
-        returnValueForMissingStub: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#onboardingFlowVersion),
-        ),
-      ) as String);
-
-  @override
-  String get completionAnimationStyle => (super.noSuchMethod(
-        Invocation.getter(#completionAnimationStyle),
-        returnValue: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#completionAnimationStyle),
-        ),
-        returnValueForMissingStub: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#completionAnimationStyle),
-        ),
-      ) as String);
-
-  @override
-  _i5.RemoteConfigFetchStatus get fetchStatus => (super.noSuchMethod(
-        Invocation.getter(#fetchStatus),
-        returnValue: _i5.RemoteConfigFetchStatus.noFetchYet,
-        returnValueForMissingStub: _i5.RemoteConfigFetchStatus.noFetchYet,
-      ) as _i5.RemoteConfigFetchStatus);
-
-  @override
-  _i6.Future<bool> fetchConfig() => (super.noSuchMethod(
-        Invocation.method(
-          #fetchConfig,
-          [],
-        ),
-        returnValue: _i6.Future<bool>.value(false),
-        returnValueForMissingStub: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
-
-  @override
-  Set<String> getAllKeys() => (super.noSuchMethod(
-        Invocation.method(
-          #getAllKeys,
-          [],
-        ),
-        returnValue: <String>{},
-        returnValueForMissingStub: <String>{},
-      ) as Set<String>);
-
-  @override
-  String getString(
-    String? key, {
-    String? defaultValue = '',
-  }) =>
+  bool get isAnalyticsScreenEnabled =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getString,
-          [key],
-          {#defaultValue: defaultValue},
-        ),
-        returnValue: _i4.dummyValue<String>(
-          this,
-          Invocation.method(
-            #getString,
-            [key],
-            {#defaultValue: defaultValue},
-          ),
-        ),
-        returnValueForMissingStub: _i4.dummyValue<String>(
-          this,
-          Invocation.method(
-            #getString,
-            [key],
-            {#defaultValue: defaultValue},
-          ),
-        ),
-      ) as String);
+            Invocation.getter(#isAnalyticsScreenEnabled),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
-  int getInt(
-    String? key, {
-    int? defaultValue = 0,
-  }) =>
+  bool get areNotificationsEnabled =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getInt,
-          [key],
-          {#defaultValue: defaultValue},
-        ),
-        returnValue: 0,
-        returnValueForMissingStub: 0,
-      ) as int);
+            Invocation.getter(#areNotificationsEnabled),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
-  bool getBool(
-    String? key, {
-    bool? defaultValue = false,
-  }) =>
+  bool get isSoundFeedbackEnabled =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getBool,
-          [key],
-          {#defaultValue: defaultValue},
-        ),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+            Invocation.getter(#isSoundFeedbackEnabled),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
-  double getDouble(
-    String? key, {
-    double? defaultValue = 0.0,
-  }) =>
+  bool get areStreakMilestonesEnabled =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getDouble,
-          [key],
-          {#defaultValue: defaultValue},
-        ),
-        returnValue: 0.0,
-        returnValueForMissingStub: 0.0,
-      ) as double);
+            Invocation.getter(#areStreakMilestonesEnabled),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  bool get showMotivationalQuotes =>
+      (super.noSuchMethod(
+            Invocation.getter(#showMotivationalQuotes),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  bool get arePremiumFeaturesEnabled =>
+      (super.noSuchMethod(
+            Invocation.getter(#arePremiumFeaturesEnabled),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  int get maxHobbiesLimit =>
+      (super.noSuchMethod(
+            Invocation.getter(#maxHobbiesLimit),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
+
+  @override
+  String get defaultThemeMode =>
+      (super.noSuchMethod(
+            Invocation.getter(#defaultThemeMode),
+            returnValue: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#defaultThemeMode),
+            ),
+            returnValueForMissingStub: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#defaultThemeMode),
+            ),
+          )
+          as String);
+
+  @override
+  int get cacheDurationHours =>
+      (super.noSuchMethod(
+            Invocation.getter(#cacheDurationHours),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
+
+  @override
+  int get maxStreakDays =>
+      (super.noSuchMethod(
+            Invocation.getter(#maxStreakDays),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
+
+  @override
+  String get onboardingFlowVersion =>
+      (super.noSuchMethod(
+            Invocation.getter(#onboardingFlowVersion),
+            returnValue: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#onboardingFlowVersion),
+            ),
+            returnValueForMissingStub: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#onboardingFlowVersion),
+            ),
+          )
+          as String);
+
+  @override
+  String get completionAnimationStyle =>
+      (super.noSuchMethod(
+            Invocation.getter(#completionAnimationStyle),
+            returnValue: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#completionAnimationStyle),
+            ),
+            returnValueForMissingStub: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#completionAnimationStyle),
+            ),
+          )
+          as String);
+
+  @override
+  _i5.RemoteConfigFetchStatus get fetchStatus =>
+      (super.noSuchMethod(
+            Invocation.getter(#fetchStatus),
+            returnValue: _i5.RemoteConfigFetchStatus.noFetchYet,
+            returnValueForMissingStub: _i5.RemoteConfigFetchStatus.noFetchYet,
+          )
+          as _i5.RemoteConfigFetchStatus);
+
+  @override
+  _i6.Future<bool> fetchConfig() =>
+      (super.noSuchMethod(
+            Invocation.method(#fetchConfig, []),
+            returnValue: _i6.Future<bool>.value(false),
+            returnValueForMissingStub: _i6.Future<bool>.value(false),
+          )
+          as _i6.Future<bool>);
+
+  @override
+  Set<String> getAllKeys() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAllKeys, []),
+            returnValue: <String>{},
+            returnValueForMissingStub: <String>{},
+          )
+          as Set<String>);
+
+  @override
+  String getString(String? key, {String? defaultValue = ''}) =>
+      (super.noSuchMethod(
+            Invocation.method(#getString, [key], {#defaultValue: defaultValue}),
+            returnValue: _i4.dummyValue<String>(
+              this,
+              Invocation.method(
+                #getString,
+                [key],
+                {#defaultValue: defaultValue},
+              ),
+            ),
+            returnValueForMissingStub: _i4.dummyValue<String>(
+              this,
+              Invocation.method(
+                #getString,
+                [key],
+                {#defaultValue: defaultValue},
+              ),
+            ),
+          )
+          as String);
+
+  @override
+  int getInt(String? key, {int? defaultValue = 0}) =>
+      (super.noSuchMethod(
+            Invocation.method(#getInt, [key], {#defaultValue: defaultValue}),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
+
+  @override
+  bool getBool(String? key, {bool? defaultValue = false}) =>
+      (super.noSuchMethod(
+            Invocation.method(#getBool, [key], {#defaultValue: defaultValue}),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  double getDouble(String? key, {double? defaultValue = 0.0}) =>
+      (super.noSuchMethod(
+            Invocation.method(#getDouble, [key], {#defaultValue: defaultValue}),
+            returnValue: 0.0,
+            returnValueForMissingStub: 0.0,
+          )
+          as double);
 }
 
 /// A class which mocks [AuthService].
@@ -251,62 +246,62 @@ class MockRemoteConfigService extends _i1.Mock
 /// See the documentation for Mockito's code generation for more information.
 class MockAuthService extends _i1.Mock implements _i7.AuthService {
   @override
-  _i2.FirebaseAuth get authInstance => (super.noSuchMethod(
-        Invocation.getter(#authInstance),
-        returnValue: _FakeFirebaseAuth_0(
-          this,
-          Invocation.getter(#authInstance),
-        ),
-        returnValueForMissingStub: _FakeFirebaseAuth_0(
-          this,
-          Invocation.getter(#authInstance),
-        ),
-      ) as _i2.FirebaseAuth);
+  _i2.FirebaseAuth get authInstance =>
+      (super.noSuchMethod(
+            Invocation.getter(#authInstance),
+            returnValue: _FakeFirebaseAuth_0(
+              this,
+              Invocation.getter(#authInstance),
+            ),
+            returnValueForMissingStub: _FakeFirebaseAuth_0(
+              this,
+              Invocation.getter(#authInstance),
+            ),
+          )
+          as _i2.FirebaseAuth);
 
   @override
-  bool get isLoggedIn => (super.noSuchMethod(
-        Invocation.getter(#isLoggedIn),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
+  bool get isLoggedIn =>
+      (super.noSuchMethod(
+            Invocation.getter(#isLoggedIn),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
 
   @override
-  _i6.Future<_i2.UserCredential?> signInWithGoogle() => (super.noSuchMethod(
-        Invocation.method(
-          #signInWithGoogle,
-          [],
-        ),
-        returnValue: _i6.Future<_i2.UserCredential?>.value(),
-        returnValueForMissingStub: _i6.Future<_i2.UserCredential?>.value(),
-      ) as _i6.Future<_i2.UserCredential?>);
+  _i6.Future<_i2.UserCredential?> signInWithGoogle() =>
+      (super.noSuchMethod(
+            Invocation.method(#signInWithGoogle, []),
+            returnValue: _i6.Future<_i2.UserCredential?>.value(),
+            returnValueForMissingStub: _i6.Future<_i2.UserCredential?>.value(),
+          )
+          as _i6.Future<_i2.UserCredential?>);
 
   @override
-  _i6.Future<void> signOut() => (super.noSuchMethod(
-        Invocation.method(
-          #signOut,
-          [],
-        ),
-        returnValue: _i6.Future<void>.value(),
-        returnValueForMissingStub: _i6.Future<void>.value(),
-      ) as _i6.Future<void>);
+  _i6.Future<void> signOut() =>
+      (super.noSuchMethod(
+            Invocation.method(#signOut, []),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
 
   @override
-  _i6.Future<bool> isGoogleSignedIn() => (super.noSuchMethod(
-        Invocation.method(
-          #isGoogleSignedIn,
-          [],
-        ),
-        returnValue: _i6.Future<bool>.value(false),
-        returnValueForMissingStub: _i6.Future<bool>.value(false),
-      ) as _i6.Future<bool>);
+  _i6.Future<bool> isGoogleSignedIn() =>
+      (super.noSuchMethod(
+            Invocation.method(#isGoogleSignedIn, []),
+            returnValue: _i6.Future<bool>.value(false),
+            returnValueForMissingStub: _i6.Future<bool>.value(false),
+          )
+          as _i6.Future<bool>);
 
   @override
-  _i6.Future<void> saveOfflineUser(String? name) => (super.noSuchMethod(
-        Invocation.method(
-          #saveOfflineUser,
-          [name],
-        ),
-        returnValue: _i6.Future<void>.value(),
-        returnValueForMissingStub: _i6.Future<void>.value(),
-      ) as _i6.Future<void>);
+  _i6.Future<void> saveOfflineUser(String? name) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveOfflineUser, [name]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
 }

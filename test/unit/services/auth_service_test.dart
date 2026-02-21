@@ -76,14 +76,16 @@ void main() {
 
     test('signInWithGoogle success', () async {
       when(mockGoogleSignIn.signIn()).thenAnswer((_) async => mockGoogleUser);
-      when(mockGoogleUser.authentication)
-          .thenAnswer((_) async => mockGoogleAuth);
+      when(
+        mockGoogleUser.authentication,
+      ).thenAnswer((_) async => mockGoogleAuth);
       when(mockGoogleAuth.accessToken).thenReturn('access_token');
       when(mockGoogleAuth.idToken).thenReturn('id_token');
       when(mockGoogleUser.email).thenReturn('test@example.com');
 
-      when(mockAuth.signInWithCredential(any))
-          .thenAnswer((_) async => mockUserCredential);
+      when(
+        mockAuth.signInWithCredential(any),
+      ).thenAnswer((_) async => mockUserCredential);
       when(mockUserCredential.user).thenReturn(mockUser);
       when(mockUser.email).thenReturn('test@example.com');
       when(mockUser.displayName).thenReturn('Test User');
@@ -94,8 +96,9 @@ void main() {
       verify(mockGoogleSignIn.signIn()).called(1);
       verify(mockAuth.signInWithCredential(any)).called(1);
       verify(mockHobbyService.setSetting('userName', 'Test User')).called(1);
-      verify(mockHobbyService.setSetting('userEmail', 'test@example.com'))
-          .called(1);
+      verify(
+        mockHobbyService.setSetting('userEmail', 'test@example.com'),
+      ).called(1);
     });
 
     test('signInWithGoogle cancel', () async {

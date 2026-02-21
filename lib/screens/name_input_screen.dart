@@ -35,9 +35,11 @@ class _NameInputScreenState extends State<NameInputScreen> {
     // Auto-capitalize each word (e.g., "john doe" -> "John Doe")
     final name = rawName
         .split(' ')
-        .map((word) => word.isEmpty
-            ? word
-            : word[0].toUpperCase() + word.substring(1).toLowerCase())
+        .map(
+          (word) => word.isEmpty
+              ? word
+              : word[0].toUpperCase() + word.substring(1).toLowerCase(),
+        )
         .join(' ');
 
     // Save as offline user
@@ -69,7 +71,8 @@ class _NameInputScreenState extends State<NameInputScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 32.0),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height -
+                minHeight:
+                    MediaQuery.of(context).size.height -
                     MediaQuery.of(context).padding.top -
                     MediaQuery.of(context).padding.bottom,
               ),
@@ -110,8 +113,9 @@ class _NameInputScreenState extends State<NameInputScreen> {
                         decoration: InputDecoration(
                           hintText: 'e.g. Tham',
                           hintStyle: TextStyle(
-                            color:
-                                const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                            color: const Color(
+                              0xFF8B5CF6,
+                            ).withValues(alpha: 0.4),
                             fontSize: 24,
                             fontWeight: FontWeight.w500,
                           ),
@@ -127,8 +131,9 @@ class _NameInputScreenState extends State<NameInputScreen> {
                               width: 2,
                             ),
                           ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
                         ),
                         textCapitalization: TextCapitalization.words,
                         autofocus: true,

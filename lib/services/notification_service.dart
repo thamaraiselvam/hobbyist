@@ -17,11 +17,11 @@ class NotificationService {
   static set instance(NotificationService value) => _instance = value;
 
   NotificationService._internal()
-      : _notifications = FlutterLocalNotificationsPlugin();
+    : _notifications = FlutterLocalNotificationsPlugin();
 
   // For testing
   NotificationService.test({FlutterLocalNotificationsPlugin? notifications})
-      : _notifications = notifications ?? FlutterLocalNotificationsPlugin();
+    : _notifications = notifications ?? FlutterLocalNotificationsPlugin();
 
   final FlutterLocalNotificationsPlugin _notifications;
 
@@ -104,10 +104,10 @@ class NotificationService {
     // iOS initialization settings
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -131,7 +131,8 @@ class NotificationService {
 
     await _notifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     _initialized = true;
@@ -139,9 +140,10 @@ class NotificationService {
 
   /// Check if notification permissions are granted
   Future<bool> areNotificationsEnabled() async {
-    final androidImplementation =
-        _notifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidImplementation = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     if (androidImplementation != null) {
       final granted = await androidImplementation.areNotificationsEnabled();
@@ -154,19 +156,20 @@ class NotificationService {
   /// Request notification permissions (required for Android 13+)
   Future<bool> requestPermissions() async {
     // Android permissions
-    final androidImplementation =
-        _notifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidImplementation = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     if (androidImplementation != null) {
       // Request notification permission
-      final granted =
-          await androidImplementation.requestNotificationsPermission();
+      final granted = await androidImplementation
+          .requestNotificationsPermission();
 
       // Request exact alarm permission (Android 12+)
       try {
-        final exactAlarmGranted =
-            await androidImplementation.requestExactAlarmsPermission();
+        final exactAlarmGranted = await androidImplementation
+            .requestExactAlarmsPermission();
         print('Exact alarms permission: $exactAlarmGranted');
       } catch (e) {
         print('Error requesting exact alarms permission: $e');
@@ -176,9 +179,10 @@ class NotificationService {
     }
 
     // iOS permissions
-    final iosImplementation =
-        _notifications.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+    final iosImplementation = _notifications
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
 
     if (iosImplementation != null) {
       final granted = await iosImplementation.requestPermissions(
@@ -194,14 +198,15 @@ class NotificationService {
 
   /// Check if exact alarms are permitted
   Future<bool> canScheduleExactAlarms() async {
-    final androidImplementation =
-        _notifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidImplementation = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     if (androidImplementation != null) {
       try {
-        final canSchedule =
-            await androidImplementation.canScheduleExactNotifications();
+        final canSchedule = await androidImplementation
+            .canScheduleExactNotifications();
         return canSchedule ?? false;
       } catch (e) {
         print('Error checking exact alarm permission: $e');
@@ -221,7 +226,8 @@ class NotificationService {
       final settingsEnabled = await _areNotificationsEnabledInSettings();
       if (!settingsEnabled) {
         print(
-            '⚠️ Push notifications DISABLED in app settings. Skipping notification for ${hobby.name}');
+          '⚠️ Push notifications DISABLED in app settings. Skipping notification for ${hobby.name}',
+        );
         return false; // Return false but don't throw error
       }
 
@@ -235,6 +241,18 @@ class NotificationService {
       if (hobby.reminderTime == null || hobby.reminderTime!.isEmpty) {
         print('ℹ️ No reminder time set for ${hobby.name}');
         return false; // No reminder set
+      }
+
+      // One-time tasks store full datetime ('yyyy-MM-dd HH:mm') — handled separately.
+      if (hobby.repeatMode == 'one_time') {
+        final canSchedule = await canScheduleExactAlarms();
+        if (!canSchedule) {
+          print('⚠️ Cannot schedule exact alarms. Permission not granted.');
+          return true;
+        }
+        await cancelNotification(hobby.id);
+        await _scheduleOneTimeNotification(hobby);
+        return true;
       }
 
       final timeParts = hobby.reminderTime!.split(':');
@@ -337,10 +355,14 @@ class NotificationService {
     scheduledDate = scheduledDate.add(Duration(days: daysUntilTarget));
 
     print(
-        '📅 Weekly notification scheduled for weekday $targetWeekday (${_getWeekdayName(targetWeekday)}) at $scheduledDate');
+      '📅 Weekly notification scheduled for weekday $targetWeekday (${_getWeekdayName(targetWeekday)}) at $scheduledDate',
+    );
 
     await _scheduleNotification(
-        hobby, scheduledDate, DateTimeComponents.dayOfWeekAndTime);
+      hobby,
+      scheduledDate,
+      DateTimeComponents.dayOfWeekAndTime,
+    );
   }
 
   /// Schedule monthly recurring notification (on selected day of month)
@@ -368,19 +390,107 @@ class NotificationService {
     if (scheduledDate.isBefore(now) || scheduledDate.day != selectedDay) {
       // Move to next month
       if (now.month == 12) {
-        scheduledDate =
-            tz.TZDateTime(tz.local, now.year + 1, 1, selectedDay, hour, minute);
+        scheduledDate = tz.TZDateTime(
+          tz.local,
+          now.year + 1,
+          1,
+          selectedDay,
+          hour,
+          minute,
+        );
       } else {
         scheduledDate = tz.TZDateTime(
-            tz.local, now.year, now.month + 1, selectedDay, hour, minute);
+          tz.local,
+          now.year,
+          now.month + 1,
+          selectedDay,
+          hour,
+          minute,
+        );
       }
     }
 
     print(
-        '📅 Monthly notification scheduled for day $selectedDay at $scheduledDate');
+      '📅 Monthly notification scheduled for day $selectedDay at $scheduledDate',
+    );
 
     await _scheduleNotification(
-        hobby, scheduledDate, DateTimeComponents.dayOfMonthAndTime);
+      hobby,
+      scheduledDate,
+      DateTimeComponents.dayOfMonthAndTime,
+    );
+  }
+
+  /// Schedule a one-shot notification for a one-time task.
+  /// reminderTime format: 'yyyy-MM-dd HH:mm'
+  Future<void> _scheduleOneTimeNotification(Hobby hobby) async {
+    final rt = hobby.reminderTime;
+    if (rt == null || rt.isEmpty || !rt.contains(' ')) {
+      print('ℹ️ No valid date+time set for one-time task: ${hobby.name}');
+      return;
+    }
+
+    final parts = rt.split(' ');
+    final dateParts = parts[0].split('-');
+    final timeParts = parts[1].split(':');
+    if (dateParts.length != 3 || timeParts.length != 2) return;
+
+    final year = int.tryParse(dateParts[0]);
+    final month = int.tryParse(dateParts[1]);
+    final day = int.tryParse(dateParts[2]);
+    final hour = int.tryParse(timeParts[0]);
+    final minute = int.tryParse(timeParts[1]);
+    if (year == null || month == null || day == null ||
+        hour == null || minute == null) {
+      return;
+    }
+
+    final scheduledDate = tz.TZDateTime(tz.local, year, month, day, hour, minute);
+    if (scheduledDate.isBefore(tz.TZDateTime.now(tz.local))) {
+      print('⚠️ One-time reminder is in the past, skipping: ${hobby.name}');
+      return;
+    }
+
+    print('📅 One-time notification for "${hobby.name}" at $scheduledDate');
+
+    const androidDetails = AndroidNotificationDetails(
+      'hobby_reminders',
+      'Hobby Reminders',
+      channelDescription: 'Notifications for hobby reminders and streaks',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      enableVibration: true,
+      playSound: true,
+      styleInformation: BigTextStyleInformation(
+        'Your one-time task is due now!',
+      ),
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    try {
+      await _notifications.zonedSchedule(
+        hobby.id.hashCode,
+        hobby.name,
+        'Your one-time task is due now!',
+        scheduledDate,
+        const NotificationDetails(android: androidDetails, iOS: iosDetails),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        // No matchDateTimeComponents = fires exactly once
+        payload: hobby.id,
+      );
+      print('✅ One-time notification scheduled at $scheduledDate');
+    } catch (e) {
+      print('❌ Error scheduling one-time notification: $e');
+      rethrow;
+    }
   }
 
   /// Common notification scheduling logic
@@ -433,7 +543,8 @@ class NotificationService {
         payload: payload,
       );
       print(
-          '✅ Notification scheduled for ${hobby.name} at $scheduledDate (Local: ${scheduledDate.toLocal()})');
+        '✅ Notification scheduled for ${hobby.name} at $scheduledDate (Local: ${scheduledDate.toLocal()})',
+      );
       print('   Current time: ${tz.TZDateTime.now(tz.local)}');
       print('   Notification ID: ${hobby.id.hashCode}');
     } catch (e) {
@@ -505,7 +616,8 @@ class NotificationService {
 
       if (result.isEmpty) {
         print(
-            '⚠️ push_notifications setting not found in database, defaulting to enabled');
+          '⚠️ push_notifications setting not found in database, defaulting to enabled',
+        );
         return true; // Default to enabled
       }
 
@@ -542,7 +654,7 @@ class NotificationService {
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ];
     return weekdays[weekday];
   }

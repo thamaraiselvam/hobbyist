@@ -11,10 +11,11 @@ void main() {
     // Mock path_provider
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/path_provider'),
-            (MethodCall methodCall) async {
-      return '.';
-    });
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async {
+            return '.';
+          },
+        );
 
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -22,11 +23,7 @@ void main() {
 
   group('AddHobbyScreen Widget Tests', () {
     testWidgets('should display add hobby screen', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: AddHobbyScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: AddHobbyScreen()));
 
       expect(find.text('ADD NEW HOBBY TASK'), findsOneWidget);
       expect(find.text('FREQUENCY'), findsOneWidget);
@@ -34,13 +31,10 @@ void main() {
       expect(find.text('Create Activity'), findsOneWidget);
     });
 
-    testWidgets('should enable create button always',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: AddHobbyScreen(),
-        ),
-      );
+    testWidgets('should enable create button always', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: AddHobbyScreen()));
 
       final button = find.widgetWithText(ElevatedButton, 'Create Activity');
       expect(button, findsOneWidget);
@@ -50,56 +44,46 @@ void main() {
       expect(elevatedButton.onPressed, isNotNull);
     });
 
-    testWidgets('should show validation error when name is empty',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: AddHobbyScreen(),
-        ),
-      );
+    testWidgets('should show validation error when name is empty', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: AddHobbyScreen()));
 
       final button = find.widgetWithText(ElevatedButton, 'Create Activity');
-      await tester.tap(button);
+      // Scroll button into view before tapping (screen may be smaller than widget)
+      await tester.ensureVisible(button);
+      await tester.tap(button, warnIfMissed: false);
       await tester.pump();
 
       expect(find.text('Please enter a hobby name'), findsOneWidget);
     });
 
-    testWidgets('should display frequency options',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: AddHobbyScreen(),
-        ),
-      );
+    testWidgets('should display frequency options', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: AddHobbyScreen()));
 
       expect(find.text('Daily'), findsOneWidget);
       expect(find.text('Weekly'), findsOneWidget);
       expect(find.text('Monthly'), findsOneWidget);
+      expect(find.text('One-time'), findsOneWidget);
     });
 
     testWidgets('should display color selection', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: AddHobbyScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: AddHobbyScreen()));
 
       expect(find.text('COLOR PALETTE'), findsOneWidget);
     });
 
     testWidgets('should have cancel button', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: AddHobbyScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: AddHobbyScreen()));
 
       expect(find.text('Cancel'), findsOneWidget);
     });
 
-    testWidgets('should pop when cancel button is pressed',
-        (WidgetTester tester) async {
+    testWidgets('should pop when cancel button is pressed', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

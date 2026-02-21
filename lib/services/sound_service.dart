@@ -12,15 +12,13 @@ class SoundService {
   static set instance(SoundService value) => _instance = value;
 
   SoundService._internal()
-      : _hobbyService = HobbyService(),
-        _analytics = AnalyticsService();
+    : _hobbyService = HobbyService(),
+      _analytics = AnalyticsService();
 
   // For testing
-  SoundService.test({
-    HobbyService? hobbyService,
-    AnalyticsService? analytics,
-  })  : _hobbyService = hobbyService ?? HobbyService(),
-        _analytics = analytics ?? AnalyticsService();
+  SoundService.test({HobbyService? hobbyService, AnalyticsService? analytics})
+    : _hobbyService = hobbyService ?? HobbyService(),
+      _analytics = analytics ?? AnalyticsService();
 
   final HobbyService _hobbyService;
   final AnalyticsService _analytics;
@@ -28,8 +26,9 @@ class SoundService {
   Future<void> playCompletionSound() async {
     try {
       // Check if completion vibration is enabled in settings
-      final vibrationEnabled =
-          await _hobbyService.getSetting('completion_sound');
+      final vibrationEnabled = await _hobbyService.getSetting(
+        'completion_sound',
+      );
       if (vibrationEnabled == 'false') {
         return;
       }

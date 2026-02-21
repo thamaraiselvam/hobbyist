@@ -56,10 +56,12 @@ void main() {
         when(mockRemoteConfig.setDefaults(any)).thenAnswer((_) async {});
         when(mockRemoteConfig.setConfigSettings(any)).thenAnswer((_) async {});
         when(mockRemoteConfig.fetchAndActivate()).thenAnswer((_) async => true);
-        when(mockRemoteConfig.lastFetchStatus)
-            .thenReturn(RemoteConfigFetchStatus.success);
-        when(mockRemoteConfig.getString('allow_developer_settings'))
-            .thenReturn('{"feature_access_by_email":{}}');
+        when(
+          mockRemoteConfig.lastFetchStatus,
+        ).thenReturn(RemoteConfigFetchStatus.success);
+        when(
+          mockRemoteConfig.getString('allow_developer_settings'),
+        ).thenReturn('{"feature_access_by_email":{}}');
 
         // Re-initialize with stubbed methods
         await RemoteConfigService.initialize();
@@ -69,8 +71,9 @@ void main() {
       test('should handle fetchAndActivate failure', () async {
         when(mockRemoteConfig.setDefaults(any)).thenAnswer((_) async {});
         when(mockRemoteConfig.setConfigSettings(any)).thenAnswer((_) async {});
-        when(mockRemoteConfig.fetchAndActivate())
-            .thenThrow(Exception('Remote config error'));
+        when(
+          mockRemoteConfig.fetchAndActivate(),
+        ).thenThrow(Exception('Remote config error'));
 
         await RemoteConfigService.initialize();
         expect(true, true);
@@ -80,11 +83,13 @@ void main() {
         when(mockRemoteConfig.setDefaults(any)).thenAnswer((_) async {});
         when(mockRemoteConfig.setConfigSettings(any)).thenAnswer((_) async {});
         when(mockRemoteConfig.fetchAndActivate()).thenAnswer((_) async => true);
-        when(mockRemoteConfig.lastFetchStatus)
-            .thenReturn(RemoteConfigFetchStatus.success);
+        when(
+          mockRemoteConfig.lastFetchStatus,
+        ).thenReturn(RemoteConfigFetchStatus.success);
         // String longer than 100 characters to test substring logic
         when(mockRemoteConfig.getString('allow_developer_settings')).thenReturn(
-            '{"feature_access_by_email":{"test@example.com":{"developer_options":true,"analytics_and_crash_reports":true}}}');
+          '{"feature_access_by_email":{"test@example.com":{"developer_options":true,"analytics_and_crash_reports":true}}}',
+        );
 
         await RemoteConfigService.initialize();
         expect(true, true);
@@ -94,10 +99,12 @@ void main() {
         when(mockRemoteConfig.setDefaults(any)).thenAnswer((_) async {});
         when(mockRemoteConfig.setConfigSettings(any)).thenAnswer((_) async {});
         when(mockRemoteConfig.fetchAndActivate()).thenAnswer((_) async => true);
-        when(mockRemoteConfig.lastFetchStatus)
-            .thenReturn(RemoteConfigFetchStatus.success);
-        when(mockRemoteConfig.getString('allow_developer_settings'))
-            .thenReturn('');
+        when(
+          mockRemoteConfig.lastFetchStatus,
+        ).thenReturn(RemoteConfigFetchStatus.success);
+        when(
+          mockRemoteConfig.getString('allow_developer_settings'),
+        ).thenReturn('');
 
         await RemoteConfigService.initialize();
         expect(true, true);
@@ -115,8 +122,9 @@ void main() {
       });
 
       test('should return false when already up to date', () async {
-        when(mockRemoteConfig.fetchAndActivate())
-            .thenAnswer((_) async => false);
+        when(
+          mockRemoteConfig.fetchAndActivate(),
+        ).thenAnswer((_) async => false);
 
         final result = await service.fetchConfig();
 
@@ -124,8 +132,9 @@ void main() {
       });
 
       test('should return false when fetch fails', () async {
-        when(mockRemoteConfig.fetchAndActivate())
-            .thenThrow(Exception('Network error'));
+        when(
+          mockRemoteConfig.fetchAndActivate(),
+        ).thenThrow(Exception('Network error'));
 
         final result = await service.fetchConfig();
 
@@ -135,12 +144,14 @@ void main() {
 
     group('Feature Flag Getters Tests', () {
       test('isAnalyticsScreenEnabled should return config value', () {
-        when(mockRemoteConfig.getBool('enable_analytics_screen'))
-            .thenReturn(true);
+        when(
+          mockRemoteConfig.getBool('enable_analytics_screen'),
+        ).thenReturn(true);
         expect(service.isAnalyticsScreenEnabled, true);
 
-        when(mockRemoteConfig.getBool('enable_analytics_screen'))
-            .thenReturn(false);
+        when(
+          mockRemoteConfig.getBool('enable_analytics_screen'),
+        ).thenReturn(false);
         expect(service.isAnalyticsScreenEnabled, false);
       });
 
@@ -148,48 +159,57 @@ void main() {
         when(mockRemoteConfig.getBool('enable_notifications')).thenReturn(true);
         expect(service.areNotificationsEnabled, true);
 
-        when(mockRemoteConfig.getBool('enable_notifications'))
-            .thenReturn(false);
+        when(
+          mockRemoteConfig.getBool('enable_notifications'),
+        ).thenReturn(false);
         expect(service.areNotificationsEnabled, false);
       });
 
       test('isSoundFeedbackEnabled should return config value', () {
-        when(mockRemoteConfig.getBool('enable_sound_feedback'))
-            .thenReturn(true);
+        when(
+          mockRemoteConfig.getBool('enable_sound_feedback'),
+        ).thenReturn(true);
         expect(service.isSoundFeedbackEnabled, true);
 
-        when(mockRemoteConfig.getBool('enable_sound_feedback'))
-            .thenReturn(false);
+        when(
+          mockRemoteConfig.getBool('enable_sound_feedback'),
+        ).thenReturn(false);
         expect(service.isSoundFeedbackEnabled, false);
       });
 
       test('areStreakMilestonesEnabled should return config value', () {
-        when(mockRemoteConfig.getBool('enable_streak_milestones'))
-            .thenReturn(true);
+        when(
+          mockRemoteConfig.getBool('enable_streak_milestones'),
+        ).thenReturn(true);
         expect(service.areStreakMilestonesEnabled, true);
 
-        when(mockRemoteConfig.getBool('enable_streak_milestones'))
-            .thenReturn(false);
+        when(
+          mockRemoteConfig.getBool('enable_streak_milestones'),
+        ).thenReturn(false);
         expect(service.areStreakMilestonesEnabled, false);
       });
 
       test('showMotivationalQuotes should return config value', () {
-        when(mockRemoteConfig.getBool('show_motivational_quotes'))
-            .thenReturn(true);
+        when(
+          mockRemoteConfig.getBool('show_motivational_quotes'),
+        ).thenReturn(true);
         expect(service.showMotivationalQuotes, true);
 
-        when(mockRemoteConfig.getBool('show_motivational_quotes'))
-            .thenReturn(false);
+        when(
+          mockRemoteConfig.getBool('show_motivational_quotes'),
+        ).thenReturn(false);
         expect(service.showMotivationalQuotes, false);
       });
 
       test('arePremiumFeaturesEnabled should return config value', () {
-        when(mockRemoteConfig.getBool('enable_premium_features'))
-            .thenReturn(true);
+        when(
+          mockRemoteConfig.getBool('enable_premium_features'),
+        ).thenReturn(true);
         expect(service.arePremiumFeaturesEnabled, true);
 
-        when(mockRemoteConfig.getBool('enable_premium_features'))
-            .thenReturn(false);
+        when(
+          mockRemoteConfig.getBool('enable_premium_features'),
+        ).thenReturn(false);
         expect(service.arePremiumFeaturesEnabled, false);
       });
     });
@@ -204,12 +224,14 @@ void main() {
       });
 
       test('defaultThemeMode should return config value', () {
-        when(mockRemoteConfig.getString('default_theme_mode'))
-            .thenReturn('light');
+        when(
+          mockRemoteConfig.getString('default_theme_mode'),
+        ).thenReturn('light');
         expect(service.defaultThemeMode, 'light');
 
-        when(mockRemoteConfig.getString('default_theme_mode'))
-            .thenReturn('dark');
+        when(
+          mockRemoteConfig.getString('default_theme_mode'),
+        ).thenReturn('dark');
         expect(service.defaultThemeMode, 'dark');
       });
 
@@ -230,22 +252,26 @@ void main() {
       });
 
       test('onboardingFlowVersion should return config value', () {
-        when(mockRemoteConfig.getString('onboarding_flow_version'))
-            .thenReturn('v2');
+        when(
+          mockRemoteConfig.getString('onboarding_flow_version'),
+        ).thenReturn('v2');
         expect(service.onboardingFlowVersion, 'v2');
 
-        when(mockRemoteConfig.getString('onboarding_flow_version'))
-            .thenReturn('v3');
+        when(
+          mockRemoteConfig.getString('onboarding_flow_version'),
+        ).thenReturn('v3');
         expect(service.onboardingFlowVersion, 'v3');
       });
 
       test('completionAnimationStyle should return config value', () {
-        when(mockRemoteConfig.getString('completion_animation_style'))
-            .thenReturn('celebration');
+        when(
+          mockRemoteConfig.getString('completion_animation_style'),
+        ).thenReturn('celebration');
         expect(service.completionAnimationStyle, 'celebration');
 
-        when(mockRemoteConfig.getString('completion_animation_style'))
-            .thenReturn('simple');
+        when(
+          mockRemoteConfig.getString('completion_animation_style'),
+        ).thenReturn('simple');
         expect(service.completionAnimationStyle, 'simple');
       });
     });
@@ -258,15 +284,18 @@ void main() {
       });
 
       test('getString should return config string', () {
-        when(mockRemoteConfig.getString('custom_key'))
-            .thenReturn('custom_value');
+        when(
+          mockRemoteConfig.getString('custom_key'),
+        ).thenReturn('custom_value');
         expect(service.getString('custom_key'), 'custom_value');
       });
 
       test('getString should return config value not default', () {
         when(mockRemoteConfig.getString('any_key')).thenReturn('from_config');
-        expect(service.getString('any_key', defaultValue: 'fallback'),
-            'from_config');
+        expect(
+          service.getString('any_key', defaultValue: 'fallback'),
+          'from_config',
+        );
       });
 
       test('getInt should return config int', () {
@@ -302,26 +331,30 @@ void main() {
 
     group('Status Getters Tests', () {
       test('fetchStatus should return last fetch status - success', () {
-        when(mockRemoteConfig.lastFetchStatus)
-            .thenReturn(RemoteConfigFetchStatus.success);
+        when(
+          mockRemoteConfig.lastFetchStatus,
+        ).thenReturn(RemoteConfigFetchStatus.success);
         expect(service.fetchStatus, RemoteConfigFetchStatus.success);
       });
 
       test('fetchStatus should return last fetch status - failure', () {
-        when(mockRemoteConfig.lastFetchStatus)
-            .thenReturn(RemoteConfigFetchStatus.failure);
+        when(
+          mockRemoteConfig.lastFetchStatus,
+        ).thenReturn(RemoteConfigFetchStatus.failure);
         expect(service.fetchStatus, RemoteConfigFetchStatus.failure);
       });
 
       test('fetchStatus should return last fetch status - noFetchYet', () {
-        when(mockRemoteConfig.lastFetchStatus)
-            .thenReturn(RemoteConfigFetchStatus.noFetchYet);
+        when(
+          mockRemoteConfig.lastFetchStatus,
+        ).thenReturn(RemoteConfigFetchStatus.noFetchYet);
         expect(service.fetchStatus, RemoteConfigFetchStatus.noFetchYet);
       });
 
       test('fetchStatus should return last fetch status - throttle', () {
-        when(mockRemoteConfig.lastFetchStatus)
-            .thenReturn(RemoteConfigFetchStatus.throttle);
+        when(
+          mockRemoteConfig.lastFetchStatus,
+        ).thenReturn(RemoteConfigFetchStatus.throttle);
         expect(service.fetchStatus, RemoteConfigFetchStatus.throttle);
       });
 

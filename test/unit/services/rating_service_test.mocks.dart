@@ -28,24 +28,22 @@ import 'package:mockito/mockito.dart' as _i1;
 /// See the documentation for Mockito's code generation for more information.
 class MockInAppReview extends _i1.Mock implements _i2.InAppReview {
   @override
-  _i3.Future<bool> isAvailable() => (super.noSuchMethod(
-        Invocation.method(
-          #isAvailable,
-          [],
-        ),
-        returnValue: _i3.Future<bool>.value(false),
-        returnValueForMissingStub: _i3.Future<bool>.value(false),
-      ) as _i3.Future<bool>);
+  _i3.Future<bool> isAvailable() =>
+      (super.noSuchMethod(
+            Invocation.method(#isAvailable, []),
+            returnValue: _i3.Future<bool>.value(false),
+            returnValueForMissingStub: _i3.Future<bool>.value(false),
+          )
+          as _i3.Future<bool>);
 
   @override
-  _i3.Future<void> requestReview() => (super.noSuchMethod(
-        Invocation.method(
-          #requestReview,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+  _i3.Future<void> requestReview() =>
+      (super.noSuchMethod(
+            Invocation.method(#requestReview, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> openStoreListing({
@@ -53,15 +51,12 @@ class MockInAppReview extends _i1.Mock implements _i2.InAppReview {
     String? microsoftStoreId,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #openStoreListing,
-          [],
-          {
-            #appStoreId: appStoreId,
-            #microsoftStoreId: microsoftStoreId,
-          },
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#openStoreListing, [], {
+              #appStoreId: appStoreId,
+              #microsoftStoreId: microsoftStoreId,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 }

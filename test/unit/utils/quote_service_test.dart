@@ -71,7 +71,7 @@ void main() {
         'do',
         'try',
         'win',
-        'habit'
+        'habit',
       ];
 
       bool foundPositive = false;

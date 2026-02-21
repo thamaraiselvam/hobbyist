@@ -23,16 +23,16 @@ class MockFirebasePlatform extends FirebasePlatform {
 
   @override
   List<FirebaseAppPlatform> get apps => [
-        FirebaseAppPlatform(
-          '[DEFAULT]',
-          const FirebaseOptions(
-            apiKey: '123',
-            appId: '123',
-            messagingSenderId: '123',
-            projectId: '123',
-          ),
-        ),
-      ];
+    FirebaseAppPlatform(
+      '[DEFAULT]',
+      const FirebaseOptions(
+        apiKey: '123',
+        appId: '123',
+        messagingSenderId: '123',
+        projectId: '123',
+      ),
+    ),
+  ];
 
   @override
   FirebaseAppPlatform app([String name = '[DEFAULT]']) {
@@ -60,71 +60,82 @@ Future<void> setupFirebaseMocks() async {
   // Mock channels for other Firebase services which might still use MethodChannels
 
   // Mock Firebase Auth
-  const MethodChannel authChannel =
-      MethodChannel('plugins.flutter.io/firebase_auth');
+  const MethodChannel authChannel = MethodChannel(
+    'plugins.flutter.io/firebase_auth',
+  );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(authChannel, (MethodCall methodCall) async {
-    if (methodCall.method == 'Auth#registerIdTokenListener') {
-      return null;
-    }
-    if (methodCall.method == 'Auth#registerAuthStateListener') {
-      return null;
-    }
-    return null;
-  });
+        if (methodCall.method == 'Auth#registerIdTokenListener') {
+          return null;
+        }
+        if (methodCall.method == 'Auth#registerAuthStateListener') {
+          return null;
+        }
+        return null;
+      });
 
   // Mock Firebase Analytics
-  const MethodChannel analyticsChannel =
-      MethodChannel('plugins.flutter.io/firebase_analytics');
+  const MethodChannel analyticsChannel = MethodChannel(
+    'plugins.flutter.io/firebase_analytics',
+  );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(analyticsChannel,
-          (MethodCall methodCall) async {
-    return null;
-  });
+      .setMockMethodCallHandler(analyticsChannel, (
+        MethodCall methodCall,
+      ) async {
+        return null;
+      });
 
   // Mock Firebase Performance
-  const MethodChannel performanceChannel =
-      MethodChannel('plugins.flutter.io/firebase_performance');
+  const MethodChannel performanceChannel = MethodChannel(
+    'plugins.flutter.io/firebase_performance',
+  );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(performanceChannel,
-          (MethodCall methodCall) async {
-    return null;
-  });
+      .setMockMethodCallHandler(performanceChannel, (
+        MethodCall methodCall,
+      ) async {
+        return null;
+      });
 
   // Mock Firebase Remote Config
-  const MethodChannel remoteConfigChannel =
-      MethodChannel('plugins.flutter.io/firebase_remote_config');
+  const MethodChannel remoteConfigChannel = MethodChannel(
+    'plugins.flutter.io/firebase_remote_config',
+  );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(remoteConfigChannel,
-          (MethodCall methodCall) async {
-    if (methodCall.method == 'RemoteConfig#ensureInitialized') {
-      return {
-        'lastFetchTime': 0,
-        'lastFetchStatus': 'success',
-        'settings': {'minimumFetchInterval': 0, 'fetchTimeout': 60},
-      };
-    }
-    return null;
-  });
+      .setMockMethodCallHandler(remoteConfigChannel, (
+        MethodCall methodCall,
+      ) async {
+        if (methodCall.method == 'RemoteConfig#ensureInitialized') {
+          return {
+            'lastFetchTime': 0,
+            'lastFetchStatus': 'success',
+            'settings': {'minimumFetchInterval': 0, 'fetchTimeout': 60},
+          };
+        }
+        return null;
+      });
 
   // Mock Firebase Crashlytics
-  const MethodChannel crashlyticsChannel =
-      MethodChannel('plugins.flutter.io/firebase_crashlytics');
+  const MethodChannel crashlyticsChannel = MethodChannel(
+    'plugins.flutter.io/firebase_crashlytics',
+  );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(crashlyticsChannel,
-          (MethodCall methodCall) async {
-    return null;
-  });
+      .setMockMethodCallHandler(crashlyticsChannel, (
+        MethodCall methodCall,
+      ) async {
+        return null;
+      });
 
   // Mock Google Sign In
-  const MethodChannel googleSignInChannel =
-      MethodChannel('plugins.flutter.io/google_sign_in');
+  const MethodChannel googleSignInChannel = MethodChannel(
+    'plugins.flutter.io/google_sign_in',
+  );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(googleSignInChannel,
-          (MethodCall methodCall) async {
-    if (methodCall.method == 'init') {
-      return null;
-    }
-    return null;
-  });
+      .setMockMethodCallHandler(googleSignInChannel, (
+        MethodCall methodCall,
+      ) async {
+        if (methodCall.method == 'init') {
+          return null;
+        }
+        return null;
+      });
 }

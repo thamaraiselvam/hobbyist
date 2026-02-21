@@ -159,7 +159,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     final now = DateTime.now();
 
@@ -207,8 +207,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String get bestDay {
     final now = DateTime.now();
     final monday = now.subtract(Duration(days: now.weekday - 1));
-    final yesterday =
-        DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 1)));
+    final yesterday = DateFormat(
+      'yyyy-MM-dd',
+    ).format(now.subtract(const Duration(days: 1)));
 
     Map<String, Map<String, dynamic>> dayData = {};
 
@@ -233,18 +234,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         displayDate = DateFormat('dd-MMM').format(date);
       }
 
-      dayData[displayDate] = {
-        'count': count,
-        'dateKey': dateKey,
-      };
+      dayData[displayDate] = {'count': count, 'dateKey': dateKey};
     }
 
     if (dayData.isEmpty || dayData.values.every((v) => v['count'] == 0)) {
       return 'N/A';
     }
 
-    final maxEntry = dayData.entries.reduce((a, b) =>
-        (a.value['count'] as int) > (b.value['count'] as int) ? a : b);
+    final maxEntry = dayData.entries.reduce(
+      (a, b) => (a.value['count'] as int) > (b.value['count'] as int) ? a : b,
+    );
 
     return maxEntry.key;
   }
@@ -273,8 +272,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       return 'No data yet';
     }
 
-    final maxEntry =
-        dayData.entries.reduce((a, b) => a.value > b.value ? a : b);
+    final maxEntry = dayData.entries.reduce(
+      (a, b) => a.value > b.value ? a : b,
+    );
 
     return '${maxEntry.value} tasks';
   }
@@ -365,8 +365,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.local_fire_department,
-                        color: Color(0xFF6C3FFF), size: 32),
+                    Icon(
+                      Icons.local_fire_department,
+                      color: Color(0xFF6C3FFF),
+                      size: 32,
+                    ),
                     SizedBox(width: 12),
                     Text(
                       'Hobby Streaks',
@@ -382,24 +385,26 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 Row(
                   children: [
                     Expanded(
-                        child: _buildStatCard(
-                      'CURRENT STREAK',
-                      '$currentStreak',
-                      'Days',
-                      'Keep it up!',
-                      Icons.local_fire_department,
-                      const Color(0xFFFF6B35),
-                    )),
+                      child: _buildStatCard(
+                        'CURRENT STREAK',
+                        '$currentStreak',
+                        'Days',
+                        'Keep it up!',
+                        Icons.local_fire_department,
+                        const Color(0xFFFF6B35),
+                      ),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
-                        child: _buildStatCard(
-                      'TOTAL DONE',
-                      '$totalCompleted',
-                      'Tasks',
-                      '${completionRate.toInt()}% Today',
-                      Icons.check_circle,
-                      const Color(0xFF6C3FFF),
-                    )),
+                      child: _buildStatCard(
+                        'TOTAL DONE',
+                        '$totalCompleted',
+                        'Tasks',
+                        '${completionRate.toInt()}% Today',
+                        Icons.check_circle,
+                        const Color(0xFF6C3FFF),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -417,18 +422,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 Row(
                   children: [
                     Expanded(
-                        child: _buildMiniStatCard(
-                      'HIGHEST COMPLETION\nDAY',
-                      bestDay,
-                      bestDay != 'N/A' ? bestDaySubtitle : 'No data yet',
-                    )),
+                      child: _buildMiniStatCard(
+                        'HIGHEST COMPLETION\nDAY',
+                        bestDay,
+                        bestDay != 'N/A' ? bestDaySubtitle : 'No data yet',
+                      ),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
-                        child: _buildMiniStatCard(
-                      'DAILY AVERAGE',
-                      '${dailyAverage.toStringAsFixed(1)} Tasks',
-                      totalCompleted > 0 ? 'Last 7 days' : 'No completions',
-                    )),
+                      child: _buildMiniStatCard(
+                        'DAILY AVERAGE',
+                        '${dailyAverage.toStringAsFixed(1)} Tasks',
+                        totalCompleted > 0 ? 'Last 7 days' : 'No completions',
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -451,10 +458,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1733),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: const Color(0xFF3D3560),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF3D3560), width: 1),
       ),
       child: SafeArea(
         top: false,
@@ -669,8 +673,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final activity = currentActivity;
     final maxActivity =
         activity.values.isEmpty || activity.values.every((v) => v == 0)
-            ? 1
-            : activity.values.reduce((a, b) => a > b ? a : b);
+        ? 1
+        : activity.values.reduce((a, b) => a > b ? a : b);
 
     return _selectedPeriod == 'Yearly'
         ? _buildYearlyGitHubStyle()
@@ -678,10 +682,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: activity.entries.map((entry) {
               final intensity = maxActivity > 0 ? entry.value / maxActivity : 0;
-              final todayLabel = DateFormat('E')
-                  .format(DateTime.now())
-                  .toUpperCase()
-                  .substring(0, 3);
+              final todayLabel = DateFormat(
+                'E',
+              ).format(DateTime.now()).toUpperCase().substring(0, 3);
               final isToday =
                   _selectedPeriod == 'Weekly' && entry.key == todayLabel;
 
@@ -695,8 +698,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         decoration: BoxDecoration(
                           color: entry.value > 0
                               ? (intensity > 0.6
-                                  ? const Color(0xFF6C3FFF)
-                                  : const Color(0xFF8B5CF6))
+                                    ? const Color(0xFF6C3FFF)
+                                    : const Color(0xFF8B5CF6))
                               : const Color(0xFF3D3449),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
@@ -738,8 +741,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final activity = yearlyActivity;
     final maxActivity =
         activity.values.isEmpty || activity.values.every((v) => v == 0)
-            ? 1
-            : activity.values.reduce((a, b) => a > b ? a : b);
+        ? 1
+        : activity.values.reduce((a, b) => a > b ? a : b);
 
     return Row(
       children: activity.entries.map((entry) {
@@ -842,10 +845,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
             ),
@@ -894,10 +894,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  color: Colors.white54,
-                  fontSize: 11,
-                ),
+                style: const TextStyle(color: Colors.white54, fontSize: 11),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -909,12 +906,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildRoutineCards() {
-    final dailyHobbies =
-        widget.hobbies.where((h) => h.repeatMode == 'daily').toList();
-    final weeklyHobbies =
-        widget.hobbies.where((h) => h.repeatMode == 'weekly').toList();
-    final monthlyHobbies =
-        widget.hobbies.where((h) => h.repeatMode == 'monthly').toList();
+    final dailyHobbies = widget.hobbies
+        .where((h) => h.repeatMode == 'daily')
+        .toList();
+    final weeklyHobbies = widget.hobbies
+        .where((h) => h.repeatMode == 'weekly')
+        .toList();
+    final monthlyHobbies = widget.hobbies
+        .where((h) => h.repeatMode == 'monthly')
+        .toList();
 
     List<Widget> cards = [];
 
@@ -949,8 +949,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       if (earliestDate != null) {
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
-        final start =
-            DateTime(earliestDate.year, earliestDate.month, earliestDate.day);
+        final start = DateTime(
+          earliestDate.year,
+          earliestDate.month,
+          earliestDate.day,
+        );
         // Calculate days from earliest creation date to now
         final daysSinceCreation = today.difference(start).inDays + 1;
         // Total expected = days × number of daily hobbies
@@ -974,8 +977,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           : 0;
       // Cap percentage at 100%
       percentage = percentage > 100 ? 100 : percentage;
-      cards.add(_buildRoutineMiniCard('DAILY ROUTINE', '$percentage%',
-          '$totalCompleted of $totalExpected tasks'));
+      cards.add(
+        _buildRoutineMiniCard(
+          'DAILY ROUTINE',
+          '$percentage%',
+          '$totalCompleted of $totalExpected tasks',
+        ),
+      );
     }
 
     if (weeklyHobbies.isNotEmpty) {
@@ -1008,8 +1016,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
       if (earliestDate != null) {
         final now = DateTime.now();
-        final start =
-            DateTime(earliestDate.year, earliestDate.month, earliestDate.day);
+        final start = DateTime(
+          earliestDate.year,
+          earliestDate.month,
+          earliestDate.day,
+        );
         // Calculate weeks from earliest creation date to now
         final weeksSinceCreation = ((now.difference(start).inDays) / 7).ceil();
         // Total expected = weeks × number of weekly hobbies
@@ -1039,8 +1050,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           : 0;
       // Cap percentage at 100%
       percentage = percentage > 100 ? 100 : percentage;
-      cards.add(_buildRoutineMiniCard('WEEKLY ROUTINE', '$percentage%',
-          '$totalCompleted of $totalExpected tasks'));
+      cards.add(
+        _buildRoutineMiniCard(
+          'WEEKLY ROUTINE',
+          '$percentage%',
+          '$totalCompleted of $totalExpected tasks',
+        ),
+      );
     }
 
     if (monthlyHobbies.isNotEmpty) {
@@ -1074,7 +1090,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       if (earliestDate != null) {
         final now = DateTime.now();
         // Calculate months from earliest creation date to now
-        final monthsSinceCreation = ((now.year - earliestDate.year) * 12 +
+        final monthsSinceCreation =
+            ((now.year - earliestDate.year) * 12 +
                 (now.month - earliestDate.month)) +
             1;
         // Total expected = months × number of monthly hobbies
@@ -1104,8 +1121,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           : 0;
       // Cap percentage at 100%
       percentage = percentage > 100 ? 100 : percentage;
-      cards.add(_buildRoutineMiniCard('MONTHLY ROUTINE', '$percentage%',
-          '$totalCompleted of $totalExpected tasks'));
+      cards.add(
+        _buildRoutineMiniCard(
+          'MONTHLY ROUTINE',
+          '$percentage%',
+          '$totalCompleted of $totalExpected tasks',
+        ),
+      );
     }
 
     if (cards.isEmpty) {
@@ -1116,30 +1138,34 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     List<Widget> rows = [];
     for (int i = 0; i < cards.length; i += 2) {
       if (i + 1 < cards.length) {
-        rows.add(Row(
-          children: [
-            Expanded(child: cards[i]),
-            const SizedBox(width: 12),
-            Expanded(child: cards[i + 1]),
-          ],
-        ));
+        rows.add(
+          Row(
+            children: [
+              Expanded(child: cards[i]),
+              const SizedBox(width: 12),
+              Expanded(child: cards[i + 1]),
+            ],
+          ),
+        );
       } else {
-        rows.add(Row(
-          children: [
-            Expanded(child: cards[i]),
-            const SizedBox(width: 12),
-            const Expanded(child: SizedBox()),
-          ],
-        ));
+        rows.add(
+          Row(
+            children: [
+              Expanded(child: cards[i]),
+              const SizedBox(width: 12),
+              const Expanded(child: SizedBox()),
+            ],
+          ),
+        );
       }
     }
 
     return Column(
       children: rows
-          .map((row) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: row,
-              ))
+          .map(
+            (row) =>
+                Padding(padding: const EdgeInsets.only(bottom: 12), child: row),
+          )
           .toList(),
     );
   }
@@ -1183,10 +1209,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  color: Colors.white54,
-                  fontSize: 11,
-                ),
+                style: const TextStyle(color: Colors.white54, fontSize: 11),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1212,8 +1235,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               color: const Color(0xFF6C3FFF).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.info_outline,
-                color: Color(0xFF8B5CF6), size: 24),
+            child: const Icon(
+              Icons.info_outline,
+              color: Color(0xFF8B5CF6),
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           const Expanded(
@@ -1231,10 +1257,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 SizedBox(height: 4),
                 Text(
                   'Complete tasks to see your progress',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
             ),

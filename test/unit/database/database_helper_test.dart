@@ -18,10 +18,11 @@ void main() {
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/path_provider'),
-            (MethodCall methodCall) async {
-      return testDir.path;
-    });
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async {
+            return testDir.path;
+          },
+        );
   });
 
   setUp(() async {
@@ -43,8 +44,9 @@ void main() {
       expect(db, isNotNull);
       expect(db.path, contains('hobbyist.db'));
 
-      final tables = await db
-          .rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
+      final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table'",
+      );
       final tableNames = tables.map((t) => t['name'] as String).toList();
 
       expect(tableNames, containsAll(['hobbies', 'completions', 'settings']));
@@ -54,11 +56,17 @@ void main() {
       final db = await DatabaseHelper.instance.database;
 
       // Ensure landing setting exists (it should from _createDB)
-      final existingNames = await db
-          .query('settings', where: 'key = ?', whereArgs: ['has_seen_landing']);
+      final existingNames = await db.query(
+        'settings',
+        where: 'key = ?',
+        whereArgs: ['has_seen_landing'],
+      );
       if (existingNames.isEmpty) {
-        await db.insert('settings',
-            {'key': 'has_seen_landing', 'value': 'true', 'updated_at': 0});
+        await db.insert('settings', {
+          'key': 'has_seen_landing',
+          'value': 'true',
+          'updated_at': 0,
+        });
       }
 
       // Insert some data
@@ -75,8 +83,11 @@ void main() {
       final hobbies = await db.query('hobbies');
       expect(hobbies, isEmpty);
 
-      final setting = await db
-          .query('settings', where: 'key = ?', whereArgs: ['has_seen_landing']);
+      final setting = await db.query(
+        'settings',
+        where: 'key = ?',
+        whereArgs: ['has_seen_landing'],
+      );
       expect(setting, isNotEmpty);
       expect(setting.first['value'], 'false');
     });
@@ -98,13 +109,18 @@ void main() {
       final upgradePath = join(dbFolder, 'hobbyist_upgrade.db');
 
       // Create version 1 database manually
-      final dbV1 = await openDatabase(upgradePath, version: 1,
-          onCreate: (db, version) async {
-        await db.execute(
-            'CREATE TABLE hobbies (id TEXT PRIMARY KEY, name TEXT NOT NULL, notes TEXT, repeat_mode TEXT NOT NULL DEFAULT "daily", priority INTEGER NOT NULL DEFAULT 0, color INTEGER NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)');
-        await db.execute(
-            'CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL)');
-      });
+      final dbV1 = await openDatabase(
+        upgradePath,
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute(
+            'CREATE TABLE hobbies (id TEXT PRIMARY KEY, name TEXT NOT NULL, notes TEXT, repeat_mode TEXT NOT NULL DEFAULT "daily", priority INTEGER NOT NULL DEFAULT 0, color INTEGER NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)',
+          );
+          await db.execute(
+            'CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL)',
+          );
+        },
+      );
       await dbV1.close();
 
       if (File(dbPath).existsSync()) File(dbPath).deleteSync();
@@ -121,8 +137,11 @@ void main() {
       expect(columnNames, contains('best_streak')); // v4
 
       // Check if telemetry_enabled setting was added
-      final telemetry = await db.query('settings',
-          where: 'key = ?', whereArgs: ['telemetry_enabled']);
+      final telemetry = await db.query(
+        'settings',
+        where: 'key = ?',
+        whereArgs: ['telemetry_enabled'],
+      );
       expect(telemetry, isNotEmpty);
 
       await DatabaseHelper.instance.close();

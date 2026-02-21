@@ -15,37 +15,40 @@ void main() async {
     // Mock path_provider
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/path_provider'),
-            (MethodCall methodCall) async {
-      return '.';
-    });
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async {
+            return '.';
+          },
+        );
 
     // Mock shared_preferences
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/shared_preferences'),
-            (MethodCall methodCall) async {
-      if (methodCall.method == 'getAll') {
-        return <String, Object>{};
-      }
-      return true;
-    });
+          const MethodChannel('plugins.flutter.io/shared_preferences'),
+          (MethodCall methodCall) async {
+            if (methodCall.method == 'getAll') {
+              return <String, Object>{};
+            }
+            return true;
+          },
+        );
 
     // Mock package_info_plus
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-            const MethodChannel('dev.fluttercommunity.plus/package_info'),
-            (MethodCall methodCall) async {
-      if (methodCall.method == 'getAll') {
-        return {
-          'appName': 'Hobbyist',
-          'packageName': 'com.example.hobbyist',
-          'version': '1.0.0',
-          'buildNumber': '1',
-        };
-      }
-      return null;
-    });
+          const MethodChannel('dev.fluttercommunity.plus/package_info'),
+          (MethodCall methodCall) async {
+            if (methodCall.method == 'getAll') {
+              return {
+                'appName': 'Hobbyist',
+                'packageName': 'com.example.hobbyist',
+                'version': '1.0.0',
+                'buildNumber': '1',
+              };
+            }
+            return null;
+          },
+        );
 
     await Firebase.initializeApp();
 
@@ -61,10 +64,7 @@ void main() async {
     testWidgets('should display settings screen', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: SettingsScreen(
-            onNavigate: (_) {},
-            onBack: () {},
-          ),
+          home: SettingsScreen(onNavigate: (_) {}, onBack: () {}),
         ),
       );
 
@@ -75,30 +75,31 @@ void main() async {
     testWidgets('should display account section', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: SettingsScreen(
-            onNavigate: (_) {},
-            onBack: () {},
-          ),
+          home: SettingsScreen(onNavigate: (_) {}, onBack: () {}),
         ),
       );
 
-      await tester.pumpAndSettle();
+      // Use pump instead of pumpAndSettle — Firebase mock creates a 10s timer
+      // that pumpAndSettle would hang waiting for.
+      await tester.pump();
       expect(find.text('ACCOUNT'), findsOneWidget);
+      // Drain the 10s Firebase Remote Config timer to prevent pending-timer failure.
+      await tester.pump(const Duration(seconds: 11));
     });
 
-    testWidgets('should display preferences section',
-        (WidgetTester tester) async {
+    testWidgets('should display preferences section', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: SettingsScreen(
-            onNavigate: (_) {},
-            onBack: () {},
-          ),
+          home: SettingsScreen(onNavigate: (_) {}, onBack: () {}),
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('PREFERENCES'), findsOneWidget);
+      // Drain the 10s Firebase Remote Config timer to prevent pending-timer failure.
+      await tester.pump(const Duration(seconds: 11));
     });
 
     testWidgets('should have bottom navigation', (WidgetTester tester) async {

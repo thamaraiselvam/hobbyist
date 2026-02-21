@@ -5,9 +5,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-@GenerateNiceMocks([
-  MockSpec<InAppReview>(),
-])
+@GenerateNiceMocks([MockSpec<InAppReview>()])
 import 'rating_service_test.mocks.dart';
 
 void main() {
@@ -52,20 +50,22 @@ void main() {
       verifyNever(mockInAppReview.isAvailable());
     });
 
-    test('checkAndShowRatingPrompt shows on 10th completion if skipped before',
-        () async {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('first_rating_prompt_shown', true);
-      for (int i = 0; i < 10; i++) {
-        await service.incrementCompletionCount();
-      }
+    test(
+      'checkAndShowRatingPrompt shows on 10th completion if skipped before',
+      () async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('first_rating_prompt_shown', true);
+        for (int i = 0; i < 10; i++) {
+          await service.incrementCompletionCount();
+        }
 
-      when(mockInAppReview.isAvailable()).thenAnswer((_) async => true);
+        when(mockInAppReview.isAvailable()).thenAnswer((_) async => true);
 
-      await service.checkAndShowRatingPrompt();
+        await service.checkAndShowRatingPrompt();
 
-      verify(mockInAppReview.requestReview()).called(1);
-    });
+        verify(mockInAppReview.requestReview()).called(1);
+      },
+    );
 
     test('checkAndShowRatingPrompt fallback to store listing', () async {
       await service.incrementCompletionCount(); // count = 1
@@ -79,9 +79,9 @@ void main() {
 
     test('openStoreListing calls inAppReview', () async {
       await service.openStoreListing();
-      verify(mockInAppReview.openStoreListing(
-              appStoreId: anyNamed('appStoreId')))
-          .called(1);
+      verify(
+        mockInAppReview.openStoreListing(appStoreId: anyNamed('appStoreId')),
+      ).called(1);
     });
 
     test('resetRatingState clears prefs', () async {
@@ -93,8 +93,9 @@ void main() {
     test('Error handling when openStoreListing fails', () async {
       await service.incrementCompletionCount(); // count = 1
       when(mockInAppReview.isAvailable()).thenAnswer((_) async => false);
-      when(mockInAppReview.openStoreListing())
-          .thenThrow(Exception('store error'));
+      when(
+        mockInAppReview.openStoreListing(),
+      ).thenThrow(Exception('store error'));
 
       // Should not throw
       await expectLater(service.checkAndShowRatingPrompt(), completes);

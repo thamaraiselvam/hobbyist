@@ -32,13 +32,15 @@ void main() {
       when(mockCollection.add(any)).thenAnswer((_) async => mockDocument);
 
       final result = await service.submitFeedback(
-          feedbackText: 'Great app!', email: 'test@example.com');
+        feedbackText: 'Great app!',
+        email: 'test@example.com',
+      );
 
       expect(result, true);
       verify(mockFirestore.collection('feedback')).called(1);
-      verify(mockCollection
-              .add(argThat(containsPair('feedback', 'Great app!'))))
-          .called(1);
+      verify(
+        mockCollection.add(argThat(containsPair('feedback', 'Great app!'))),
+      ).called(1);
     });
 
     test('submitFeedback empty text', () async {
@@ -58,7 +60,8 @@ void main() {
 
     test('submitFeedback firestore error', () async {
       when(mockCollection.add(any)).thenThrow(
-          FirebaseException(plugin: 'firestore', message: 'test error'));
+        FirebaseException(plugin: 'firestore', message: 'test error'),
+      );
 
       final result = await service.submitFeedback(feedbackText: 'test');
 
