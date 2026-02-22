@@ -8,6 +8,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.widget.RemoteViews
+import es.antonborri.home_widget.HomeWidgetPlugin
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -16,9 +17,10 @@ import java.util.Locale
  * Android home-screen widget displaying the user's current streak and a
  * **rolling 7-day window** anchored on today.
  *
- * Data is written by HomeWidgetService (Dart) via the home_widget plugin's
- * SharedPreferences file ("HomeWidgetPlugin").  This provider reads that
- * store on every update and rebuilds RemoteViews accordingly.
+ * Data is written by HomeWidgetService (Dart) via the home_widget plugin.
+ * This provider reads that store via [HomeWidgetPlugin.getData] on every
+ * update — never hardcode the SharedPreferences file name directly, as the
+ * plugin's internal constant may differ across versions.
  *
  * SharedPreferences keys (written by Dart):
  *   streak_current      – Int,    global consecutive-day streak count
@@ -67,10 +69,11 @@ class StreakWidget : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             widgetId: Int,
         ) {
-            val prefs = context.getSharedPreferences(
-                "HomeWidgetPlugin",
-                Context.MODE_PRIVATE,
-            )
+            // Use HomeWidgetPlugin.getData() — the correct API for home_widget 0.5+.
+            // Do NOT call getSharedPreferences("HomeWidgetPlugin", ...) directly; the
+            // plugin's internal PREFERENCES constant may differ from that string and
+            // would cause the widget to always read defaults (streak = 0).
+            val prefs      = HomeWidgetPlugin.getData(context)
             val streak     = prefs.getInt("streak_current", 0)
             val daysStr    = prefs.getString("streak_days", "0000000") ?: "0000000"
             val hasHobbies = prefs.getInt("streak_has_hobbies", 0) == 1

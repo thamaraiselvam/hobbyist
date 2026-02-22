@@ -76,19 +76,34 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   /// Fire-and-forget — the userName is loaded async and errors are swallowed
   /// in [HomeWidgetService] so this never blocks the UI.
   void _pushHomeWidget() {
+    // Capture all values SYNCHRONOUSLY now, before any async work.
+    // If we read _globalStreakData or _allHobbies inside a .then() callback,
+    // a concurrent _loadHobbies() reload could overwrite _allHobbies with
+    // stale DB data (toggleCompletion is fire-and-forget, so a reload racing
+    // the DB write would miss the new completion and push streak = 0).
     final now = DateTime.now();
     final fmt = DateFormat('yyyy-MM-dd');
-    // Rolling window: index 0 = 6 days ago … index 6 = today
     final completedDays = List.generate(7, (i) {
       final key = fmt.format(now.subtract(Duration(days: 6 - i)));
       return _allHobbies.any((h) => h.completions[key]?.completed == true);
     });
+    final streak = _globalStreakData['streak'] as int;
+    final hasHobbies = _allHobbies.isNotEmpty;
+
     _service.getSetting('userName').then((name) {
       HomeWidgetService.push(
-        streak: _globalStreakData['streak'] as int,
+        streak: streak,
         completedDaysInWeek: completedDays,
-        hasHobbies: _allHobbies.isNotEmpty,
+        hasHobbies: hasHobbies,
         userName: name ?? '',
+      );
+    }).catchError((_) {
+      // getSetting failed — push with empty name so widget still updates.
+      HomeWidgetService.push(
+        streak: streak,
+        completedDaysInWeek: completedDays,
+        hasHobbies: hasHobbies,
+        userName: '',
       );
     });
   }

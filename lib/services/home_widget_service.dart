@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 
 /// Pushes streak data to the Android home screen widget.
@@ -38,8 +39,10 @@ class HomeWidgetService {
       );
       await HomeWidget.saveWidgetData<String>('streak_user_name', userName);
       await HomeWidget.updateWidget(androidName: _androidWidgetName);
-    } catch (_) {
-      // Widget may not be pinned or plugin not initialised — ignore.
+    } catch (e) {
+      // Widget may not be pinned or plugin not initialised.
+      // Log in debug so sync failures are visible during development.
+      debugPrint('HomeWidgetService.push failed: $e');
     }
   }
 }
