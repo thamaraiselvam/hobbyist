@@ -132,7 +132,7 @@ class StreakWidget : AppWidgetProvider() {
                 // Label brightness: today = full white, past = dimmer
                 views.setTextColor(
                     DAY_LABEL_IDS[i],
-                    if (isToday) Color.WHITE else Color.argb(80, 255, 255, 255),
+                    if (isToday) Color.WHITE else Color.argb(140, 255, 255, 255),
                 )
 
                 // Circle background
@@ -145,11 +145,11 @@ class StreakWidget : AppWidgetProvider() {
                 }
                 views.setInt(DAY_CIRCLE_IDS[i], "setBackgroundResource", circleDrawable)
 
-                // Circle text symbol
+                // Circle text symbol — no ✗ for missed days; an empty dim ring
+                // reads as "not done" without feeling punishing.
                 val symbol = when {
                     completed -> "✓"
                     isToday   -> "🔥"
-                    isMissed  -> "✗"
                     else      -> ""
                 }
                 views.setTextViewText(DAY_CIRCLE_IDS[i], symbol)
