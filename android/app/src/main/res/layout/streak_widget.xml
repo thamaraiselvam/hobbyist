@@ -4,11 +4,13 @@
   Structure:
     1. Hero streak counter  (🔥 N days) — largest, top-left
     2. Motivational subtitle — directly below hero
-    3. Flexible spacer — pushes bottom section down
-    4. Weekday label row — M T W T F S S
-    5. Streak indicator row — 7 circles inside a pill container
-  Day circles are TextViews whose background is swapped at runtime by
-  StreakWidget.kt to reflect each day's completion state.
+    3. Weekday label row — M T W T F S S  (8dp gap above)
+    4. Streak indicator row — 7 circles inside a pill container
+
+  Circle sizing: each circle is wrapped in a weight-bearing column LinearLayout
+  so the column expands to fill 1/7 of the row while the inner TextView stays a
+  fixed 28×28dp square — preventing the oval stretching that occurs when a
+  single TextView with layout_weight fills a wide widget.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -43,25 +45,15 @@
         android:textSize="12sp"
         android:includeFontPadding="false" />
 
-    <!-- Flexible spacer — distributes leftover height between top and bottom.
-         Uses TextView (not View) because RemoteViews only inflates views on its
-         explicit allowlist; bare <View> is not on it and causes "couldn't add
-         widget" on some launchers. An empty TextView is a safe, zero-cost spacer. -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
     <!-- ── Weekday label row ─────────────────────────────────────────────── -->
     <!--
-      Padding matches the pill container's horizontal padding so columns
-      stay optically aligned with the circles below them.
+      Column widths mirror the circle columns below so letters stay centred
+      above their respective circles.
     -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp"
+        android:layout_marginTop="8dp"
         android:orientation="horizontal">
 
         <TextView
@@ -151,6 +143,11 @@
     </LinearLayout>
 
     <!-- ── Streak indicator row (pill container) ─────────────────────────── -->
+    <!--
+      Each day is a column LinearLayout (layout_weight=1) that centres a
+      fixed 28×28dp circle TextView. The column absorbs the available width;
+      the circle never stretches regardless of widget width.
+    -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -163,109 +160,137 @@
         android:orientation="horizontal">
 
         <!-- Day 0 (6 days ago) -->
-        <TextView
-            android:id="@+id/day_circle_0"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="28dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
-            android:background="@drawable/widget_day_pending"
             android:gravity="center"
-            android:textColor="#FFFFFFFF"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/day_circle_0"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/widget_day_pending"
+                android:gravity="center"
+                android:textColor="#FFFFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+        </LinearLayout>
 
         <!-- Day 1 (5 days ago) -->
-        <TextView
-            android:id="@+id/day_circle_1"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="28dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
-            android:background="@drawable/widget_day_pending"
             android:gravity="center"
-            android:textColor="#FFFFFFFF"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/day_circle_1"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/widget_day_pending"
+                android:gravity="center"
+                android:textColor="#FFFFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+        </LinearLayout>
 
         <!-- Day 2 (4 days ago) -->
-        <TextView
-            android:id="@+id/day_circle_2"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="28dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
-            android:background="@drawable/widget_day_pending"
             android:gravity="center"
-            android:textColor="#FFFFFFFF"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/day_circle_2"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/widget_day_pending"
+                android:gravity="center"
+                android:textColor="#FFFFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+        </LinearLayout>
 
         <!-- Day 3 (3 days ago) -->
-        <TextView
-            android:id="@+id/day_circle_3"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="28dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
-            android:background="@drawable/widget_day_pending"
             android:gravity="center"
-            android:textColor="#FFFFFFFF"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/day_circle_3"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/widget_day_pending"
+                android:gravity="center"
+                android:textColor="#FFFFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+        </LinearLayout>
 
         <!-- Day 4 (2 days ago) -->
-        <TextView
-            android:id="@+id/day_circle_4"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="28dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
-            android:background="@drawable/widget_day_pending"
             android:gravity="center"
-            android:textColor="#FFFFFFFF"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/day_circle_4"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/widget_day_pending"
+                android:gravity="center"
+                android:textColor="#FFFFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+        </LinearLayout>
 
         <!-- Day 5 (yesterday) -->
-        <TextView
-            android:id="@+id/day_circle_5"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="28dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
-            android:background="@drawable/widget_day_pending"
             android:gravity="center"
-            android:textColor="#FFFFFFFF"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/day_circle_5"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/widget_day_pending"
+                android:gravity="center"
+                android:textColor="#FFFFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+        </LinearLayout>
 
         <!-- Day 6 (today — always rightmost) -->
-        <TextView
-            android:id="@+id/day_circle_6"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="28dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
-            android:background="@drawable/widget_day_today"
             android:gravity="center"
-            android:textColor="#FFFFFFFF"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/day_circle_6"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/widget_day_today"
+                android:gravity="center"
+                android:textColor="#FFFFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+        </LinearLayout>
 
     </LinearLayout>
 
