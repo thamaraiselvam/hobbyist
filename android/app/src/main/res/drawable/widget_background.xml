@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Dark purple card background for the streak home-screen widget -->
+<!-- Diagonal purple gradient card background for the streak widget -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#2A2238" />
+    <gradient
+        android:startColor="#4A2D8F"
+        android:endColor="#1E1240"
+        android:angle="135" />
     <corners android:radius="20dp" />
 </shape>
