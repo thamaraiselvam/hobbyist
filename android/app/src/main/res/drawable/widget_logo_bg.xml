@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Purple gradient circle for the 'H' logo in the widget header -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:type="linear"
+        android:angle="135"
+        android:startColor="#6C3FFF"
+        android:endColor="#8B5CF6" />
+</shape>
