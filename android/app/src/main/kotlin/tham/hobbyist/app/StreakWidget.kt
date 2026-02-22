@@ -17,6 +17,12 @@ import java.util.Locale
  * Android home-screen widget displaying the user's current streak and a
  * **rolling 7-day window** anchored on today.
  *
+ * Layout sections (top → bottom):
+ *   1. Hero streak counter — "🔥 N days" (large, bold, top-left)
+ *   2. Motivational subtitle — context-aware copy below the counter
+ *   3. Weekday label row — M T W T F S S
+ *   4. Streak indicator row — 7 circles inside a pill container
+ *
  * Data is written by HomeWidgetService (Dart) via the home_widget plugin.
  * This provider reads that store via [HomeWidgetPlugin.getData] on every
  * update — never hardcode the SharedPreferences file name directly, as the
@@ -95,16 +101,22 @@ class StreakWidget : AppWidgetProvider() {
                 PendingIntent.getActivity(context, 0, launchIntent, piFlags),
             )
 
-            // ── Header ────────────────────────────────────────────────────
-            views.setTextViewText(R.id.streak_pill, "🔥 $streak")
-            views.setTextViewText(R.id.widget_subtitle, subtitleFor(streak, userName, hasHobbies))
+            // ── Parse 7-day bitmask ───────────────────────────────────────
+            val days          = daysStr.padEnd(7, '0')
+            val todayCompleted = days.getOrElse(6) { '0' } == '1'
 
-            // ── CTA ───────────────────────────────────────────────────────
-            views.setTextViewText(R.id.cta_button, "⚡  ${ctaFor(streak)}")
+            // ── Hero streak counter ────────────────────────────────────────
+            val dayLabel = if (streak == 1) "day" else "days"
+            views.setTextViewText(R.id.streak_hero, "🔥 $streak $dayLabel")
+
+            // ── Subtitle ──────────────────────────────────────────────────
+            views.setTextViewText(
+                R.id.widget_subtitle,
+                subtitleFor(userName, hasHobbies, todayCompleted),
+            )
 
             // ── Rolling 7-day window (index 6 = today) ────────────────────
-            val days = daysStr.padEnd(7, '0')
-            val sdf  = SimpleDateFormat("EEE", Locale.ENGLISH)
+            val sdf = SimpleDateFormat("EEE", Locale.ENGLISH)
 
             for (i in 0..6) {
                 val completed = days.getOrElse(i) { '0' } == '1'
@@ -120,7 +132,7 @@ class StreakWidget : AppWidgetProvider() {
                 // Label brightness: today = full white, past = dimmer
                 views.setTextColor(
                     DAY_LABEL_IDS[i],
-                    if (isToday) Color.WHITE else Color.argb(100, 255, 255, 255),
+                    if (isToday) Color.WHITE else Color.argb(80, 255, 255, 255),
                 )
 
                 // Circle background
@@ -135,10 +147,10 @@ class StreakWidget : AppWidgetProvider() {
 
                 // Circle text symbol
                 val symbol = when {
-                    completed            -> "✓"
-                    isToday              -> "🔥"
-                    isMissed             -> "✗"
-                    else                 -> ""
+                    completed -> "✓"
+                    isToday   -> "🔥"
+                    isMissed  -> "✗"
+                    else      -> ""
                 }
                 views.setTextViewText(DAY_CIRCLE_IDS[i], symbol)
             }
@@ -148,13 +160,27 @@ class StreakWidget : AppWidgetProvider() {
 
         // ── Copy helpers ──────────────────────────────────────────────────
 
-        private fun subtitleFor(streak: Int, userName: String, hasHobbies: Boolean): String {
-            if (userName.isNotBlank()) return "Keep it up, $userName"
-            if (!hasHobbies) return "Create your first task to start your streak"
-            return "Keep going — you're building a great habit"
+        /**
+         * Returns contextual subtitle copy based on onboarding state,
+         * username presence, and whether today has been completed.
+         *
+         * Priority:
+         *   1. Not onboarded (no hobbies) → "Start your journey"
+         *   2. Has name, today not done    → "<Name>! Streak?"
+         *   3. Has name, today done        → "Keep it up, <Name>"
+         *   4. No name, today done         → "Great job today!"
+         *   5. No name, today not done     → "Keep the streak going!"
+         */
+        private fun subtitleFor(
+            userName: String,
+            hasHobbies: Boolean,
+            todayCompleted: Boolean,
+        ): String {
+            if (!hasHobbies) return "Start your journey"
+            if (userName.isNotBlank()) {
+                return if (todayCompleted) "Keep it up, $userName" else "$userName! Streak?"
+            }
+            return if (todayCompleted) "Great job today!" else "Keep the streak going!"
         }
-
-        private fun ctaFor(streak: Int): String =
-            if (streak == 0) "Start your streak today" else "Stay Consistent"
     }
 }
