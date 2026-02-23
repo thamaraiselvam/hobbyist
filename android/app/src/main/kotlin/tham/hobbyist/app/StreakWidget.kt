@@ -2,13 +2,13 @@ package tham.hobbyist.app
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Build
 import android.widget.RemoteViews
-import es.antonborri.home_widget.HomeWidgetPlugin
+import es.antonborri.home_widget.HomeWidgetProvider
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -42,15 +42,16 @@ import java.util.Locale
  *   widget_day_missed      – dull red, past missed (hobbies exist)
  *   widget_day_pending     – muted grey, fresh-install or future slot
  */
-class StreakWidget : AppWidgetProvider() {
+class StreakWidget : HomeWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
+        widgetData: SharedPreferences,
     ) {
         for (widgetId in appWidgetIds) {
-            updateWidget(context, appWidgetManager, widgetId)
+            updateWidget(context, appWidgetManager, widgetId, widgetData)
         }
     }
 
@@ -74,16 +75,12 @@ class StreakWidget : AppWidgetProvider() {
             context: Context,
             appWidgetManager: AppWidgetManager,
             widgetId: Int,
+            widgetData: SharedPreferences,
         ) {
-            // Use HomeWidgetPlugin.getData() — the correct API for home_widget 0.5+.
-            // Do NOT call getSharedPreferences("HomeWidgetPlugin", ...) directly; the
-            // plugin's internal PREFERENCES constant may differ from that string and
-            // would cause the widget to always read defaults (streak = 0).
-            val prefs      = HomeWidgetPlugin.getData(context)
-            val streak     = prefs.getInt("streak_current", 0)
-            val daysStr    = prefs.getString("streak_days", "0000000") ?: "0000000"
-            val hasHobbies = prefs.getInt("streak_has_hobbies", 0) == 1
-            val userName   = prefs.getString("streak_user_name", "") ?: ""
+            val streak     = widgetData.getInt("streak_current", 0)
+            val daysStr    = widgetData.getString("streak_days", "0000000") ?: "0000000"
+            val hasHobbies = widgetData.getInt("streak_has_hobbies", 0) == 1
+            val userName   = widgetData.getString("streak_user_name", "") ?: ""
 
             val views = RemoteViews(context.packageName, R.layout.streak_widget)
 
