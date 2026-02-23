@@ -84,6 +84,8 @@ class TestKeys {
   static const String settingsDeveloperOptions = 'developer_options_button';
   static const String settingsLogout = 'logout_button';
   static const String settingsRefreshFlags = 'refresh_flags_button';
+  static const String settingsExportData = 'export_data_button';
+  static const String settingsImportData = 'import_data_button';
 
   // ─── FEEDBACK SCREEN ─────────────────────────────────────────────────────
   static const String feedbackInput = 'feedback_textarea';

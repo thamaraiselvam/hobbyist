@@ -8,6 +8,7 @@ import '../services/performance_service.dart';
 import '../services/crashlytics_service.dart';
 import '../services/feature_flags_service.dart';
 import '../services/rating_service.dart';
+import '../services/import_export_service.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'developer_settings_screen.dart';
@@ -39,6 +40,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _userName = 'Tham';
   String? _userEmail;
   bool _isGoogleSignedIn = false;
+  bool _isExporting = false;
+  bool _isImporting = false;
 
   @override
   void initState() {
@@ -664,6 +667,190 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _handleExport() async {
+    setState(() => _isExporting = true);
+    try {
+      await ImportExportService().exportData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data exported successfully!'),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
+  Future<void> _handleImport() async {
+    setState(() => _isImporting = true);
+    try {
+      final importData = await ImportExportService().pickAndValidateImport();
+      if (importData == null) {
+        // User cancelled file picker
+        return;
+      }
+
+      if (!mounted) return;
+
+      // Show confirmation dialog
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF221834),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Import Data',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'This will replace all existing data with the imported backup.',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Backup contains:',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildImportDetail(
+                Icons.grid_view_rounded,
+                '${importData.hobbyCount} hobbies',
+              ),
+              const SizedBox(height: 4),
+              _buildImportDetail(
+                Icons.check_circle_outline,
+                '${importData.taskCount} tasks',
+              ),
+              const SizedBox(height: 4),
+              _buildImportDetail(
+                Icons.settings_outlined,
+                '${importData.settingsCount} settings',
+              ),
+              if (importData.exportedAt != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Exported: ${importData.exportedAt!.split('T').first}',
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              const Text(
+                'This action cannot be undone.',
+                style: TextStyle(
+                  color: Color(0xFFEF4444),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'Import',
+                style: TextStyle(
+                  color: Color(0xFFEF4444),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true || !mounted) return;
+
+      // Execute import
+      await ImportExportService().executeImport(importData);
+
+      // Reload all UI state
+      await _loadUserName();
+      await _loadSettings();
+      await _checkAuthStatus();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Imported ${importData.hobbyCount} hobbies and ${importData.taskCount} tasks successfully!',
+            ),
+            backgroundColor: const Color(0xFF10B981),
+          ),
+        );
+      }
+    } on FormatException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invalid backup file: ${e.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Import failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isImporting = false);
+      }
+    }
+  }
+
+  Widget _buildImportDetail(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white54, size: 16),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDataCard() {
     return Container(
       padding: const EdgeInsets.all(4),
@@ -677,18 +864,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.file_download_outlined,
             iconColor: const Color(0xFF3B82F6),
             title: 'Export Data',
-            subtitle: 'Coming Soon',
-            isEnabled: false,
-            onTap: () {},
+            subtitle: _isExporting ? 'Exporting...' : 'Save all data as JSON',
+            isEnabled: !_isExporting,
+            testKey: TestKeys.settingsExportData,
+            onTap: _handleExport,
           ),
           const Divider(color: Color(0xFF382a54), height: 1),
           _buildNavTile(
             icon: Icons.file_upload_outlined,
             iconColor: const Color(0xFF8B5CF6),
             title: 'Import Data',
-            subtitle: 'Coming Soon',
-            isEnabled: false,
-            onTap: () {},
+            subtitle: _isImporting ? 'Importing...' : 'Restore from JSON file',
+            isEnabled: !_isImporting,
+            testKey: TestKeys.settingsImportData,
+            onTap: _handleImport,
           ),
         ],
       ),
