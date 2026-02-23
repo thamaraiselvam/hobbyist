@@ -55,6 +55,32 @@ class Task {
     'completed_at': completedAt?.millisecondsSinceEpoch,
   };
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'dueDate': dueDate?.toIso8601String(),
+    'priority': priority.name,
+    'isCompleted': isCompleted,
+    'createdAt': createdAt.toIso8601String(),
+    'completedAt': completedAt?.toIso8601String(),
+  };
+
+  factory Task.fromJson(Map<String, dynamic> json) => Task(
+    id: json['id'] as String,
+    title: json['title'] as String,
+    description: (json['description'] as String?) ?? '',
+    dueDate: json['dueDate'] != null
+        ? DateTime.parse(json['dueDate'] as String)
+        : null,
+    priority: TaskPriority.fromString((json['priority'] as String?) ?? 'medium'),
+    isCompleted: json['isCompleted'] as bool? ?? false,
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    completedAt: json['completedAt'] != null
+        ? DateTime.parse(json['completedAt'] as String)
+        : null,
+  );
+
   factory Task.fromMap(Map<String, dynamic> map) => Task(
     id: map['id'] as String,
     title: map['title'] as String,
