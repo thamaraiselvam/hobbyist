@@ -105,9 +105,8 @@ class StreakWidget : AppWidgetProvider() {
             val days          = daysStr.padEnd(7, '0')
             val todayCompleted = days.getOrElse(6) { '0' } == '1'
 
-            // ── Hero streak counter ────────────────────────────────────────
-            val dayLabel = if (streak == 1) "day" else "days"
-            views.setTextViewText(R.id.streak_hero, "🔥 $streak $dayLabel")
+            // ── Hero streak counter (badge shows "day streak") ──────────────────
+            views.setTextViewText(R.id.streak_hero, "\uD83D\uDD25 $streak")
 
             // ── Subtitle ──────────────────────────────────────────────────
             views.setTextViewText(
