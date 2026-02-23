@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Orange tinted pill background for the streak count -->
+<!-- Orange-amber tinted pill badge — "day streak" label on top right -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#24FF6B35" />
+    <solid android:color="#33FFA726" />
+    <stroke
+        android:width="1dp"
+        android:color="#55FFA726" />
     <corners android:radius="10dp" />
 </shape>

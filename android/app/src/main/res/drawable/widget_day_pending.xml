@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Muted grey circle — pending day (no hobbies yet or future slot) -->
+<!-- Very muted dark circle — pending/future slot (no hobbies or future) -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
-    <solid android:color="#3A3A4A" />
+    <solid android:color="#1EFFFFFF" />
     <stroke
         android:width="1dp"
-        android:color="#14FFFFFF" />
+        android:color="#18FFFFFF" />
 </shape>
