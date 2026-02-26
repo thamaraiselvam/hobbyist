@@ -405,6 +405,89 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
     }
   }
 
+  Future<void> _selectMonthDay() async {
+    final pickedDay = await showDialog<int>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: const Color(0xFF221834),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select date',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 31,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    final day = index + 1;
+                    final isSelected = day == _selectedMonthDay;
+
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(999),
+                      onTap: () => Navigator.of(context).pop(day),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF590df2)
+                              : Colors.transparent,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF590df2)
+                                : Colors.white.withValues(alpha: 0.08),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$day',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (pickedDay != null && mounted) {
+      setState(() {
+        _selectedMonthDay = pickedDay;
+      });
+    }
+  }
+
   String _formatDate(DateTime dt) {
     const months = [
       'Jan',
@@ -760,7 +843,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                       ),
                                     ),
                                   ] else if (_repeatMode == 'monthly') ...[
-                                    // Monthly - show day picker slider
+                                    // Monthly - show date picker dialog trigger
                                     Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -784,68 +867,46 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                           ],
                                         ),
                                         const SizedBox(height: 12),
-                                        SliderTheme(
-                                          data: SliderThemeData(
-                                            activeTrackColor: const Color(
-                                              0xFF590df2,
+                                        Container(
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                              0xFF161022,
+                                            ).withValues(alpha: 0.4),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
                                             ),
-                                            inactiveTrackColor: const Color(
-                                              0xFF590df2,
-                                            ).withValues(alpha: 0.2),
-                                            thumbColor: const Color(0xFF590df2),
-                                            overlayColor: const Color(
-                                              0xFF590df2,
-                                            ).withValues(alpha: 0.2),
-                                            thumbShape:
-                                                const RoundSliderThumbShape(
-                                                  enabledThumbRadius: 10,
-                                                ),
-                                            trackHeight: 4,
                                           ),
-                                          child: Slider(
-                                            value: _selectedMonthDay.toDouble(),
-                                            min: 1,
-                                            max: 31,
-                                            divisions: 30,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _selectedMonthDay = value
-                                                    .toInt();
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                        // Show day markers
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                '1',
-                                                style: TextStyle(
-                                                  color: Color(0xFFa490cb),
-                                                  fontSize: 10,
+                                          child: ListTile(
+                                            onTap: _selectMonthDay,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 12,
                                                 ),
+                                            leading: const Icon(
+                                              Icons.date_range,
+                                              color: Color(0xFFa490cb),
+                                              size: 20,
+                                            ),
+                                            title: const Text(
+                                              'Select date',
+                                              style: TextStyle(
+                                                color: Color(0xFFa490cb),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
                                               ),
-                                              Text(
-                                                '15',
-                                                style: TextStyle(
-                                                  color: Color(0xFFa490cb),
-                                                  fontSize: 10,
-                                                ),
+                                            ),
+                                            subtitle: Text(
+                                              '$_selectedMonthDay${_getDaySuffix(_selectedMonthDay)} of each month',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 13,
                                               ),
-                                              Text(
-                                                '31',
-                                                style: TextStyle(
-                                                  color: Color(0xFFa490cb),
-                                                  fontSize: 10,
-                                                ),
-                                              ),
-                                            ],
+                                            ),
+                                            trailing: const Icon(
+                                              Icons.keyboard_arrow_down,
+                                              color: Color(0xFFa490cb),
+                                            ),
                                           ),
                                         ),
                                       ],
