@@ -5,6 +5,7 @@ import '../services/hobby_service.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 class TasksListScreen extends StatefulWidget {
   final List<Hobby> hobbies;
@@ -431,6 +432,17 @@ class _TasksListScreenState extends State<TasksListScreen>
                         ],
                       ],
                     ),
+                    if (!hobby.isOneTime && hobby.endDate != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'End date: ${DateFormat('MMM d, yyyy').format(hobby.endDate!)}',
+                        style: const TextStyle(
+                          color: Color(0xFFa490cb),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

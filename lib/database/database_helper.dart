@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       dbPath,
-      version: 8,
+      version: 9,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -52,6 +52,7 @@ class DatabaseHelper {
         custom_days TEXT,
         best_streak INTEGER NOT NULL DEFAULT 0,
         is_one_time INTEGER NOT NULL DEFAULT 0,
+        end_date INTEGER,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -321,6 +322,13 @@ class DatabaseHelper {
         "WHERE repeat_mode = 'weekly' AND custom_day IS NOT NULL",
       );
       print('✅ Migration complete: custom_days column added');
+    }
+
+    if (oldVersion < 9) {
+      // Add optional end_date column for recurring hobbies
+      print('🔄 Migrating: Adding end_date column to hobbies...');
+      await db.execute('ALTER TABLE hobbies ADD COLUMN end_date INTEGER');
+      print('✅ Migration complete: end_date column added');
     }
   }
 

@@ -1871,6 +1871,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   bool _isHobbyAvailableForDate(Hobby hobby, DateTime date) {
+    if (!hobby.isScheduledOn(date)) return false;
+
     switch (hobby.repeatMode.toLowerCase()) {
       case 'daily':
         return true;

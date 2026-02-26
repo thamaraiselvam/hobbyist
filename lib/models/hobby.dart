@@ -6,6 +6,7 @@ class Hobby {
   final int color;
   final Map<String, HobbyCompletion> completions; // date -> completion info
   final DateTime? createdAt;
+  final DateTime? endDate;
   final String? reminderTime; // Time in HH:mm format (e.g., "09:00")
   final int? customDay; // For weekly (legacy/single): 0-6 (Mon-Sun). For monthly: 1-31
   final List<int>? customDays; // For weekly multi-select: list of 0-6 values
@@ -20,6 +21,7 @@ class Hobby {
     required this.color,
     Map<String, HobbyCompletion>? completions,
     this.createdAt,
+    this.endDate,
     this.reminderTime,
     this.customDay,
     this.customDays,
@@ -125,6 +127,7 @@ class Hobby {
     'color': color,
     'completions': completions.map((k, v) => MapEntry(k, v.toJson())),
     'createdAt': createdAt?.toIso8601String(),
+    'endDate': endDate?.toIso8601String(),
     'reminderTime': reminderTime,
     'customDay': customDay,
     'customDays': customDays,
@@ -146,6 +149,7 @@ class Hobby {
     createdAt: json['createdAt'] != null
         ? DateTime.parse(json['createdAt'])
         : null,
+    endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
     reminderTime: json['reminderTime'],
     customDay: json['customDay'] as int?,
     customDays: (json['customDays'] as List<dynamic>?)
@@ -162,6 +166,8 @@ class Hobby {
     int? color,
     Map<String, HobbyCompletion>? completions,
     DateTime? createdAt,
+    DateTime? endDate,
+    bool clearEndDate = false,
     String? reminderTime,
     int? customDay,
     List<int>? customDays,
@@ -175,12 +181,27 @@ class Hobby {
     color: color ?? this.color,
     completions: completions ?? this.completions,
     createdAt: createdAt ?? this.createdAt,
+    endDate: clearEndDate ? null : (endDate ?? this.endDate),
     reminderTime: reminderTime ?? this.reminderTime,
     customDay: customDay ?? this.customDay,
     customDays: customDays ?? this.customDays,
     bestStreak: bestStreak ?? this.bestStreak,
     isOneTime: isOneTime ?? this.isOneTime,
   );
+
+  bool isScheduledOn(DateTime date) {
+    final normalized = DateTime(date.year, date.month, date.day);
+    final start = createdAt != null
+        ? DateTime(createdAt!.year, createdAt!.month, createdAt!.day)
+        : null;
+    final end = endDate != null
+        ? DateTime(endDate!.year, endDate!.month, endDate!.day)
+        : null;
+
+    if (start != null && normalized.isBefore(start)) return false;
+    if (end != null && normalized.isAfter(end)) return false;
+    return true;
+  }
 }
 
 class HobbyCompletion {

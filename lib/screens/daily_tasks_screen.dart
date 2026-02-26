@@ -117,6 +117,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   String get _todayKey => DateFormat('yyyy-MM-dd').format(DateTime.now());
 
   bool _isHobbyAvailableForDate(Hobby hobby, DateTime date) {
+    if (!hobby.isScheduledOn(date)) return false;
+
     switch (hobby.repeatMode.toLowerCase()) {
       case 'daily':
         return true;
@@ -978,9 +980,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
                     children: [
                       Expanded(
                         child: Text(
-                          hobby.notes.isNotEmpty
-                              ? hobby.notes
-                              : _getFrequencyText(hobby.repeatMode),
+                          _taskSubtitle(hobby),
                           style: TextStyle(
                             color: const Color(0xFF71717A),
                             fontSize: 12,
@@ -1162,6 +1162,16 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         ),
       ),
     );
+  }
+
+  String _taskSubtitle(Hobby hobby) {
+    final base = hobby.notes.isNotEmpty
+        ? hobby.notes
+        : _getFrequencyText(hobby.repeatMode);
+    if (!hobby.isOneTime && hobby.endDate != null) {
+      return '$base • Ends ${DateFormat('MMM d, yyyy').format(hobby.endDate!)}';
+    }
+    return base;
   }
 
   Widget _buildStreakBadge(String value, IconData icon, Color color) {

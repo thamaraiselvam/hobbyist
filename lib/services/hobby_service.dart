@@ -101,6 +101,9 @@ class HobbyService {
             createdAt: hobbyData['created_at'] != null
                 ? DateTime.fromMillisecondsSinceEpoch(hobbyData['created_at'])
                 : null,
+            endDate: hobbyData['end_date'] != null
+                ? DateTime.fromMillisecondsSinceEpoch(hobbyData['end_date'])
+                : null,
             reminderTime: hobbyData['reminder_time'],
             customDay: hobbyData['custom_day'],
             customDays: customDays,
@@ -167,6 +170,7 @@ class HobbyService {
             : null,
         'best_streak': hobby.bestStreak,
         'is_one_time': hobby.isOneTime ? 1 : 0,
+        'end_date': hobby.endDate?.millisecondsSinceEpoch,
         'created_at': now,
         'updated_at': now,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -249,6 +253,7 @@ class HobbyService {
               : null,
           'best_streak': hobby.bestStreak,
           'is_one_time': hobby.isOneTime ? 1 : 0,
+          'end_date': hobby.endDate?.millisecondsSinceEpoch,
           'updated_at': DateTime.now().millisecondsSinceEpoch,
         },
         where: 'id = ?',
