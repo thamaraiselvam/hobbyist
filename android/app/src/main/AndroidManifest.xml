@@ -40,13 +40,112 @@
         <receiver
             android:name=".StreakWidget"
             android:exported="true"
-            android:label="Hobbyist Streak">
+            android:label="Hobbyist Streak - Design 1">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/streak_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".StreakWidgetDesign02"
+            android:exported="true"
+            android:label="Hobbyist Streak - Design 2">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info_02" />
+        </receiver>
+        <receiver
+            android:name=".StreakWidgetDesign03"
+            android:exported="true"
+            android:label="Hobbyist Streak - Design 3">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info_03" />
+        </receiver>
+        <receiver
+            android:name=".StreakWidgetDesign04"
+            android:exported="true"
+            android:label="Hobbyist Streak - Design 4">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info_04" />
+        </receiver>
+        <receiver
+            android:name=".StreakWidgetDesign05"
+            android:exported="true"
+            android:label="Hobbyist Streak - Design 5">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info_05" />
+        </receiver>
+        <receiver
+            android:name=".StreakWidgetDesign06"
+            android:exported="true"
+            android:label="Hobbyist Streak - Design 6">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info_06" />
+        </receiver>
+        <receiver
+            android:name=".StreakWidgetDesign07"
+            android:exported="true"
+            android:label="Hobbyist Streak - Design 7">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info_07" />
+        </receiver>
+        <receiver
+            android:name=".StreakWidgetDesign08"
+            android:exported="true"
+            android:label="Hobbyist Streak - Design 8">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info_08" />
+        </receiver>
+        <receiver
+            android:name=".StreakWidgetDesign09"
+            android:exported="true"
+            android:label="Hobbyist Streak - Design 9">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info_09" />
+        </receiver>
+        <receiver
+            android:name=".StreakWidgetDesign10"
+            android:exported="true"
+            android:label="Hobbyist Streak - Design 10">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/streak_widget_info_10" />
         </receiver>
 
         <meta-data

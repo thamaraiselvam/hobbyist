@@ -14,7 +14,18 @@ import 'package:home_widget/home_widget.dart';
 ///   streak_has_hobbies  – int,    1 if user has at least one hobby else 0
 ///   streak_user_name    – String, user's display name (empty = not set)
 class HomeWidgetService {
-  static const _androidWidgetName = 'StreakWidget';
+  static const _androidWidgetNames = <String>[
+    'StreakWidget',
+    'StreakWidgetDesign02',
+    'StreakWidgetDesign03',
+    'StreakWidgetDesign04',
+    'StreakWidgetDesign05',
+    'StreakWidgetDesign06',
+    'StreakWidgetDesign07',
+    'StreakWidgetDesign08',
+    'StreakWidgetDesign09',
+    'StreakWidgetDesign10',
+  ];
 
   /// Saves all streak state and requests a native widget redraw.
   ///
@@ -38,7 +49,9 @@ class HomeWidgetService {
         hasHobbies ? 1 : 0,
       );
       await HomeWidget.saveWidgetData<String>('streak_user_name', userName);
-      await HomeWidget.updateWidget(androidName: _androidWidgetName);
+      for (final widgetName in _androidWidgetNames) {
+        await HomeWidget.updateWidget(androidName: widgetName);
+      }
     } catch (e) {
       // Widget may not be pinned or plugin not initialised.
       // Log in debug so sync failures are visible during development.
