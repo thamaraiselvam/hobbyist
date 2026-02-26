@@ -878,6 +878,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                             ),
                                           ),
                                           child: ListTile(
+                                            onTap: _selectMonthDay,
                                             contentPadding:
                                                 const EdgeInsets.symmetric(
                                                   horizontal: 12,
@@ -902,9 +903,9 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                                 fontSize: 13,
                                               ),
                                             ),
-                                            trailing: TextButton(
-                                              onPressed: _selectMonthDay,
-                                              child: const Text('Set'),
+                                            trailing: const Icon(
+                                              Icons.keyboard_arrow_down,
+                                              color: Color(0xFFa490cb),
                                             ),
                                           ),
                                         ),
