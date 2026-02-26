@@ -435,6 +435,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         SettingsScreen(
           onBack: () => setState(() => _selectedIndex = 0),
           onNavigate: (index) => setState(() => _selectedIndex = index),
+          onRefresh: _refreshFromOtherScreen,
         ),
       ],
     );
@@ -1309,4 +1310,3 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
     }
   }
 }
-
