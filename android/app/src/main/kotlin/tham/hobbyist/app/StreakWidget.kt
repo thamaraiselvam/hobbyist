@@ -140,7 +140,3 @@ open class StreakWidget : HomeWidgetProvider() {
     }
 }
 
-class StreakWidgetDesign02 : StreakWidget() { override val layoutResId = R.layout.streak_widget_design_02 }
-class StreakWidgetDesign03 : StreakWidget() { override val layoutResId = R.layout.streak_widget_design_03 }
-class StreakWidgetDesign04 : StreakWidget() { override val layoutResId = R.layout.streak_widget_design_04 }
-class StreakWidgetDesign07 : StreakWidget() { override val layoutResId = R.layout.streak_widget_design_07 }

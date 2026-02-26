@@ -14,13 +14,7 @@ import 'package:home_widget/home_widget.dart';
 ///   streak_has_hobbies  – int,    1 if user has at least one hobby else 0
 ///   streak_user_name    – String, user's display name (empty = not set)
 class HomeWidgetService {
-  static const _androidWidgetNames = <String>[
-    'StreakWidget',
-    'StreakWidgetDesign02',
-    'StreakWidgetDesign03',
-    'StreakWidgetDesign04',
-    'StreakWidgetDesign07',
-  ];
+  static const _androidWidgetNames = <String>['StreakWidget'];
 
   /// Saves all streak state and requests a native widget redraw.
   ///

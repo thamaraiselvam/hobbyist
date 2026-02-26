@@ -48,51 +48,7 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/streak_widget_info" />
         </receiver>
-        <receiver
-            android:name=".StreakWidgetDesign02"
-            android:exported="true"
-            android:label="Hobbyist Streak - Design 2">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/streak_widget_info_02" />
-        </receiver>
-        <receiver
-            android:name=".StreakWidgetDesign03"
-            android:exported="true"
-            android:label="Hobbyist Streak - Design 3">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/streak_widget_info_03" />
-        </receiver>
-        <receiver
-            android:name=".StreakWidgetDesign04"
-            android:exported="true"
-            android:label="Hobbyist Streak - Design 4">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/streak_widget_info_04" />
-        </receiver>
-        <receiver
-            android:name=".StreakWidgetDesign07"
-            android:exported="true"
-            android:label="Hobbyist Streak - Design 7">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/streak_widget_info_07" />
-        </receiver>
-
+        
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
