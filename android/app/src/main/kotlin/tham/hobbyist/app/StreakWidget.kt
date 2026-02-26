@@ -14,35 +14,12 @@ import java.util.Calendar
 import java.util.Locale
 
 /**
- * Android home-screen widget displaying the user's current streak and a
- * **rolling 7-day window** anchored on today.
+ * Shared widget renderer used by all streak widget designs.
  *
- * Layout sections (top → bottom):
- *   1. Hero streak counter — "🔥 N days" (large, bold, top-left)
- *   2. Motivational subtitle — context-aware copy below the counter
- *   3. Weekday label row — M T W T F S S
- *   4. Streak indicator row — 7 circles inside a pill container
- *
- * Data is written by HomeWidgetService (Dart) via the home_widget plugin.
- * This provider reads that store via [HomeWidgetPlugin.getData] on every
- * update — never hardcode the SharedPreferences file name directly, as the
- * plugin's internal constant may differ across versions.
- *
- * SharedPreferences keys (written by Dart):
- *   streak_current      – Int,    global consecutive-day streak count
- *   streak_days         – String, 7-char bitmask "1101100"
- *                         index 0 = 6 days ago … index 6 = today
- *   streak_has_hobbies  – Int,    1 = user has hobbies, 0 = fresh install
- *   streak_user_name    – String, display name (empty = not set)
- *
- * Day circle states:
- *   widget_day_done        – solid green, past completed
- *   widget_day_done_today  – bright green + border, today completed
- *   widget_day_today       – solid orange, today pending (fire emoji)
- *   widget_day_missed      – dull red, past missed (hobbies exist)
- *   widget_day_pending     – muted grey, fresh-install or future slot
+ * Each widget provider can point to a different layout while reusing the same
+ * data and interaction logic.
  */
-class StreakWidget : HomeWidgetProvider() {
+open class StreakWidget : HomeWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -51,9 +28,17 @@ class StreakWidget : HomeWidgetProvider() {
         widgetData: SharedPreferences,
     ) {
         for (widgetId in appWidgetIds) {
-            updateWidget(context, appWidgetManager, widgetId, widgetData)
+            updateWidget(
+                context = context,
+                appWidgetManager = appWidgetManager,
+                widgetId = widgetId,
+                widgetData = widgetData,
+                layoutResId = layoutResId,
+            )
         }
     }
+
+    protected open val layoutResId: Int = R.layout.streak_widget
 
     companion object {
 
@@ -68,23 +53,20 @@ class StreakWidget : HomeWidgetProvider() {
             R.id.day_circle_6,
         )
 
-        // Single-char abbreviations indexed by Calendar.DAY_OF_WEEK (1=Sun … 7=Sat)
-        private val DAY_ABBR_BY_DOW = arrayOf("", "S", "M", "T", "W", "T", "F", "S")
-
         fun updateWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
             widgetId: Int,
             widgetData: SharedPreferences,
+            layoutResId: Int,
         ) {
-            val streak     = widgetData.getInt("streak_current", 0)
-            val daysStr    = widgetData.getString("streak_days", "0000000") ?: "0000000"
+            val streak = widgetData.getInt("streak_current", 0)
+            val daysStr = widgetData.getString("streak_days", "0000000") ?: "0000000"
             val hasHobbies = widgetData.getInt("streak_has_hobbies", 0) == 1
-            val userName   = widgetData.getString("streak_user_name", "") ?: ""
+            val userName = widgetData.getString("streak_user_name", "") ?: ""
 
-            val views = RemoteViews(context.packageName, R.layout.streak_widget)
+            val views = RemoteViews(context.packageName, layoutResId)
 
-            // ── Tap widget → open app ─────────────────────────────────────
             val launchIntent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
@@ -98,55 +80,45 @@ class StreakWidget : HomeWidgetProvider() {
                 PendingIntent.getActivity(context, 0, launchIntent, piFlags),
             )
 
-            // ── Parse 7-day bitmask ───────────────────────────────────────
-            val days          = daysStr.padEnd(7, '0')
+            val days = daysStr.padEnd(7, '0')
             val todayCompleted = days.getOrElse(6) { '0' } == '1'
 
-            // ── Hero streak counter (badge shows "day streak") ──────────────────
             views.setTextViewText(R.id.streak_hero, "\uD83D\uDD25 $streak")
-
-            // ── Subtitle ──────────────────────────────────────────────────
             views.setTextViewText(
                 R.id.widget_subtitle,
                 subtitleFor(userName, hasHobbies, todayCompleted),
             )
 
-            // ── Rolling 7-day window (index 6 = today) ────────────────────
             val sdf = SimpleDateFormat("EEE", Locale.ENGLISH)
 
             for (i in 0..6) {
                 val completed = days.getOrElse(i) { '0' } == '1'
-                val isToday   = i == 6      // rolling window always has today at index 6
-                val isMissed  = !isToday && !completed && hasHobbies
+                val isToday = i == 6
+                val isMissed = !isToday && !completed && hasHobbies
 
-                // Rolling day label: compute weekday of (today - (6 - i))
                 val cal = Calendar.getInstance()
                 cal.add(Calendar.DAY_OF_YEAR, -(6 - i))
                 val label = sdf.format(cal.time)[0].uppercaseChar().toString()
                 views.setTextViewText(DAY_LABEL_IDS[i], label)
 
-                // Label brightness: today = full white, past = dimmer
                 views.setTextColor(
                     DAY_LABEL_IDS[i],
                     if (isToday) Color.WHITE else Color.argb(140, 255, 255, 255),
                 )
 
-                // Circle background
                 val circleDrawable = when {
                     isToday && completed -> R.drawable.widget_day_done_today
-                    isToday              -> R.drawable.widget_day_today
-                    completed            -> R.drawable.widget_day_done
-                    isMissed             -> R.drawable.widget_day_missed
-                    else                 -> R.drawable.widget_day_pending
+                    isToday -> R.drawable.widget_day_today
+                    completed -> R.drawable.widget_day_done
+                    isMissed -> R.drawable.widget_day_missed
+                    else -> R.drawable.widget_day_pending
                 }
                 views.setInt(DAY_CIRCLE_IDS[i], "setBackgroundResource", circleDrawable)
 
-                // Circle text symbol — no ✗ for missed days; an empty dim ring
-                // reads as "not done" without feeling punishing.
                 val symbol = when {
                     completed -> "✓"
-                    isToday   -> "🔥"
-                    else      -> ""
+                    isToday -> "🔥"
+                    else -> ""
                 }
                 views.setTextViewText(DAY_CIRCLE_IDS[i], symbol)
             }
@@ -154,19 +126,6 @@ class StreakWidget : HomeWidgetProvider() {
             appWidgetManager.updateAppWidget(widgetId, views)
         }
 
-        // ── Copy helpers ──────────────────────────────────────────────────
-
-        /**
-         * Returns contextual subtitle copy based on onboarding state,
-         * username presence, and whether today has been completed.
-         *
-         * Priority:
-         *   1. Not onboarded (no hobbies) → "Start your journey"
-         *   2. Has name, today not done    → "<Name>! Streak?"
-         *   3. Has name, today done        → "Keep it up, <Name>"
-         *   4. No name, today done         → "Great job today!"
-         *   5. No name, today not done     → "Keep the streak going!"
-         */
         private fun subtitleFor(
             userName: String,
             hasHobbies: Boolean,
@@ -180,3 +139,4 @@ class StreakWidget : HomeWidgetProvider() {
         }
     }
 }
+
