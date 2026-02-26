@@ -19,12 +19,7 @@ class HomeWidgetService {
     'StreakWidgetDesign02',
     'StreakWidgetDesign03',
     'StreakWidgetDesign04',
-    'StreakWidgetDesign05',
-    'StreakWidgetDesign06',
     'StreakWidgetDesign07',
-    'StreakWidgetDesign08',
-    'StreakWidgetDesign09',
-    'StreakWidgetDesign10',
   ];
 
   /// Saves all streak state and requests a native widget redraw.
