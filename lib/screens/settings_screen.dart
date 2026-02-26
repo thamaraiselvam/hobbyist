@@ -19,11 +19,13 @@ import '../constants/test_keys.dart';
 class SettingsScreen extends StatefulWidget {
   final VoidCallback onBack;
   final Function(int) onNavigate;
+  final Future<void> Function()? onRefresh;
 
   const SettingsScreen({
     super.key,
     required this.onBack,
     required this.onNavigate,
+    this.onRefresh,
   });
 
   @override
@@ -802,6 +804,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await _loadUserName();
       await _loadSettings();
       await _checkAuthStatus();
+
+      // Trigger global data refresh so other tabs reflect imported data.
+      if (widget.onRefresh != null) {
+        await widget.onRefresh!();
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
