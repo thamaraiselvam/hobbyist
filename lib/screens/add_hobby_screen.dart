@@ -449,7 +449,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
       if (!mounted) {
         return;
       }
-      final searchResults = DefaultHobbies.search(query);
+      final searchResults = DefaultHobbies.search(query, limit: 6);
       setState(() {
         _filteredHobbies = searchResults;
         _showSuggestions = query.trim().isNotEmpty && searchResults.isNotEmpty;
@@ -579,9 +579,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 8,
                                       ),
-                                      itemCount: _filteredHobbies
-                                          .take(6)
-                                          .length,
+                                      itemCount: _filteredHobbies.length,
                                       separatorBuilder: (context, index) =>
                                           const Divider(
                                             color: Color(0xFF382a54),

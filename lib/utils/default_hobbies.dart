@@ -343,7 +343,7 @@ class DefaultHobbies {
     );
   }).toList(growable: false);
 
-  static List<HobbyData> search(String query) {
+  static List<HobbyData> search(String query, {int? limit}) {
     final normalized = query.trim().toLowerCase();
     if (normalized.isEmpty) {
       return hobbies;
@@ -398,6 +398,11 @@ class DefaultHobbies {
       return a.hobby.name.compareTo(b.hobby.name);
     });
 
-    return matches.map((match) => match.hobby).toList(growable: false);
+    final sorted = matches.map((match) => match.hobby);
+    if (limit != null && limit > 0) {
+      return sorted.take(limit).toList(growable: false);
+    }
+
+    return sorted.toList(growable: false);
   }
 }

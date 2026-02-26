@@ -131,6 +131,11 @@ void main() {
         expect(monthly.any((h) => h.name.contains('(Monthly Task)')), true);
         expect(oneTime.any((h) => h.name.contains('(One-time Task)')), true);
       });
+
+      test('should support limiting results for UI performance', () {
+        final limited = DefaultHobbies.search('task', limit: 6);
+        expect(limited.length, lessThanOrEqualTo(6));
+      });
     });
   });
 }
