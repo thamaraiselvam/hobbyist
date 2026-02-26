@@ -28,6 +28,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   TimeOfDay _notificationTime = const TimeOfDay(hour: 8, minute: 0);
   bool _notifyEnabled = false; // Default OFF
   DateTime? _oneTimeReminderDateTime; // Full date+time for one-time task reminders
+  DateTime? _endDate;
   // Color palette - 10 bright colors matching theme
   final List<int> _colorPalette = const [
     0xFF590df2, // Purple (theme primary)
@@ -63,6 +64,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
         _repeatMode = 'one_time';
       }
       _selectedColor = widget.hobby!.color;
+      _endDate = widget.hobby!.isOneTime ? null : widget.hobby!.endDate;
 
       // Load custom day(s) if exists
       if (widget.hobby!.repeatMode == 'weekly') {
@@ -174,6 +176,8 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             customDay: customDay,
             customDays: customDays,
             isOneTime: _repeatMode == 'one_time',
+            endDate: _repeatMode == 'one_time' ? null : _endDate,
+            clearEndDate: _repeatMode == 'one_time' || _endDate == null,
           );
           await _service.updateHobby(updatedHobby);
 
@@ -201,6 +205,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
             customDay: customDay,
             customDays: customDays,
             isOneTime: _repeatMode == 'one_time',
+            endDate: _repeatMode == 'one_time' ? null : _endDate,
           );
           await _service.addHobby(hobby);
 
@@ -357,6 +362,65 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.period == DayPeriod.am ? 'AM' : 'PM';
     return '$hour:$minute $period';
+  }
+
+  Future<void> _selectEndDate() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDate = widget.hobby?.createdAt != null
+        ? DateTime(
+            widget.hobby!.createdAt!.year,
+            widget.hobby!.createdAt!.month,
+            widget.hobby!.createdAt!.day,
+          )
+        : today;
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _endDate ?? startDate,
+      firstDate: startDate,
+      lastDate: today.add(const Duration(days: 3650)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF590df2),
+              onPrimary: Colors.white,
+              surface: Color(0xFF221834),
+              onSurface: Colors.white,
+            ),
+            dialogTheme: const DialogThemeData(
+              backgroundColor: Color(0xFF221834),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _endDate = DateTime(picked.year, picked.month, picked.day);
+      });
+    }
+  }
+
+  String _formatDate(DateTime dt) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
   String _getDaySuffix(int day) {
@@ -813,6 +877,58 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                           ),
                                         ],
                                       ),
+                                    ),
+                                  ],
+                                  if (_repeatMode != 'one_time') ...[
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.event_busy,
+                                          color: Color(0xFFa490cb),
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'End Date (Optional)',
+                                                style: TextStyle(
+                                                  color: Color(0xFFa490cb),
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                _endDate != null
+                                                    ? _formatDate(_endDate!)
+                                                    : 'No end date',
+                                                style: TextStyle(
+                                                  color: _endDate != null
+                                                      ? Colors.white
+                                                      : const Color(0xFFa490cb),
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: _selectEndDate,
+                                          child: const Text('Set'),
+                                        ),
+                                        if (_endDate != null)
+                                          TextButton(
+                                            onPressed: () {
+                                              setState(() => _endDate = null);
+                                            },
+                                            child: const Text('Clear'),
+                                          ),
+                                      ],
                                     ),
                                   ],
                                   const SizedBox(height: 20),
