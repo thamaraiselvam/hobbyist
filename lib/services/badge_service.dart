@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -101,7 +100,7 @@ class BadgeService {
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
 
-    final bgRect = const ui.Rect.fromLTWH(0, 0, width, height);
+    const bgRect = ui.Rect.fromLTWH(0, 0, width, height);
     final bgPaint = ui.Paint()
       ..shader = ui.Gradient.linear(
         const ui.Offset(120, 40),
