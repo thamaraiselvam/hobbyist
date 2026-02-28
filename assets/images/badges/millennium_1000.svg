@@ -1,8 +1,23 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs><linearGradient id="g" x1="60" y1="20" x2="450" y2="492"><stop stop-color="#271C41"/><stop offset="1" stop-color="#08060E"/></linearGradient></defs>
-  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#g)"/>
-  <circle cx="256" cy="210" r="118" fill="#B18BFF"/>
-  <text x="256" y="230" text-anchor="middle" fill="white" font-family="Arial" font-size="70" font-weight="700">1000</text>
-  <text x="256" y="380" text-anchor="middle" fill="white" font-family="Arial" font-size="34" font-weight="700">MILLENNIUM</text>
-  <text x="256" y="430" text-anchor="middle" fill="#CFC6FF" font-family="Arial" font-size="24">1000-DAY STREAK</text>
+  <defs>
+    <linearGradient id="bg1000" x1="46" y1="24" x2="464" y2="490" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1F1734"/>
+      <stop offset="1" stop-color="#05030A"/>
+    </linearGradient>
+    <radialGradient id="halo1000" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 194) rotate(90) scale(168)">
+      <stop stop-color="#F6F0FF"/>
+      <stop offset="1" stop-color="#B18BFF"/>
+    </radialGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#bg1000)"/>
+  <circle cx="256" cy="194" r="138" fill="#6C3FFF" opacity="0.18"/>
+  <circle cx="256" cy="194" r="114" fill="url(#halo1000)"/>
+  <circle cx="256" cy="194" r="92" fill="#171024"/>
+  <path d="M256 114L278 162L330 168L292 206L302 258L256 232L210 258L220 206L182 168L234 162L256 114Z" fill="#FFFFFF"/>
+  <circle cx="146" cy="114" r="4" fill="#DCCBFF"/>
+  <circle cx="372" cy="130" r="5" fill="#EBDDFF"/>
+  <circle cx="398" cy="220" r="3" fill="#DCCBFF"/>
+  <circle cx="128" cy="248" r="4" fill="#EBDDFF"/>
+  <text x="256" y="372" text-anchor="middle" fill="white" font-family="Arial" font-size="52" font-weight="700">1000</text>
+  <text x="256" y="428" text-anchor="middle" fill="#E4D8FF" font-family="Arial" font-size="24">MILLENNIUM LEGEND</text>
 </svg>
