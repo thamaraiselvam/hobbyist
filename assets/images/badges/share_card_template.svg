@@ -1,0 +1,21 @@
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="40" x2="960" y2="1020" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A1625"/>
+      <stop offset="1" stop-color="#2A2238"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="210" y1="180" x2="860" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#342A4C"/>
+      <stop offset="1" stop-color="#231C34"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <rect x="120" y="130" width="840" height="820" rx="56" fill="url(#panel)"/>
+  <circle cx="540" cy="350" r="120" fill="#6C3FFF"/>
+  <text x="540" y="370" text-anchor="middle" fill="white" font-family="Arial" font-size="72" font-weight="700">30</text>
+  <text x="540" y="510" text-anchor="middle" fill="white" font-family="Arial" font-size="72" font-weight="700">Flame Streak</text>
+  <text x="540" y="585" text-anchor="middle" fill="#CFC6FF" font-family="Arial" font-size="40">You stayed consistent for 30 days.</text>
+  <rect x="180" y="760" width="720" height="130" rx="28" fill="#6C3FFF"/>
+  <text x="540" y="818" text-anchor="middle" fill="white" font-family="Arial" font-size="36" font-weight="700">Install Hobbyist</text>
+  <text x="540" y="860" text-anchor="middle" fill="#E5DAFF" font-family="Arial" font-size="30">hobbyist.app/install</text>
+</svg>

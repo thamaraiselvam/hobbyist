@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="70" y1="24" x2="444" y2="488" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2C1F49"/>
+      <stop offset="1" stop-color="#141021"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="144" y1="108" x2="367" y2="333" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B18BFF"/>
+      <stop offset="1" stop-color="#6C3FFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#bg)"/>
+  <circle cx="256" cy="220" r="116" fill="#251C36"/>
+  <circle cx="256" cy="220" r="101" stroke="url(#ring)" stroke-width="22"/>
+  <path d="M256 144C286 174 303 194 303 225C303 253 282 275 256 275C228 275 209 253 209 228C209 205 224 186 243 171C240 196 249 212 266 222C264 204 265 188 256 144Z" fill="#E5DAFF"/>
+  <rect x="196" y="332" width="120" height="62" rx="31" fill="#8B5CF6"/>
+  <text x="256" y="372" text-anchor="middle" fill="white" font-family="Arial" font-weight="700" font-size="30">7D</text>
+  <text x="256" y="430" text-anchor="middle" fill="#CFC6FF" font-family="Arial" font-size="26">EMBER STREAK</text>
+</svg>

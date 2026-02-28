@@ -1,0 +1,17 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="68" y1="24" x2="444" y2="482" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2B1F45"/>
+      <stop offset="1" stop-color="#120E1D"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 214) rotate(90) scale(140)">
+      <stop stop-color="#FFD0FF"/>
+      <stop offset="1" stop-color="#7A44FF"/>
+    </radialGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#bg)"/>
+  <circle cx="256" cy="214" r="120" fill="url(#sun)"/>
+  <path d="M256 120C296 170 332 208 332 256C332 298 297 332 256 332C213 332 180 298 180 258C180 219 205 188 232 165C232 199 243 220 267 232C266 197 269 164 256 120Z" fill="#fff"/>
+  <text x="256" y="377" text-anchor="middle" fill="white" font-family="Arial" font-weight="700" font-size="52">30</text>
+  <text x="256" y="430" text-anchor="middle" fill="#CFC6FF" font-family="Arial" font-size="26">FLAME STREAK</text>
+</svg>

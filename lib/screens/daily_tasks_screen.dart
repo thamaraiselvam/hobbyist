@@ -1,7 +1,9 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously, body_might_complete_normally_catch_error
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/test_keys.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/hobby.dart';
 import '../services/hobby_service.dart';
 import '../services/sound_service.dart';
@@ -14,6 +16,8 @@ import 'settings_screen.dart';
 import 'tasks_list_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/home_widget_service.dart';
+import '../services/badge_service.dart';
+import '../models/badge.dart';
 
 class DailyTasksScreen extends StatefulWidget {
   const DailyTasksScreen({super.key});
@@ -27,12 +31,14 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   final HobbyService _service = HobbyService();
   final SoundService _soundService = SoundService();
   final QuoteService _quoteService = QuoteService();
+  final BadgeService _badgeService = BadgeService();
 
   List<Hobby> _allHobbies = [];
   bool _loading = true;
   int _selectedIndex = 0;
   String _currentQuote = '';
   bool _pullToRefreshEnabled = false;
+  bool _badgeDialogOpen = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -396,6 +402,21 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
 
     if (!isCurrentlyCompleted) _soundService.playCompletionSound();
 
+    if (!isCurrentlyCompleted) {
+      final hadSeenToast =
+          (await _service.getSetting('has_seen_success_toast')) == 'true';
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nice work! Task completed.')),
+        );
+      }
+      if (!hadSeenToast) {
+        await _service.setSetting('has_seen_success_toast', 'true');
+      } else {
+        await _checkForBadgeUnlocks();
+      }
+    }
+
     _service.toggleCompletion(hobby.id, toggleDate).catchError((error) {
       print('⚠️ Error syncing completion: $error');
       if (mounted && error.toString().contains('Database')) {
@@ -411,6 +432,116 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
         );
       }
     });
+  }
+
+  Future<void> _checkForBadgeUnlocks() async {
+    if (_badgeDialogOpen) return;
+    final hasSeenToast =
+        (await _service.getSetting('has_seen_success_toast')) == 'true';
+    if (!hasSeenToast) return;
+
+    final newUnlocks = await _badgeService.evaluateNewUnlocks(_allHobbies);
+    if (newUnlocks.isEmpty || !mounted) return;
+
+    final now = DateTime.now();
+    final lastPrompt = await _service.getSetting('last_badge_celebration_at');
+    if (lastPrompt != null) {
+      final parsed = DateTime.tryParse(lastPrompt);
+      if (parsed != null && now.difference(parsed) < const Duration(hours: 24)) {
+        return;
+      }
+    }
+
+    _badgeDialogOpen = true;
+    try {
+      await _showBadgeUnlockDialog(newUnlocks.first);
+      await _service.setSetting(
+        'last_badge_celebration_at',
+        now.toIso8601String(),
+      );
+    } finally {
+      _badgeDialogOpen = false;
+    }
+  }
+
+  Future<void> _showBadgeUnlockDialog(BadgeUnlock unlock) async {
+    bool includeInstallLink = true;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF2A2238),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: Text('You unlocked ${unlock.badge.name}! 🎉'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: 120,
+                    width: 120,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      color: const Color(0xFF1A1625),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: SvgPicture.asset(unlock.badge.asset),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    unlock.badge.description,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFFCFC6FF)),
+                  ),
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    value: includeInstallLink,
+                    onChanged: (v) => setDialogState(() => includeInstallLink = v ?? true),
+                    activeColor: const Color(0xFF6C3FFF),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Include app install link',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Not now'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await _shareBadge(unlock, includeInstallLink);
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6C3FFF),
+                  ),
+                  child: const Text('Share'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _shareBadge(BadgeUnlock unlock, bool includeInstallLink) async {
+    final cardFile = await _badgeService.createShareCardSvg(unlock);
+    final shareText = StringBuffer('I just unlocked ${unlock.badge.name} in Hobbyist!');
+    if (includeInstallLink) {
+      shareText.write('\nInstall: https://hobbyist.app/install');
+    }
+    await Share.shareXFiles(
+      [XFile(cardFile.path)],
+      text: shareText.toString(),
+      subject: 'Hobbyist Badge Unlock',
+    );
   }
 
   // ── Build ─────────────────────────────────────────────────────────────
