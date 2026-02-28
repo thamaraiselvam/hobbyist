@@ -10,6 +10,20 @@
   },
   "badges": [
     {
+      "id": "first_completion",
+      "name": "First Win",
+      "description": "Complete your very first task.",
+      "category": "milestone",
+      "rarity": "common",
+      "unlockCriteria": {
+        "metric": "totalCompletions",
+        "operator": ">=",
+        "value": 1
+      },
+      "asset": "assets/images/badges/first_completion.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
       "id": "spark_streak_3",
       "name": "Spark Streak",
       "description": "Complete tasks for 3 consecutive days.",

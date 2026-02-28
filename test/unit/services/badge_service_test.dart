@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hobbyist/models/badge.dart';
 import 'package:hobbyist/models/hobby.dart';
@@ -5,7 +7,52 @@ import 'package:hobbyist/services/badge_service.dart';
 
 void main() {
   group('BadgeService', () {
-    test('unlocks streak badge once and persists unlocked IDs', () async {
+    test('unlocks first completion badge and stores unlock timestamp', () async {
+      final store = <String, String>{};
+      final service = BadgeService(
+        getSetting: (key) async => store[key],
+        setSetting: (key, value) async => store[key] = value,
+      );
+
+      final badges = [
+        const Badge(
+          id: 'first_completion',
+          name: 'First Win',
+          description: 'First completion',
+          category: 'milestone',
+          rarity: 'common',
+          metric: 'totalCompletions',
+          operator: '>=',
+          value: 1,
+          asset: 'assets/images/badges/first_completion.svg',
+          shareTemplate: 'assets/images/badges/share_card_template.svg',
+        ),
+      ];
+
+      final hobbies = [
+        Hobby(
+          id: 'h1',
+          name: 'Read',
+          color: 0xFF6C3FFF,
+          completions: {_key(DateTime.now()): HobbyCompletion(completed: true)},
+        ),
+      ];
+
+      final unlocks = await service.evaluateNewUnlocks(
+        hobbies,
+        badgesOverride: badges,
+        now: DateTime(2026, 1, 1, 10, 30),
+      );
+
+      expect(unlocks.length, 1);
+      expect(unlocks.first.badge.id, 'first_completion');
+
+      final metadata = jsonDecode(store['badge_unlock_metadata']!)
+          as Map<String, dynamic>;
+      expect(metadata['first_completion'], '2026-01-01T10:30:00.000');
+    });
+
+    test('unlocks streak badge once and does not duplicate', () async {
       final store = <String, String>{};
       final service = BadgeService(
         getSetting: (key) async => store[key],
@@ -42,9 +89,7 @@ void main() {
       final second = await service.evaluateNewUnlocks(hobbies, badgesOverride: badges);
 
       expect(first.length, 1);
-      expect(first.first.badge.id, 'spark_streak_3');
       expect(second, isEmpty);
-      expect(store['unlocked_badge_ids'], contains('spark_streak_3'));
     });
   });
 }

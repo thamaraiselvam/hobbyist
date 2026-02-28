@@ -46,3 +46,12 @@ class BadgeUnlock {
 
   const BadgeUnlock({required this.badge, required this.achievedValue});
 }
+
+class BadgeCollectionState {
+  final Badge badge;
+  final DateTime? unlockedAt;
+
+  const BadgeCollectionState({required this.badge, required this.unlockedAt});
+
+  bool get isUnlocked => unlockedAt != null;
+}

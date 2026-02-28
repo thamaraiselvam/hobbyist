@@ -412,9 +412,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
       }
       if (!hadSeenToast) {
         await _service.setSetting('has_seen_success_toast', 'true');
-      } else {
-        await _checkForBadgeUnlocks();
       }
+      await _checkForBadgeUnlocks();
     }
 
     _service.toggleCompletion(hobby.id, toggleDate).catchError((error) {

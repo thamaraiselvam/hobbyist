@@ -25,7 +25,9 @@ class BadgeService {
 
   Future<List<Badge>> loadBadges() async {
     if (_cache != null) return _cache!;
-    final raw = await rootBundle.loadString('assets/images/badges/badge_catalog.json');
+    final raw = await rootBundle.loadString(
+      'assets/images/badges/badge_catalog.json',
+    );
     final data = jsonDecode(raw) as Map<String, dynamic>;
     final badges = (data['badges'] as List<dynamic>)
         .map((e) => Badge.fromJson(e as Map<String, dynamic>))
@@ -37,26 +39,58 @@ class BadgeService {
   Future<List<BadgeUnlock>> evaluateNewUnlocks(
     List<Hobby> hobbies, {
     List<Badge>? badgesOverride,
+    DateTime? now,
   }) async {
     final badges = badgesOverride ?? await loadBadges();
-    final unlocked = await _getUnlockedBadgeIds();
-    final metrics = _computeMetrics(hobbies);
+    final unlocked = await _getUnlockMetadata();
+    final metrics = _computeMetrics(hobbies, now: now);
 
     final newlyUnlocked = <BadgeUnlock>[];
+    final unlockTime = (now ?? DateTime.now()).toIso8601String();
+
     for (final badge in badges) {
-      if (unlocked.contains(badge.id)) continue;
+      if (unlocked.containsKey(badge.id)) continue;
       final currentValue = metrics[badge.metric];
       if (currentValue == null) continue;
       if (_matchesRule(currentValue, badge.operator, badge.value.toDouble())) {
         newlyUnlocked.add(BadgeUnlock(badge: badge, achievedValue: currentValue));
-        unlocked.add(badge.id);
+        unlocked[badge.id] = unlockTime;
       }
     }
 
     if (newlyUnlocked.isNotEmpty) {
-      await _saveUnlockedBadgeIds(unlocked);
+      await _saveUnlockMetadata(unlocked);
     }
     return newlyUnlocked;
+  }
+
+  Future<List<BadgeCollectionState>> getCollectionStates() async {
+    final badges = await loadBadges();
+    final metadata = await _getUnlockMetadata();
+
+    return badges.map((badge) {
+      final raw = metadata[badge.id];
+      return BadgeCollectionState(
+        badge: badge,
+        unlockedAt: raw == null ? null : DateTime.tryParse(raw),
+      );
+    }).toList();
+  }
+
+  String criteriaText(Badge badge) {
+    final value = badge.value % 1 == 0
+        ? badge.value.toInt().toString()
+        : badge.value.toString();
+    switch (badge.metric) {
+      case 'streakDays':
+        return 'Reach a streak of $value days';
+      case 'weeklyCompletionRate':
+        return 'Reach $value% completion in the last 7 days';
+      case 'totalCompletions':
+        return 'Complete $value total task${badge.value == 1 ? '' : 's'}';
+      default:
+        return 'Satisfy: ${badge.metric} ${badge.operator} $value';
+    }
   }
 
   Future<File> createShareCardSvg(BadgeUnlock unlock) async {
@@ -92,39 +126,46 @@ class BadgeService {
     return file;
   }
 
-  Future<Set<String>> _getUnlockedBadgeIds() async {
-    final raw = await (_getSetting?.call('unlocked_badge_ids') ??
-            _hobbyService.getSetting('unlocked_badge_ids')) ??
+  Future<Map<String, String>> _getUnlockMetadata() async {
+    final raw = await (_getSetting?.call('badge_unlock_metadata') ??
+            _hobbyService.getSetting('badge_unlock_metadata')) ??
         '';
-    if (raw.trim().isEmpty) return <String>{};
-    return raw
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toSet();
+    if (raw.trim().isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      return decoded.map((key, value) => MapEntry(key, value.toString()));
+    } catch (_) {
+      return {};
+    }
   }
 
-  Future<void> _saveUnlockedBadgeIds(Set<String> ids) async {
-    await (_setSetting?.call('unlocked_badge_ids', ids.join(',')) ??
-        _hobbyService.setSetting('unlocked_badge_ids', ids.join(',')));
+  Future<void> _saveUnlockMetadata(Map<String, String> metadata) async {
+    await (_setSetting?.call('badge_unlock_metadata', jsonEncode(metadata)) ??
+        _hobbyService.setSetting('badge_unlock_metadata', jsonEncode(metadata)));
   }
 
-  Map<String, double> _computeMetrics(List<Hobby> hobbies) {
-    final streak = _globalStreak(hobbies).toDouble();
-    final weeklyRate = _weeklyCompletionRate(hobbies);
+  Map<String, double> _computeMetrics(List<Hobby> hobbies, {DateTime? now}) {
+    final streak = _globalStreak(hobbies, now: now).toDouble();
+    final weeklyRate = _weeklyCompletionRate(hobbies, now: now);
+    final totalCompletions = hobbies
+        .map((h) => h.completions.values.where((c) => c.completed).length)
+        .fold<int>(0, (a, b) => a + b)
+        .toDouble();
+
     return {
       'streakDays': streak,
       'weeklyCompletionRate': weeklyRate,
+      'totalCompletions': totalCompletions,
     };
   }
 
-  int _globalStreak(List<Hobby> hobbies) {
+  int _globalStreak(List<Hobby> hobbies, {DateTime? now}) {
     if (hobbies.isEmpty) return 0;
-    final now = DateTime.now();
+    final dateNow = now ?? DateTime.now();
     final fmt = DateFormat('yyyy-MM-dd');
     int streak = 0;
     for (int i = 0; i < 365; i++) {
-      final date = now.subtract(Duration(days: i));
+      final date = dateNow.subtract(Duration(days: i));
       final key = fmt.format(date);
       final any = hobbies.any((h) => h.completions[key]?.completed == true);
       if (any) {
@@ -136,22 +177,18 @@ class BadgeService {
     return streak;
   }
 
-  double _weeklyCompletionRate(List<Hobby> hobbies) {
-    final now = DateTime.now();
+  double _weeklyCompletionRate(List<Hobby> hobbies, {DateTime? now}) {
+    final dateNow = now ?? DateTime.now();
     final fmt = DateFormat('yyyy-MM-dd');
     int completedDays = 0;
-    int activeDays = 0;
 
     for (int i = 0; i < 7; i++) {
-      final date = now.subtract(Duration(days: i));
+      final date = dateNow.subtract(Duration(days: i));
       final key = fmt.format(date);
-      final hasActivity = hobbies.any((h) => h.completions.containsKey(key));
-      if (hasActivity) activeDays++;
       final completed = hobbies.any((h) => h.completions[key]?.completed == true);
       if (completed) completedDays++;
     }
 
-    if (activeDays == 0) return 0;
     return (completedDays / 7 * 100).clamp(0, 100);
   }
 

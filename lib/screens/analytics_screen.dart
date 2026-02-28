@@ -7,6 +7,7 @@ import '../services/hobby_service.dart';
 import '../utils/discipline_score.dart';
 import '../utils/page_transitions.dart';
 import 'add_hobby_screen.dart';
+import 'badges_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/test_keys.dart';
 
@@ -551,15 +552,35 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-      child: const Text(
-        'Analytics',
-        textAlign: TextAlign.left,
-        style: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          letterSpacing: 0.5,
-        ),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Text(
+              'Analytics',
+              textAlign: TextAlign.left,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BadgesScreen()),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFF6C3FFF)),
+              foregroundColor: const Color(0xFFE9E1FF),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
+            icon: const Icon(Icons.workspace_premium, size: 18),
+            label: const Text('Badges'),
+          ),
+        ],
       ),
     );
   }
