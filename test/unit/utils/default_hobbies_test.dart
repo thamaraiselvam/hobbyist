@@ -22,8 +22,8 @@ void main() {
       expect(DefaultHobbies.hobbies, isNotEmpty);
     });
 
-    test('should have more than 50 hobbies', () {
-      expect(DefaultHobbies.hobbies.length, greaterThan(50));
+    test('should have exactly 300 curated hobbies and tasks', () {
+      expect(DefaultHobbies.hobbies.length, 300);
     });
 
     test('should include fitness hobbies', () {
@@ -48,7 +48,7 @@ void main() {
               'Painting',
               'Drawing',
               'Photography',
-              'Writing',
+              'Creative Writing',
             ].contains(h.name),
           )
           .toList();
@@ -59,7 +59,7 @@ void main() {
       final musicHobbies = DefaultHobbies.hobbies
           .where(
             (h) =>
-                ['Guitar', 'Piano', 'Drums', 'Music Practice'].contains(h.name),
+                ['Guitar Practice', 'Piano Practice', 'Drum Practice', 'Music Production'].contains(h.name),
           )
           .toList();
       expect(musicHobbies.length, 4);
@@ -85,7 +85,7 @@ void main() {
 
       test('should find hobbies by exact name', () {
         final results = DefaultHobbies.search('Running');
-        expect(results.length, 1);
+        expect(results, isNotEmpty);
         expect(results.first.name, 'Running');
       });
 
@@ -99,9 +99,12 @@ void main() {
         final resultsUpper = DefaultHobbies.search('RUNNING');
         final resultsMixed = DefaultHobbies.search('RuNnInG');
 
-        expect(resultsLower.length, 1);
-        expect(resultsUpper.length, 1);
-        expect(resultsMixed.length, 1);
+        expect(resultsLower, isNotEmpty);
+        expect(resultsUpper, isNotEmpty);
+        expect(resultsMixed, isNotEmpty);
+        expect(resultsLower.first.name, 'Running');
+        expect(resultsUpper.first.name, 'Running');
+        expect(resultsMixed.first.name, 'Running');
       });
 
       test('should find multiple matches', () {
@@ -117,6 +120,21 @@ void main() {
       test('should find hobbies with partial match in middle', () {
         final results = DefaultHobbies.search('ball');
         expect(results.any((h) => h.name.toLowerCase().contains('ball')), true);
+      });
+
+      test('should include and find task templates by cadence', () {
+        final weekly = DefaultHobbies.search('weekly task');
+        final monthly = DefaultHobbies.search('monthly task');
+        final oneTime = DefaultHobbies.search('one-time task');
+
+        expect(weekly.any((h) => h.name.contains('(Weekly Task)')), true);
+        expect(monthly.any((h) => h.name.contains('(Monthly Task)')), true);
+        expect(oneTime.any((h) => h.name.contains('(One-time Task)')), true);
+      });
+
+      test('should support limiting results for UI performance', () {
+        final limited = DefaultHobbies.search('task', limit: 6);
+        expect(limited.length, lessThanOrEqualTo(6));
       });
     });
   });

@@ -1,4 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/hobby.dart';
@@ -51,6 +53,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
 
   List<HobbyData> _filteredHobbies = DefaultHobbies.hobbies;
   bool _showSuggestions = false;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -132,6 +135,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _nameController.dispose();
     _notesController.dispose();
     super.dispose();
@@ -523,9 +527,16 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
   }
 
   void _onSearchChanged(String query) {
-    setState(() {
-      _filteredHobbies = DefaultHobbies.search(query);
-      _showSuggestions = query.isNotEmpty && _filteredHobbies.isNotEmpty;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 120), () {
+      if (!mounted) {
+        return;
+      }
+      final searchResults = DefaultHobbies.search(query, limit: 6);
+      setState(() {
+        _filteredHobbies = searchResults;
+        _showSuggestions = query.trim().isNotEmpty && searchResults.isNotEmpty;
+      });
     });
   }
 
@@ -651,9 +662,7 @@ class _AddHobbyScreenState extends State<AddHobbyScreen> {
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 8,
                                       ),
-                                      itemCount: _filteredHobbies
-                                          .take(6)
-                                          .length,
+                                      itemCount: _filteredHobbies.length,
                                       separatorBuilder: (context, index) =>
                                           const Divider(
                                             color: Color(0xFF382a54),
