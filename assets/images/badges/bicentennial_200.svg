@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg200" x1="48" y1="26" x2="468" y2="490" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2A1E46"/>
+      <stop offset="1" stop-color="#0D0916"/>
+    </linearGradient>
+    <radialGradient id="core200" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 198) rotate(90) scale(142)">
+      <stop stop-color="#E7DBFF"/>
+      <stop offset="1" stop-color="#7A44FF"/>
+    </radialGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#bg200)"/>
+  <path d="M256 76L296 148L378 160L320 222L334 304L256 266L178 304L192 222L134 160L216 148L256 76Z" fill="#8B5CF6" opacity="0.3"/>
+  <circle cx="256" cy="198" r="112" fill="url(#core200)"/>
+  <circle cx="256" cy="198" r="94" fill="#221935"/>
+  <path d="M256 122L278 172H334L288 204L306 256L256 224L206 256L224 204L178 172H234L256 122Z" fill="#F7F3FF"/>
+  <text x="256" y="376" text-anchor="middle" fill="white" font-family="Arial" font-size="54" font-weight="700">200</text>
+  <text x="256" y="430" text-anchor="middle" fill="#D6C8FF" font-family="Arial" font-size="24">BICENTENNIAL STREAK</text>
+</svg>

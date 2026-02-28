@@ -1,0 +1,17 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="60" y1="24" x2="440" y2="488" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2A2142"/>
+      <stop offset="1" stop-color="#151126"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="256" y1="124" x2="256" y2="324" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C8B2FF"/>
+      <stop offset="1" stop-color="#7B4FFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#bg)"/>
+  <path d="M256 120L352 160V230C352 286 311 336 256 354C201 336 160 286 160 230V160L256 120Z" fill="url(#shield)"/>
+  <path d="M224 236L248 260L292 208" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="154" y="372" width="204" height="54" rx="27" fill="#8B5CF6"/>
+  <text x="256" y="408" text-anchor="middle" fill="white" font-family="Arial" font-weight="700" font-size="26">PRECISION WEEK</text>
+</svg>

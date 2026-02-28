@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "theme": {
+    "primary": "#6C3FFF",
+    "secondary": "#8B5CF6",
+    "surface": "#2A2238",
+    "background": "#1A1625",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#CFC6FF"
+  },
+  "badges": [
+    {
+      "id": "first_completion",
+      "name": "First Win",
+      "description": "Complete your very first task.",
+      "category": "milestone",
+      "rarity": "common",
+      "unlockCriteria": {
+        "metric": "totalCompletions",
+        "operator": ">=",
+        "value": 1
+      },
+      "asset": "assets/images/badges/first_completion.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "spark_streak_3",
+      "name": "Spark Streak",
+      "description": "Complete tasks for 3 consecutive days.",
+      "category": "streak",
+      "rarity": "common",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 3
+      },
+      "asset": "assets/images/badges/spark_streak.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "ember_streak_7",
+      "name": "Ember Streak",
+      "description": "Complete tasks for 7 consecutive days.",
+      "category": "streak",
+      "rarity": "uncommon",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 7
+      },
+      "asset": "assets/images/badges/ember_streak.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "flame_streak_30",
+      "name": "Flame Streak",
+      "description": "Complete tasks for 30 consecutive days.",
+      "category": "streak",
+      "rarity": "rare",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 30
+      },
+      "asset": "assets/images/badges/flame_streak.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "precision_week",
+      "name": "Precision Week",
+      "description": "Get 100% completion in a 7-day active window.",
+      "category": "completion",
+      "rarity": "rare",
+      "unlockCriteria": {
+        "metric": "weeklyCompletionRate",
+        "operator": "==",
+        "value": 100
+      },
+      "asset": "assets/images/badges/precision_week.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "constellation_streak_90",
+      "name": "Constellation",
+      "description": "Complete tasks for 90 consecutive days.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 90
+      },
+      "asset": "assets/images/badges/constellation_streak.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "centurion_100",
+      "name": "Centurion 100",
+      "description": "Maintain a 100-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 100
+      },
+      "asset": "assets/images/badges/centurion_100.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "bicentennial_200",
+      "name": "Bicentennial 200",
+      "description": "Maintain a 200-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 200
+      },
+      "asset": "assets/images/badges/bicentennial_200.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "triple_300",
+      "name": "Triple 300",
+      "description": "Maintain a 300-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 300
+      },
+      "asset": "assets/images/badges/triple_300.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "mythic_500",
+      "name": "Mythic 500",
+      "description": "Maintain a 500-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 500
+      },
+      "asset": "assets/images/badges/mythic_500.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "millennium_1000",
+      "name": "Millennium 1000",
+      "description": "Maintain a 1000-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 1000
+      },
+      "asset": "assets/images/badges/millennium_1000.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    }
+  ]
+}

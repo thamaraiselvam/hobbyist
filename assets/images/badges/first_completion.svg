@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="58" y1="22" x2="446" y2="492" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2F2550"/>
+      <stop offset="1" stop-color="#151027"/>
+    </linearGradient>
+    <linearGradient id="coin" x1="188" y1="108" x2="324" y2="332" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E6D8FF"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#bg)"/>
+  <circle cx="256" cy="220" r="118" fill="url(#coin)"/>
+  <path d="M196 222L236 262L316 182" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="170" y="338" width="172" height="64" rx="32" fill="#6C3FFF"/>
+  <text x="256" y="380" text-anchor="middle" fill="white" font-family="Arial" font-weight="700" font-size="28">FIRST WIN</text>
+  <text x="256" y="430" text-anchor="middle" fill="#CFC6FF" font-family="Arial" font-size="22">1ST COMPLETION</text>
+</svg>

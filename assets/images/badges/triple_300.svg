@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg300" x1="54" y1="24" x2="458" y2="486" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#281C40"/>
+      <stop offset="1" stop-color="#0A0711"/>
+    </linearGradient>
+    <linearGradient id="blade300" x1="256" y1="92" x2="256" y2="304" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8DDFF"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#bg300)"/>
+  <circle cx="256" cy="202" r="126" fill="#3E2A66" opacity="0.42"/>
+  <circle cx="256" cy="202" r="104" fill="#1D162D"/>
+  <path d="M256 96L300 156L282 156L304 242L256 304L208 242L230 156L212 156L256 96Z" fill="url(#blade300)"/>
+  <circle cx="256" cy="204" r="26" fill="#1D162D"/>
+  <path d="M222 202H290" stroke="#E8DDFF" stroke-width="12" stroke-linecap="round"/>
+  <rect x="146" y="338" width="220" height="58" rx="29" fill="#7A44FF"/>
+  <text x="256" y="376" text-anchor="middle" fill="white" font-family="Arial" font-size="32" font-weight="700">TRIPLE 300</text>
+  <text x="256" y="432" text-anchor="middle" fill="#D4C4FF" font-family="Arial" font-size="24">300 DAY STREAK</text>
+</svg>

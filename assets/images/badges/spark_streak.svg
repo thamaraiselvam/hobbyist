@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2A2238"/>
+      <stop offset="1" stop-color="#1A1625"/>
+    </linearGradient>
+    <radialGradient id="medal" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 220) rotate(90) scale(150)">
+      <stop stop-color="#BFA6FF"/>
+      <stop offset="1" stop-color="#6C3FFF"/>
+    </radialGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#bg)"/>
+  <circle cx="256" cy="220" r="118" fill="url(#medal)"/>
+  <path d="M256 134L280 198H348L294 238L314 304L256 264L198 304L218 238L164 198H232L256 134Z" fill="#fff" opacity="0.92"/>
+  <rect x="196" y="332" width="120" height="62" rx="31" fill="#6C3FFF"/>
+  <text x="256" y="372" text-anchor="middle" fill="white" font-family="Arial" font-weight="700" font-size="30">3D</text>
+  <text x="256" y="430" text-anchor="middle" fill="#CFC6FF" font-family="Arial" font-size="26">SPARK STREAK</text>
+</svg>
