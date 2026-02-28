@@ -1,0 +1,8 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="g" x1="60" y1="20" x2="450" y2="492"><stop stop-color="#2B1F4A"/><stop offset="1" stop-color="#0F0B18"/></linearGradient></defs>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#g)"/>
+  <circle cx="256" cy="210" r="118" fill="#7A44FF"/>
+  <text x="256" y="230" text-anchor="middle" fill="white" font-family="Arial" font-size="76" font-weight="700">200</text>
+  <text x="256" y="380" text-anchor="middle" fill="white" font-family="Arial" font-size="30" font-weight="700">BICENTENNIAL</text>
+  <text x="256" y="430" text-anchor="middle" fill="#CFC6FF" font-family="Arial" font-size="24">200-DAY STREAK</text>
+</svg>

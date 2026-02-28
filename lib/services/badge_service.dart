@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -93,37 +95,127 @@ class BadgeService {
     }
   }
 
-  Future<File> createShareCardSvg(BadgeUnlock unlock) async {
-    final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/${unlock.badge.id}_share_card.svg');
+  Future<File> createShareCardImage(BadgeUnlock unlock) async {
+    const width = 1080.0;
+    const height = 1080.0;
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+
+    final bgRect = const ui.Rect.fromLTWH(0, 0, width, height);
+    final bgPaint = ui.Paint()
+      ..shader = ui.Gradient.linear(
+        const ui.Offset(120, 40),
+        const ui.Offset(960, 1020),
+        const [ui.Color(0xFF1A1625), ui.Color(0xFF2A2238)],
+      );
+    canvas.drawRect(bgRect, bgPaint);
+
+    final panelRect = ui.RRect.fromRectAndRadius(
+      const ui.Rect.fromLTWH(120, 130, 840, 820),
+      const ui.Radius.circular(56),
+    );
+    final panelPaint = ui.Paint()
+      ..shader = ui.Gradient.linear(
+        const ui.Offset(210, 180),
+        const ui.Offset(860, 900),
+        const [ui.Color(0xFF342A4C), ui.Color(0xFF231C34)],
+      );
+    canvas.drawRRect(panelRect, panelPaint);
+
+    canvas.drawCircle(
+      const ui.Offset(540, 350),
+      120,
+      ui.Paint()..color = const ui.Color(0xFF6C3FFF),
+    );
+
     final displayValue = unlock.achievedValue % 1 == 0
         ? unlock.achievedValue.toInt().toString()
         : unlock.achievedValue.toStringAsFixed(1);
 
-    final content = '''<svg width="1080" height="1080" viewBox="0 0 1080 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="120" y1="40" x2="960" y2="1020" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1A1625"/>
-      <stop offset="1" stop-color="#2A2238"/>
-    </linearGradient>
-    <linearGradient id="panel" x1="210" y1="180" x2="860" y2="900" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#342A4C"/>
-      <stop offset="1" stop-color="#231C34"/>
-    </linearGradient>
-  </defs>
-  <rect width="1080" height="1080" fill="url(#bg)"/>
-  <rect x="120" y="130" width="840" height="820" rx="56" fill="url(#panel)"/>
-  <circle cx="540" cy="350" r="120" fill="#6C3FFF"/>
-  <text x="540" y="370" text-anchor="middle" fill="white" font-family="Arial" font-size="68" font-weight="700">$displayValue</text>
-  <text x="540" y="510" text-anchor="middle" fill="white" font-family="Arial" font-size="66" font-weight="700">${unlock.badge.name}</text>
-  <text x="540" y="585" text-anchor="middle" fill="#CFC6FF" font-family="Arial" font-size="38">${unlock.badge.description}</text>
-  <rect x="180" y="760" width="720" height="130" rx="28" fill="#6C3FFF"/>
-  <text x="540" y="818" text-anchor="middle" fill="white" font-family="Arial" font-size="36" font-weight="700">Install Hobbyist</text>
-  <text x="540" y="860" text-anchor="middle" fill="#E5DAFF" font-family="Arial" font-size="30">hobbyist.app/install</text>
-</svg>''';
+    _drawCenteredText(
+      canvas,
+      displayValue,
+      y: 315,
+      size: 68,
+      color: const ui.Color(0xFFFFFFFF),
+      weight: ui.FontWeight.w700,
+    );
 
-    await file.writeAsString(content);
+    _drawCenteredText(
+      canvas,
+      unlock.badge.name,
+      y: 478,
+      size: 66,
+      color: const ui.Color(0xFFFFFFFF),
+      weight: ui.FontWeight.w700,
+    );
+
+    _drawCenteredText(
+      canvas,
+      unlock.badge.description,
+      y: 548,
+      size: 38,
+      color: const ui.Color(0xFFCFC6FF),
+      maxWidth: 760,
+    );
+
+    final ctaRect = ui.RRect.fromRectAndRadius(
+      const ui.Rect.fromLTWH(180, 760, 720, 130),
+      const ui.Radius.circular(28),
+    );
+    canvas.drawRRect(ctaRect, ui.Paint()..color = const ui.Color(0xFF6C3FFF));
+
+    _drawCenteredText(
+      canvas,
+      'Install Hobbyist',
+      y: 790,
+      size: 36,
+      color: const ui.Color(0xFFFFFFFF),
+      weight: ui.FontWeight.w700,
+    );
+    _drawCenteredText(
+      canvas,
+      'hobbyist.app/install',
+      y: 840,
+      size: 30,
+      color: const ui.Color(0xFFE5DAFF),
+    );
+
+    final image = await recorder.endRecording().toImage(
+      width.toInt(),
+      height.toInt(),
+    );
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    final pngBytes = bytes?.buffer.asUint8List() ?? Uint8List(0);
+
+    final tempDir = await getTemporaryDirectory();
+    final file = File('${tempDir.path}/${unlock.badge.id}_share_card.png');
+    await file.writeAsBytes(pngBytes, flush: true);
     return file;
+  }
+
+  void _drawCenteredText(
+    ui.Canvas canvas,
+    String text, {
+    required double y,
+    required double size,
+    required ui.Color color,
+    ui.FontWeight weight = ui.FontWeight.w400,
+    double maxWidth = 1000,
+  }) {
+    final style = ui.TextStyle(
+      color: color,
+      fontSize: size,
+      fontWeight: weight,
+    );
+    final paragraphStyle = ui.ParagraphStyle(
+      textAlign: ui.TextAlign.center,
+      maxLines: 2,
+      ellipsis: '…',
+    );
+    final builder = ui.ParagraphBuilder(paragraphStyle)..pushStyle(style)..addText(text);
+    final paragraph = builder.build()..layout(ui.ParagraphConstraints(width: maxWidth));
+    canvas.drawParagraph(paragraph, ui.Offset((1080 - maxWidth) / 2, y));
   }
 
   Future<Map<String, String>> _getUnlockMetadata() async {
@@ -164,7 +256,7 @@ class BadgeService {
     final dateNow = now ?? DateTime.now();
     final fmt = DateFormat('yyyy-MM-dd');
     int streak = 0;
-    for (int i = 0; i < 365; i++) {
+    for (int i = 0; i < 3650; i++) {
       final date = dateNow.subtract(Duration(days: i));
       final key = fmt.format(date);
       final any = hobbies.any((h) => h.completions[key]?.completed == true);

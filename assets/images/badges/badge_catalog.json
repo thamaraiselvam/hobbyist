@@ -92,6 +92,76 @@
       },
       "asset": "assets/images/badges/constellation_streak.svg",
       "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "centurion_100",
+      "name": "Centurion 100",
+      "description": "Maintain a 100-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 100
+      },
+      "asset": "assets/images/badges/centurion_100.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "bicentennial_200",
+      "name": "Bicentennial 200",
+      "description": "Maintain a 200-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 200
+      },
+      "asset": "assets/images/badges/bicentennial_200.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "triple_300",
+      "name": "Triple 300",
+      "description": "Maintain a 300-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 300
+      },
+      "asset": "assets/images/badges/triple_300.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "mythic_500",
+      "name": "Mythic 500",
+      "description": "Maintain a 500-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 500
+      },
+      "asset": "assets/images/badges/mythic_500.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
+    },
+    {
+      "id": "millennium_1000",
+      "name": "Millennium 1000",
+      "description": "Maintain a 1000-day streak.",
+      "category": "streak",
+      "rarity": "legendary",
+      "unlockCriteria": {
+        "metric": "streakDays",
+        "operator": ">=",
+        "value": 1000
+      },
+      "asset": "assets/images/badges/millennium_1000.svg",
+      "shareTemplate": "assets/images/badges/share_card_template.svg"
     }
   ]
 }

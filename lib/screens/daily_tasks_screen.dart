@@ -464,78 +464,65 @@ class _DailyTasksScreenState extends State<DailyTasksScreen>
   }
 
   Future<void> _showBadgeUnlockDialog(BadgeUnlock unlock) async {
-    bool includeInstallLink = true;
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF2A2238),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              title: Text('You unlocked ${unlock.badge.name}! 🎉'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    height: 120,
-                    width: 120,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      color: const Color(0xFF1A1625),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: SvgPicture.asset(unlock.badge.asset),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    unlock.badge.description,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Color(0xFFCFC6FF)),
-                  ),
-                  const SizedBox(height: 12),
-                  CheckboxListTile(
-                    value: includeInstallLink,
-                    onChanged: (v) => setDialogState(() => includeInstallLink = v ?? true),
-                    activeColor: const Color(0xFF6C3FFF),
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text(
-                      'Include app install link',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2238),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text('You unlocked ${unlock.badge.name}! 🎉'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                height: 120,
+                width: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  color: const Color(0xFF1A1625),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: SvgPicture.asset(unlock.badge.asset),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Not now'),
+              const SizedBox(height: 12),
+              Text(
+                unlock.badge.description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Color(0xFFCFC6FF)),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Not now'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await _shareBadge(unlock);
+                if (context.mounted) Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C3FFF),
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    await _shareBadge(unlock, includeInstallLink);
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6C3FFF),
-                  ),
-                  child: const Text('Share'),
-                ),
-              ],
-            );
-          },
+              ),
+              child: const Text('Share'),
+            ),
+          ],
         );
       },
     );
   }
 
-  Future<void> _shareBadge(BadgeUnlock unlock, bool includeInstallLink) async {
-    final cardFile = await _badgeService.createShareCardSvg(unlock);
+  Future<void> _shareBadge(BadgeUnlock unlock) async {
+    final cardFile = await _badgeService.createShareCardImage(unlock);
     final shareText = StringBuffer('I just unlocked ${unlock.badge.name} in Hobbyist!');
-    if (includeInstallLink) {
-      shareText.write('\nInstall: https://hobbyist.app/install');
-    }
+    shareText.write('\nInstall: https://hobbyist.app/install');
     await Share.shareXFiles(
       [XFile(cardFile.path)],
       text: shareText.toString(),
