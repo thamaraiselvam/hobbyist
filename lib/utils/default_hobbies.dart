@@ -366,7 +366,7 @@ class DefaultHobbies {
 
       var score = 0;
       if (entry.nameLower == normalized) {
-        score += 1_000;
+        score += 1000;
       }
       if (entry.nameLower.startsWith(normalized)) {
         score += 700;
